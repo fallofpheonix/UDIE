@@ -1,0 +1,348 @@
+2026-02-13 01:52:41.579 xcodebuild[54966:386214]  DVTFilePathFSEvents: Failed to start fs event stream.
+2026-02-13 01:52:41.778 xcodebuild[54966:386196] [MT] DVTDeveloperPaths: Failed to get length of DARWIN_USER_CACHE_DIR from confstr(3), error = Error Domain=NSPOSIXErrorDomain Code=5 "Input/output error". Using NSCachesDirectory instead.
+2026-02-13 01:52:42.135 xcodebuild[54966:386215] CoreSimulatorService connection became invalid.  Simulator services will no longer be available.
+2026-02-13 01:52:42.136 xcodebuild[54966:386240] Logging connecton invalid: <OS_xpc_error: <dictionary: 0x1fd9e3c10> { count = 1, transaction: 0, voucher = 0x0, contents =
+	"XPCErrorDescription" => <string: 0x1fd9e3d58> { string cache = 0x0, length = 18, contents = "Connection invalid" }
+}>
+2026-02-13 01:52:42.145 xcodebuild[54966:386240] Error opening log file (/Users/fallofpheonix/Library/Logs/CoreSimulator/CoreSimulator.com.apple.dt.xcodebuild.log): Operation not permitted
+[-[SimServiceContext sendRequest:]:1743] ERROR : Unable to deliver request ({
+    "developer_dir" = "/Applications/Xcode.app/Contents/Developer";
+    request = "set_developer_dir";
+}) because we are not connected to CoreSimulatorService.
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project /Users/fallofpheonix/ios_swift/UDIE/UDIE.xcodeproj -scheme UDIE -configuration Debug -destination generic/platform=iOS -derivedDataPath /Users/fallofpheonix/ios_swift/UDIE/.derived build CODE_SIGNING_ALLOWED=NO
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+2026-02-13 01:52:42.197 xcodebuild[54966:386196] [MT] DVTAssertions: Warning in DVTFrameworks/DVTFoundation/FileTypes/DVTFileDataTypeDetection.m:79
+Details:  detectedTypeIdentifier (com.apple.binary-property-list) does not conform to matchedTypeIdentifier in MagicFileDataTypeDetector extenson com.apple.property-list. When both are specified, this conformance is required unless overridden by setting allowNonInheritance. extension.identifier:Xcode.MagicFileDataTypeDetector.BinaryPlist
+Object:   <DVTFileDataTypeDetectionMagicCache: 0xb0bb886c0>
+Method:   -initWithExtension:
+Thread:   <_NSMainThread: 0x104e7da70>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-02-13 01:52:42.198 xcodebuild[54966:386196] [MT] DVTAssertions: Warning in DVTFrameworks/DVTFoundation/FileTypes/DVTFileDataTypeDetection.m:79
+Details:  detectedTypeIdentifier (com.apple.xml-property-list) does not conform to matchedTypeIdentifier in MagicFileDataTypeDetector extenson com.apple.property-list. When both are specified, this conformance is required unless overridden by setting allowNonInheritance. extension.identifier:Xcode.MagicFileDataTypeDetector.XMLPlist
+Object:   <DVTFileDataTypeDetectionMagicCache: 0xb0bb89ce0>
+Method:   -initWithExtension:
+Thread:   <_NSMainThread: 0x104e7da70>{number = 1, name = main}
+Please file a bug at https://feedbackassistant.apple.com with this warning message and any useful information you can provide.
+2026-02-13 01:52:42.315 xcodebuild[54966:386248]  DVTProvisioningProfileManager: Failed to load profile "/Users/fallofpheonix/Library/Developer/Xcode/UserData/Provisioning Profiles/ea47befe-6d1d-4de2-b2ab-fcacfa13ba34.mobileprovision" (Error Domain=DVTProvisioningProfileProviderErrorDomain Code=1 "Failed to load profile." UserInfo={NSLocalizedDescription=Failed to load profile., NSLocalizedRecoverySuggestion=Profile is missing the required UUID property.})
+2026-02-13 01:52:42.315 xcodebuild[54966:386252]  DVTProvisioningProfileManager: Failed to load profile "/Users/fallofpheonix/Library/Developer/Xcode/UserData/Provisioning Profiles/c1a75643-4fa3-442b-b02f-98a158f3c4c0.mobileprovision" (Error Domain=DVTProvisioningProfileProviderErrorDomain Code=1 "Failed to load profile." UserInfo={NSLocalizedDescription=Failed to load profile., NSLocalizedRecoverySuggestion=Profile is missing the required UUID property.})
+2026-02-13 01:52:42.315 xcodebuild[54966:386245]  DVTProvisioningProfileManager: Failed to load profile "/Users/fallofpheonix/Library/Developer/Xcode/UserData/Provisioning Profiles/f8847b1b-70b7-440e-a8d6-2bd16e0f4a5b.mobileprovision" (Error Domain=DVTProvisioningProfileProviderErrorDomain Code=1 "Failed to load profile." UserInfo={NSLocalizedDescription=Failed to load profile., NSLocalizedRecoverySuggestion=Profile is missing the required UUID property.})
+2026-02-13 01:52:42.315 xcodebuild[54966:386247]  DVTProvisioningProfileManager: Failed to load profile "/Users/fallofpheonix/Library/Developer/Xcode/UserData/Provisioning Profiles/200e4d8c-df90-4a85-896d-e682dbe379f1.mobileprovision" (Error Domain=DVTProvisioningProfileProviderErrorDomain Code=1 "Failed to load profile." UserInfo={NSLocalizedDescription=Failed to load profile., NSLocalizedRecoverySuggestion=Profile is missing the required UUID property.})
+2026-02-13 01:52:42.315 xcodebuild[54966:386249]  DVTProvisioningProfileManager: Failed to load profile "/Users/fallofpheonix/Library/Developer/Xcode/UserData/Provisioning Profiles/753dbc0e-dcb9-41b6-a10e-24373338e071.mobileprovision" (Error Domain=DVTProvisioningProfileProviderErrorDomain Code=1 "Failed to load profile." UserInfo={NSLocalizedDescription=Failed to load profile., NSLocalizedRecoverySuggestion=Profile is missing the required UUID property.})
+2026-02-13 01:52:42.316 xcodebuild[54966:386251]  DVTProvisioningProfileManager: Failed to load profile "/Users/fallofpheonix/Library/Developer/Xcode/UserData/Provisioning Profiles/a4a191c1-4e7a-46a9-a77d-7285c0b48b95.mobileprovision" (Error Domain=DVTProvisioningProfileProviderErrorDomain Code=1 "Failed to load profile." UserInfo={NSLocalizedDescription=Failed to load profile., NSLocalizedRecoverySuggestion=Profile is missing the required UUID property.})
+2026-02-13 01:52:42.316 xcodebuild[54966:386244]  DVTProvisioningProfileManager: Failed to load profile "/Users/fallofpheonix/Library/Developer/Xcode/UserData/Provisioning Profiles/5e4037f5-8737-4a20-9b09-acf69cd1e199.mobileprovision" (Error Domain=DVTProvisioningProfileProviderErrorDomain Code=1 "Failed to load profile." UserInfo={NSLocalizedDescription=Failed to load profile., NSLocalizedRecoverySuggestion=Profile is missing the required UUID property.})
+2026-02-13 01:52:42.316 xcodebuild[54966:386250]  DVTProvisioningProfileManager: Failed to load profile "/Users/fallofpheonix/Library/Developer/Xcode/UserData/Provisioning Profiles/24762797-db2a-4b25-b8e2-8a19ccf6ec6c.mobileprovision" (Error Domain=DVTProvisioningProfileProviderErrorDomain Code=1 "Failed to load profile." UserInfo={NSLocalizedDescription=Failed to load profile., NSLocalizedRecoverySuggestion=Profile is missing the required UUID property.})
+2026-02-13 01:52:42.317 xcodebuild[54966:386248]  DVTProvisioningProfileManager: Failed to load profile "/Users/fallofpheonix/Library/Developer/Xcode/UserData/Provisioning Profiles/36dbf5f4-7aba-40ce-816f-cfa8416bbe1d.mobileprovision" (Error Domain=DVTProvisioningProfileProviderErrorDomain Code=1 "Failed to load profile." UserInfo={NSLocalizedDescription=Failed to load profile., NSLocalizedRecoverySuggestion=Profile is missing the required UUID property.})
+2026-02-13 01:52:42.317 xcodebuild[54966:386252]  DVTProvisioningProfileManager: Failed to load profile "/Users/fallofpheonix/Library/Developer/Xcode/UserData/Provisioning Profiles/ac79c810-0b77-41bf-9ee4-b3f21d2cd510.mobileprovision" (Error Domain=DVTProvisioningProfileProviderErrorDomain Code=1 "Failed to load profile." UserInfo={NSLocalizedDescription=Failed to load profile., NSLocalizedRecoverySuggestion=Profile is missing the required UUID property.})
+[-[SimServiceContext initWithDeveloperDir:connectionType:error:]:450] WARN  : Unable to discover any Simulator runtimes. Developer Directory is /Applications/Xcode.app/Contents/Developer.
+[-[SimDiskImageManager init]:175] ERROR : Could not kickstart simdiskimaged; SimDiskImageManager services will not be available: Error Domain=NSPOSIXErrorDomain Code=53 "Software caused connection abort" UserInfo={NSLocalizedDescription=Error returned in reply from CoreSimulatorService: Connection invalid}
+[-[SimDiskImageManager _onQueue_checkConnection:]:239] ERROR : simdiskimaged returned error (invalid), marking disconnected.
+[-[SimDiskImageManager _onQueue_checkConnection:]:239] ERROR : simdiskimaged returned error (invalid), marking disconnected.
+[-[SimServiceContext initWithDeveloperDir:connectionType:error:]_block_invoke:486] ERROR : Could not get list of trusted mount directories: Error Domain=com.apple.CoreSimulator.SimError Code=410 "The service used to manage runtime disk images (simdiskimaged) crashed or is not responding" UserInfo={NSLocalizedDescription=The service used to manage runtime disk images (simdiskimaged) crashed or is not responding}
+[-[SimServiceContext sendRequest:reply:error:]:1763] ERROR : Unable to deliver request ({
+    request = "notification_subscription";
+    "set_path" = "/Users/fallofpheonix/Library/Developer/CoreSimulator/Devices";
+}) because we are not connected to CoreSimulatorService.
+2026-02-13 01:52:42.321 xcodebuild[54966:386214] Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedDescription=CoreSimulatorService connection became invalid.  Simulator services will no longer be available.}
+[-[SimServiceContext sendRequest:reply:error:]:1763] ERROR : Unable to deliver request ({
+    request = "notification_subscription";
+    "set_path" = "/Users/fallofpheonix/Library/Developer/CoreSimulator/Devices";
+}) because we are not connected to CoreSimulatorService.
+2026-02-13 01:52:42.323 xcodebuild[54966:386241] Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedDescription=CoreSimulatorService connection became invalid.  Simulator services will no longer be available.}
+2026-02-13 01:52:42.323 xcodebuild[54966:386214]  IDESimulatorAvailability: startObservingSimulatorUpdates() FAILED to register SimDeviceSet observer
+2026-02-13 01:52:42.323 xcodebuild[54966:386241]  iOSSimulator: [SimServiceContext defaultDeviceSetWithError:] returned nil (Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedFailureReason=Failed to subscribe to notifications from CoreSimulatorService., NSLocalizedDescription=Failed to initialize simulator device set., NSUnderlyingError=0xb0b7f9b00 {Error Domain=NSPOSIXErrorDomain Code=61 "Connection refused" UserInfo={NSLocalizedDescription=CoreSimulatorService connection became invalid.  Simulator services will no longer be available.}}}). Simulator device support disabled.
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'UDIE' in project 'UDIE' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: fb6a73b3466a2f464b7dee3c1998d6c1
+Build description path: /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/XCBuildData/fb6a73b3466a2f464b7dee3c1998d6c1.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk /Users/fallofpheonix/ios_swift/UDIE/.derived/SDKStatCaches.noindex/iphoneos26.2-23C53-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache
+    cd /Users/fallofpheonix/ios_swift/UDIE/UDIE.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -o /Users/fallofpheonix/ios_swift/UDIE/.derived/SDKStatCaches.noindex/iphoneos26.2-23C53-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache
+Failed to create FS event stream. Considering the cache up-to-date.
+
+ProcessInfoPlistFile /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/Info.plist /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/empty-UDIE.plist (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    builtin-infoPlistUtility /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/empty-UDIE.plist -producttype com.apple.product-type.application -genpkginfo /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/PkgInfo -expandbuildsettings -format binary -platform iphoneos -additionalcontentfile /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/assetcatalog_generated_info.plist -requiredArchitecture arm64 -o /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/Info.plist
+
+SwiftDriver UDIE normal arm64 com.apple.xcode.tools.swift.compiler (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name UDIE -Onone -enforce-exclusivity\=checked @/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios26.0 -g -module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos -F /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos -emit-localized-strings -emit-localized-strings-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64 -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/SDKStatCaches.noindex/iphoneos26.2-23C53-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex -sdk-module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE_const_extract_protocols.json -Xcc -iquote -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-generated-files.hmap -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-own-target-headers.hmap -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE-ccaa9730f5854f9c6f5a6227025f7bdb-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-project-headers.hmap -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/include -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources-normal/arm64 -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources/arm64 -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-Swift.h -working-directory /Users/fallofpheonix/ios_swift/UDIE -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal arm64 Compiling\ GeoEvent.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/GeoEvent.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/GeoEvent.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftCompile normal arm64 Compiling\ MapView.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapView.swift (in target 'UDIE' from project 'UDIE')
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapView.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapView.swift:12:1: warning: extension declares a conformance of imported type 'MKCoordinateRegion' to imported protocol 'Equatable'; this will not behave correctly if the owners of 'MapKit' introduce this conformance in the future
+extension MKCoordinateRegion: Equatable {
+^
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapView.swift:12:1: note: add '@retroactive' to silence this warning
+extension MKCoordinateRegion: Equatable {
+^                             ~~~~~~~~~
+                              @retroactive Equatable
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapView.swift:188:10: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+        .onChange(of: selectedRoute) { newRoute in
+         ^
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapView.swift:196:10: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+        .onChange(of: region) { newRegion in
+         ^
+
+SwiftCompile normal arm64 Compiling\ LocationManager.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Services/LocationManager.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Services/LocationManager.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftCompile normal arm64 Compiling\ AppState.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/AppState.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/AppState.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ UDIE (in target 'UDIE' from project 'UDIE')
+
+EmitSwiftModule normal arm64 (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapView.swift:12:1: warning: extension declares a conformance of imported type 'MKCoordinateRegion' to imported protocol 'Equatable'; this will not behave correctly if the owners of 'MapKit' introduce this conformance in the future
+extension MKCoordinateRegion: Equatable {
+^
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapView.swift:12:1: note: add '@retroactive' to silence this warning
+extension MKCoordinateRegion: Equatable {
+^                             ~~~~~~~~~
+                              @retroactive Equatable
+
+SwiftCompile normal arm64 Compiling\ MapViewModel.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapViewModel.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapViewModel.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling GeoEvent.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriverJobDiscovery normal arm64 Compiling AppState.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 Compiling\ ClusteredMapView.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Components/ClusteredMapView.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Components/ClusteredMapView.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftCompile normal arm64 Compiling\ EventFilter.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/EventFilter.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/EventFilter.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftCompile normal arm64 Compiling\ FilterView.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Filters/FilterView.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Filters/FilterView.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftCompile normal arm64 Compiling\ MockEventGenerator.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Mock/MockEventGenerator.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Mock/MockEventGenerator.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftCompile normal arm64 Compiling\ UDIEApp.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/App/UDIEApp.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/App/UDIEApp.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling LocationManager.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 Compiling\ EventDetailView.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/EventDetailView.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/EventDetailView.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling MapViewModel.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 Compiling\ APIClient.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Networking/APIClient.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Networking/APIClient.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for UDIE (in target 'UDIE' from project 'UDIE')
+
+SwiftDriver\ Compilation\ Requirements UDIE normal arm64 com.apple.xcode.tools.swift.compiler (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name UDIE -Onone -enforce-exclusivity\=checked @/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios26.0 -g -module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos -F /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos -emit-localized-strings -emit-localized-strings-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64 -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/SDKStatCaches.noindex/iphoneos26.2-23C53-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex -sdk-module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE_const_extract_protocols.json -Xcc -iquote -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-generated-files.hmap -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-own-target-headers.hmap -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE-ccaa9730f5854f9c6f5a6227025f7bdb-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-project-headers.hmap -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/include -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources-normal/arm64 -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources/arm64 -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-Swift.h -working-directory /Users/fallofpheonix/ios_swift/UDIE -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Compiling MockEventGenerator.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 Compiling\ EventRepository.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Services/EventRepository.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Services/EventRepository.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+Copy /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.swiftmodule/arm64-apple-ios.swiftmodule /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.swiftmodule (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.swiftmodule /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.swiftmodule/arm64-apple-ios.swiftmodule
+
+SwiftDriverJobDiscovery normal arm64 Compiling EventFilter.swift (in target 'UDIE' from project 'UDIE')
+
+Copy /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.swiftmodule/arm64-apple-ios.abi.json /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.abi.json (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.abi.json /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.swiftmodule/arm64-apple-ios.abi.json
+
+Copy /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.swiftsourceinfo (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.swiftsourceinfo /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.swiftmodule/Project/arm64-apple-ios.swiftsourceinfo
+
+SwiftDriverJobDiscovery normal arm64 Compiling ClusteredMapView.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriverJobDiscovery normal arm64 Compiling UDIEApp.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriverJobDiscovery normal arm64 Compiling EventRepository.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriverJobDiscovery normal arm64 Compiling APIClient.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriverJobDiscovery normal arm64 Compiling EventDetailView.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriverJobDiscovery normal arm64 Compiling FilterView.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriverJobDiscovery normal arm64 Compiling MapView.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 Compiling\ BottomSheet.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Components/BottomSheet.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Components/BottomSheet.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftCompile normal arm64 Compiling\ RoutePlannerView.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift:51:24: warning: 'CLGeocoder' was deprecated in iOS 26.0: Use MapKit
+        let geocoder = CLGeocoder()
+                       ^
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift:53:18: warning: 'geocodeAddressString(_:completionHandler:)' was deprecated in iOS 26.0: Use MKGeocodingRequest
+        geocoder.geocodeAddressString(originText) { originPlacemarks, _ in
+                 ^
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift:59:22: warning: 'geocodeAddressString(_:completionHandler:)' was deprecated in iOS 26.0: Use MKGeocodingRequest
+            geocoder.geocodeAddressString(destinationText) { destPlacemarks, _ in
+                     ^
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift:66:34: warning: 'init(placemark:)' was deprecated in iOS 26.0: Use init(location:address:)
+                request.source = MKMapItem(placemark: MKPlacemark(coordinate: origin.coordinate))
+                                 ^
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift:66:55: warning: 'MKPlacemark' was deprecated in iOS 26.0: Use MKMapItem's location, address and addressRepresentations properties instead. Use MKAddressRepresentations for formatted address strings for MapKit provided MKMapItems
+                request.source = MKMapItem(placemark: MKPlacemark(coordinate: origin.coordinate))
+                                                      ^
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift:67:39: warning: 'init(placemark:)' was deprecated in iOS 26.0: Use init(location:address:)
+                request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destination.coordinate))
+                                      ^
+/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift:67:60: warning: 'MKPlacemark' was deprecated in iOS 26.0: Use MKMapItem's location, address and addressRepresentations properties instead. Use MKAddressRepresentations for formatted address strings for MapKit provided MKMapItems
+                request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destination.coordinate))
+                                                           ^
+
+SwiftCompile normal arm64 Compiling\ GeneratedAssetSymbols.swift /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftCompile normal arm64 Compiling\ RouteRisk.swift /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/RouteRisk.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftCompile normal arm64 /Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/RouteRisk.swift (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling RouteRisk.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriverJobDiscovery normal arm64 Compiling GeneratedAssetSymbols.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriverJobDiscovery normal arm64 Compiling RoutePlannerView.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriverJobDiscovery normal arm64 Compiling BottomSheet.swift (in target 'UDIE' from project 'UDIE')
+
+SwiftDriver\ Compilation UDIE normal arm64 com.apple.xcode.tools.swift.compiler (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name UDIE -Onone -enforce-exclusivity\=checked @/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -target arm64-apple-ios26.0 -g -module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos -F /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos -emit-localized-strings -emit-localized-strings-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64 -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/SDKStatCaches.noindex/iphoneos26.2-23C53-3794476bd08197c3e2abd9bb477ef7f7.sdkstatcache -output-file-map /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex -sdk-module-cache-path /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/fallofpheonix/ios_swift/UDIE/.derived/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE_const_extract_protocols.json -Xcc -iquote -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-generated-files.hmap -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-own-target-headers.hmap -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-all-non-framework-target-headers.hmap -Xcc -ivfsoverlay -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE-ccaa9730f5854f9c6f5a6227025f7bdb-VFS-iphoneos/all-product-headers.yaml -Xcc -iquote -Xcc /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-project-headers.hmap -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/include -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources-normal/arm64 -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources/arm64 -Xcc -I/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-Swift.h -working-directory /Users/fallofpheonix/ios_swift/UDIE -experimental-emit-module-separately -disable-cmo
+
+Ld /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/UDIE.debug.dylib normal (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios26.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -L/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos -F/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/EagerLinkingTBDs/Debug-iphoneos -F/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos -filelist /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.LinkFileList -install_name @rpath/UDIE.debug.dylib -Xlinker -rpath -Xlinker @executable_path/Frameworks -dead_strip -Xlinker -object_path_lto -Xlinker /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -debug_variant -Xlinker -dependency_info -Xlinker /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE_dependency_info.dat -fobjc-link-runtime -fprofile-instr-generate -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.swiftmodule @/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-linker-args.resp -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -framework CoreLocation -framework MapKit -o /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/UDIE.debug.dylib
+
+ConstructStubExecutorLinkFileList /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-ExecutorLinkFileList-normal-arm64.txt (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    construct-stub-executor-link-file-list /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/UDIE.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'UDIE' from project 'UDIE')
+
+Ld /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/UDIE normal (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-ios26.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk -O0 -L/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos -F/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/Frameworks -rdynamic -Xlinker -no_deduplicate -Xlinker -debug_variant -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE-ExecutorLinkFileList-normal-arm64.txt /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/UDIE.debug.dylib -o /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/UDIE
+
+ExtractAppIntentsMetadata (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --module-name UDIE --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk --xcode-version 17C52 --platform-family iOS --deployment-target 26.0 --bundle-identifier com.ujjwal.dev.UDIE --output /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app --target-triple arm64-apple-ios26.0 --binary-file /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/UDIE --dependency-file /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE_dependency_info.dat --stringsdata-file /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.SwiftFileList --metadata-file-list /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE.DependencyMetadataFileList --static-metadata-file-list /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE.DependencyStaticMetadataFileList --swift-const-vals-list /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --validate-assistant-intents --no-app-shortcuts-localization
+2026-02-13 01:52:46.931 appintentsmetadataprocessor[55066:386691] Starting appintentsmetadataprocessor export
+2026-02-13 01:52:46.933 appintentsmetadataprocessor[55066:386691] warning: Metadata extraction skipped. No AppIntents.framework dependency found.
+
+CopySwiftLibs /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/UDIE.debug.dylib --scan-folder /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/Frameworks --scan-folder /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/PlugIns --scan-folder /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/SystemExtensions --scan-folder /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/Extensions --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/System/Library/Frameworks/CoreLocation.framework --scan-folder /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.2.sdk/System/Library/Frameworks/MapKit.framework --platform iphoneos --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+Ignoring --strip-bitcode because --sign was not passed
+
+AppIntentsSSUTraining (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsnltrainingprocessor --infoplist-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/Info.plist --temp-dir-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/ssu --bundle-id com.ujjwal.dev.UDIE --product-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app --extracted-metadata-path /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app/Metadata.appintents --metadata-file-list /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/UDIE.DependencyMetadataFileList --archive-ssu-assets
+2026-02-13 01:52:46.964 appintentsnltrainingprocessor[55070:386706] Parsing options for appintentsnltrainingprocessor
+2026-02-13 01:52:46.964 appintentsnltrainingprocessor[55070:386706] No AppShortcuts found - Skipping.
+
+RegisterExecutionPolicyException /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    builtin-RegisterExecutionPolicyException /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app
+
+Validate /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    builtin-validationUtility /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app -shallow-bundle -infoplist-subpath Info.plist
+
+Touch /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app (in target 'UDIE' from project 'UDIE')
+    cd /Users/fallofpheonix/ios_swift/UDIE
+    /usr/bin/touch -c /Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Products/Debug-iphoneos/UDIE.app
+
+** BUILD SUCCEEDED **
+

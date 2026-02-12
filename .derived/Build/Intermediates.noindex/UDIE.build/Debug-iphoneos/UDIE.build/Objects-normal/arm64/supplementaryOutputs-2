@@ -1,0 +1,23 @@
+{
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Mock/MockEventGenerator.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.dia",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.swiftdeps"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/AppState.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.dia",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.swiftdeps"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/BoundingBox.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.dia",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.swiftdeps"
+  }
+}

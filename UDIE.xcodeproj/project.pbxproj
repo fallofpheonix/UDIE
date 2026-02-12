@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3940DB152F3DD54C00B28E50 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3940DB142F3DD54C00B28E50 /* MapKit.framework */; };
+		3940DB172F3DD55400B28E50 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3940DB162F3DD55400B28E50 /* CoreLocation.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		39C4DC0B2F3DA80F00287629 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +29,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		3940DB142F3DD54C00B28E50 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
+		3940DB162F3DD55400B28E50 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		3940DB182F3DD55D00B28E50 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		39C4DBF12F3DA80E00287629 /* UDIE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UDIE.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		39C4DC002F3DA80F00287629 /* UDIETests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UDIETests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		39C4DC0A2F3DA80F00287629 /* UDIEUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UDIEUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -33,27 +41,17 @@
 		39C4DC422F3DB16D00287629 /* Exceptions for "UDIE" folder in "UDIE" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				App/UDIEApp.swift,
 				"Core/Extensions/Array+GeoFiltering.swift",
+				"Core/Extensions/CLLocation+Extensions.swift",
 				"Core/Extensions/CLLocationCoordinate2D+Distance.swift",
 				"Core/Extensions/Color+EventType.swift",
 				"Core/Extensions/Date+Formatting.swift",
 				"Core/Extensions/Double+RiskFormatting.swift",
+				"Core/Extensions/MapKit+Extensions.swift",
 				"Core/Extensions/MKCoordinateRegion+BoundingBox.swift",
 				"Core/Extensions/MKPolyline+Coordinates.swift",
 				"Core/Extensions/String+URLEncoding.swift",
 				"Core/Extensions/View+BottomSheet.swift",
-				Core/Models/AppState.swift,
-				Core/Models/EventFilter.swift,
-				Core/Models/GeoEvent.swift,
-				Core/Models/RouteRisk.swift,
-				Core/Networking/APIClient.swift,
-				Core/Services/LocationManager.swift,
-				Features/Filters/FilterView.swift,
-				Features/Map/EventDetailView.swift,
-				Features/Map/MapView.swift,
-				Features/Map/MapViewModel.swift,
-				Services/EventRepository.swift,
 			);
 			target = 39C4DBF02F3DA80E00287629 /* UDIE */;
 		};
@@ -85,6 +83,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3940DB172F3DD55400B28E50 /* CoreLocation.framework in Frameworks */,
+				3940DB152F3DD54C00B28E50 /* MapKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,12 +105,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3940DB132F3DD54B00B28E50 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3940DB182F3DD55D00B28E50 /* SwiftUI.framework */,
+				3940DB162F3DD55400B28E50 /* CoreLocation.framework */,
+				3940DB142F3DD54C00B28E50 /* MapKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		39C4DBE82F3DA80E00287629 = {
 			isa = PBXGroup;
 			children = (
 				39C4DBF32F3DA80E00287629 /* UDIE */,
 				39C4DC032F3DA80F00287629 /* UDIETests */,
 				39C4DC0D2F3DA80F00287629 /* UDIEUITests */,
+				3940DB132F3DD54B00B28E50 /* Frameworks */,
 				39C4DBF22F3DA80E00287629 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -432,14 +443,17 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = 9HRB674593;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -448,6 +462,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ujjwal.dev.UDIE;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -466,14 +483,17 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = 9HRB674593;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -482,6 +502,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ujjwal.dev.UDIE;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;

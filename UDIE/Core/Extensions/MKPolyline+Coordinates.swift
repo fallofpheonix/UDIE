@@ -11,12 +11,15 @@ extension MKPolyline {
 
     var coordinates: [CLLocationCoordinate2D] {
 
-        var coords = [CLLocationCoordinate2D](
+        var coords = Array(
             repeating: kCLLocationCoordinate2DInvalid,
             count: pointCount
         )
 
-        getCoordinates(&coords, range: NSRange(location: 0, length: pointCount))
+        getCoordinates(
+            &coords,
+            range: NSRange(location: 0, length: pointCount)
+        )
 
         return coords
     }

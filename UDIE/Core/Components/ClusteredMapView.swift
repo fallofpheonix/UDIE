@@ -7,10 +7,11 @@
 
 import SwiftUI
 import MapKit
+import CoreLocation
 
 struct ClusteredMapView: UIViewRepresentable {
 
-    var region: MKCoordinateRegion
+    @Binding var region: MKCoordinateRegion
     var events: [GeoEvent]
     var onSelect: (GeoEvent) -> Void
 
@@ -23,13 +24,16 @@ struct ClusteredMapView: UIViewRepresentable {
         let mapView = MKMapView()
         mapView.delegate = context.coordinator
         mapView.setRegion(region, animated: false)
+
         mapView.register(
             MKMarkerAnnotationView.self,
             forAnnotationViewWithReuseIdentifier: "Event"
         )
+
         mapView.register(
             MKMarkerAnnotationView.self,
-            forAnnotationViewWithReuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier
+            forAnnotationViewWithReuseIdentifier:
+                MKMapViewDefaultClusterAnnotationViewReuseIdentifier
         )
 
         return mapView
@@ -37,15 +41,15 @@ struct ClusteredMapView: UIViewRepresentable {
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
 
-        mapView.setRegion(region, animated: true)
+        if mapView.region.center.latitude != region.center.latitude ||
+           mapView.region.center.longitude != region.center.longitude {
+            mapView.setRegion(region, animated: true)
+        }
 
         mapView.removeAnnotations(mapView.annotations)
 
-        let annotations = events.map { event -> MKPointAnnotation in
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = event.coordinate
-            annotation.title = event.eventType.displayName
-            return annotation
+        let annotations = events.map { event -> EventAnnotation in
+            EventAnnotation(event: event)
         }
 
         mapView.addAnnotations(annotations)
@@ -59,30 +63,64 @@ struct ClusteredMapView: UIViewRepresentable {
             self.parent = parent
         }
 
-        func mapView(
-            _ mapView: MKMapView,
-            viewFor annotation: MKAnnotation
-        ) -> MKAnnotationView? {
+        func mapView(_ mapView: MKMapView,
+                     regionDidChangeAnimated animated: Bool) {
+            parent.region = mapView.region
+        }
 
-            if annotation is MKClusterAnnotation {
+        func mapView(_ mapView: MKMapView,
+                     viewFor annotation: MKAnnotation)
+        -> MKAnnotationView? {
+
+            if let cluster = annotation as? MKClusterAnnotation {
+
                 let view = MKMarkerAnnotationView(
-                    annotation: annotation,
-                    reuseIdentifier: MKMapViewDefaultClusterAnnotationViewReuseIdentifier
+                    annotation: cluster,
+                    reuseIdentifier:
+                        MKMapViewDefaultClusterAnnotationViewReuseIdentifier
                 )
+
                 view.markerTintColor = .systemBlue
                 view.canShowCallout = false
                 return view
             }
 
+            guard let eventAnnotation = annotation as? EventAnnotation else {
+                return nil
+            }
+
             let view = MKMarkerAnnotationView(
-                annotation: annotation,
+                annotation: eventAnnotation,
                 reuseIdentifier: "Event"
             )
 
             view.clusteringIdentifier = "eventCluster"
+            // TODO: Map EventType to a display color when available (e.g., via a computed property or extension)
+            view.markerTintColor = .systemBlue
             view.canShowCallout = false
 
             return view
         }
+
+        func mapView(_ mapView: MKMapView,
+                     didSelect view: MKAnnotationView) {
+
+            if let eventAnnotation = view.annotation as? EventAnnotation {
+                parent.onSelect(eventAnnotation.event)
+            }
+        }
+    }
+}
+
+final class EventAnnotation: NSObject, MKAnnotation {
+
+    let event: GeoEvent
+
+    var coordinate: CLLocationCoordinate2D {
+        event.coordinate
+    }
+
+    init(event: GeoEvent) {
+        self.event = event
     }
 }

@@ -1,0 +1,23 @@
+{
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/App/UDIEApp.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.dia",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.swiftdeps"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Components/BottomSheet.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.dia",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.swiftdeps"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Components/ClusteredMapView.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.dia",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.swiftdeps"
+  }
+}

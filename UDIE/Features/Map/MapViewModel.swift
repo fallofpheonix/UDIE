@@ -6,7 +6,9 @@
 //
 
 import Foundation
+import Combine
 import MapKit
+import CoreLocation
 
 @MainActor
 final class MapViewModel: ObservableObject {
@@ -29,7 +31,10 @@ final class MapViewModel: ObservableObject {
 
             try? await Task.sleep(nanoseconds: 600_000_000)
 
-            if Task.isCancelled { return }
+            if Task.isCancelled {
+                isLoading = false
+                return
+            }
 
             let generated = MockEventGenerator.generate(in: region)
 
@@ -38,15 +43,20 @@ final class MapViewModel: ObservableObject {
             isLoading = false
         }
     }
-
     func calculateRisk(for route: MKRoute) -> RouteRisk {
 
         var totalRisk: Double = 0
-        let coordinates = route.polyline.coordinates
+        let coordinates = polylineCoordinates(for: route.polyline)
 
         for event in events {
             for point in coordinates {
-                let distance = event.coordinate.distance(to: point)
+                let distance = CLLocation(
+                    latitude: event.coordinate.latitude,
+                    longitude: event.coordinate.longitude
+                ).distance(from: CLLocation(
+                    latitude: point.latitude,
+                    longitude: point.longitude
+                ))
                 if distance < 300 {
                     totalRisk += Double(event.severity) * event.confidence
                     break
@@ -96,5 +106,11 @@ final class MapViewModel: ObservableObject {
         return latShift > threshold ||
                lngShift > threshold ||
                zoomShift > threshold
+    }
+
+    private func polylineCoordinates(for polyline: MKPolyline) -> [CLLocationCoordinate2D] {
+        var coords = Array(repeating: kCLLocationCoordinate2DInvalid, count: polyline.pointCount)
+        polyline.getCoordinates(&coords, range: NSRange(location: 0, length: polyline.pointCount))
+        return coords
     }
 }

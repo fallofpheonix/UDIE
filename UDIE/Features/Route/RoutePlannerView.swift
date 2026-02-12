@@ -74,12 +74,14 @@ struct RoutePlannerView: View {
 
                         isLoading = false
 
-                        if let foundRoutes = response?.routes {
-                            routes = foundRoutes
-                            selectedRoute = foundRoutes.first
+                        if let foundRoutes = response?.routes,
+                           let first = foundRoutes.first {
 
-                            region = MKCoordinateRegion(foundRoutes.first!.polyline.boundingMapRect)
+                            routes = foundRoutes
+                            selectedRoute = first
+                            region = MKCoordinateRegion(first.polyline.boundingMapRect)
                         }
+
                     }
                 }
             }

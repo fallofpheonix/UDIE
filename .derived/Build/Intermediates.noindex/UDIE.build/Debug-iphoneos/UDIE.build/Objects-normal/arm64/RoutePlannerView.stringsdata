@@ -1,0 +1,32 @@
+{
+  "source": "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Origin",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 25
+        }
+      },
+      {
+        "comment": "",
+        "key": "Destination",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 28
+        }
+      },
+      {
+        "comment": "",
+        "key": "Calculate Route",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 37
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 import CoreLocation
 
 struct GeoEvent: Identifiable, Codable {
@@ -32,6 +33,20 @@ struct GeoEvent: Identifiable, Codable {
 }
 
 enum EventType: String, Codable, CaseIterable {
+    var displayColor: Color {
+        switch self {
+        case .accident:
+            return .red
+        case .construction:
+            return .orange
+        case .flood:
+            return .blue
+        case .protest:
+            return .purple
+        case .heavyTraffic:
+            return .yellow
+        }
+    }
 
     case accident
     case construction

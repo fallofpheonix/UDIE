@@ -1,0 +1,40 @@
+{
+  "source": "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/EventDetailView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Severity",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 37
+        }
+      },
+      {
+        "comment": "",
+        "key": "Confidence",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 50
+        }
+      },
+      {
+        "comment": "",
+        "key": "Latitude: %lf",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 64
+        }
+      },
+      {
+        "comment": "",
+        "key": "Longitude: %lf",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 65
+        }
+      }
+    ]
+  },
+  "version": 1
+}

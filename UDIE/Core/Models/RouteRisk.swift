@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct RouteRisk {
-    print("Risk score:", normalized)
 
     let score: Double
     let level: RiskLevel

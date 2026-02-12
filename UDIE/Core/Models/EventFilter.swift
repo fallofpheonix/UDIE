@@ -6,19 +6,11 @@
 //
 
 import Foundation
+import Combine
 
-struct EventFilter {
+final class EventFilter: ObservableObject {
 
-    static let defaultMinSeverity = 1
-    static let defaultMinConfidence = 0.0
-
-    var selectedTypes: Set<EventType> = Set(EventType.allCases)
-    var minSeverity: Int = defaultMinSeverity
-    var minConfidence: Double = defaultMinConfidence
-
-    mutating func reset() {
-        selectedTypes = Set(EventType.allCases)
-        minSeverity = Self.defaultMinSeverity
-        minConfidence = Self.defaultMinConfidence
-    }
+    @Published var selectedTypes: Set<EventType> = Set(EventType.allCases)
+    @Published var minSeverity: Int = 1
+    @Published var minConfidence: Double = 0.0
 }

@@ -1,0 +1,24 @@
+{
+  "source": "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "No disruptions in this area",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 89
+        }
+      },
+      {
+        "comment": "",
+        "key": "Try zooming out or adjusting filters",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 92
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -5,7 +5,9 @@
 //  Created by Ujjwal Singh on 12/02/26.
 //
 
+import Foundation
 import SwiftUI
+import Combine
 
 @main
 struct UDIEApp: App {

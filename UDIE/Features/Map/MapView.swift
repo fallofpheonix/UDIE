@@ -9,6 +9,15 @@
 import SwiftUI
 import MapKit
 
+extension MKCoordinateRegion: Equatable {
+    public static func == (lhs: MKCoordinateRegion, rhs: MKCoordinateRegion) -> Bool {
+        lhs.center.latitude == rhs.center.latitude &&
+        lhs.center.longitude == rhs.center.longitude &&
+        lhs.span.latitudeDelta == rhs.span.latitudeDelta &&
+        lhs.span.longitudeDelta == rhs.span.longitudeDelta
+    }
+}
+
 struct MapView: View {
 
     @EnvironmentObject var appState: AppState
@@ -53,8 +62,6 @@ struct MapView: View {
             ClusteredMapView(
                 region: $region,
                 events: filteredEvents,
-                routes: routes,
-                selectedRoute: selectedRoute,
                 onSelect: { event in
                     activeSheet = .eventDetail(event)
                 }

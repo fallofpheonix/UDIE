@@ -1,0 +1,189 @@
+{
+  "" : {
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-primary.dia",
+    "emit-module-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-primary-emit-module.dia",
+    "pch" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIE-primary.swiftdeps"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/App/UDIEApp.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/UDIEApp~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Components/BottomSheet.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BottomSheet~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Components/ClusteredMapView.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/ClusteredMapView~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Mock/MockEventGenerator.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MockEventGenerator~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/AppState.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/AppState~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/BoundingBox.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/BoundingBox~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/EventFilter.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventFilter.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventFilter.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventFilter.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventFilter.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventFilter.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventFilter.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventFilter.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventFilter~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/GeoEvent.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeoEvent.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeoEvent.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeoEvent.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeoEvent.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeoEvent.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeoEvent.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeoEvent.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/GeoEvent~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Models/RouteRisk.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RouteRisk.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RouteRisk.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RouteRisk.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RouteRisk.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RouteRisk.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RouteRisk.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RouteRisk.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RouteRisk~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Networking/APIClient.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/APIClient.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/APIClient.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/APIClient.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/APIClient.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/APIClient.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/APIClient.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/APIClient.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/APIClient~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Core/Services/LocationManager.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/LocationManager.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/LocationManager.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/LocationManager.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/LocationManager.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/LocationManager.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/LocationManager.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/LocationManager.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/LocationManager~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Filters/FilterView.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/FilterView.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/FilterView.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/FilterView.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/FilterView.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/FilterView.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/FilterView.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/FilterView.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/FilterView~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/EventDetailView.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventDetailView.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventDetailView.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventDetailView.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventDetailView.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventDetailView.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventDetailView.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventDetailView.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventDetailView~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapView.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapView.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapView.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapView.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapView.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapView.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapView.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapView.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapView~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Map/MapViewModel.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapViewModel.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapViewModel.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapViewModel.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapViewModel.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapViewModel.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapViewModel.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapViewModel.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/MapViewModel~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Features/Route/RoutePlannerView.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RoutePlannerView.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RoutePlannerView.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RoutePlannerView.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RoutePlannerView.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RoutePlannerView.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RoutePlannerView.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RoutePlannerView.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/RoutePlannerView~partial.swiftmodule"
+  },
+  "/Users/fallofpheonix/ios_swift/UDIE/UDIE/Services/EventRepository.swift" : {
+    "const-values" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventRepository.swiftconstvalues",
+    "dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventRepository.d",
+    "diagnostics" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventRepository.dia",
+    "index-unit-output-path" : "/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventRepository.o",
+    "llvm-bc" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventRepository.bc",
+    "object" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventRepository.o",
+    "swift-dependencies" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventRepository.swiftdeps",
+    "swiftmodule" : "/Users/fallofpheonix/ios_swift/UDIE/.derived/Build/Intermediates.noindex/UDIE.build/Debug-iphoneos/UDIE.build/Objects-normal/arm64/EventRepository~partial.swiftmodule"
+  }
+}
