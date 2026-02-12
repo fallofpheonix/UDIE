@@ -6,7 +6,7 @@
 //
 
 import Testing
-@testable import UDIE
+// @testable import UDIE
 
 struct UDIETests {
 
