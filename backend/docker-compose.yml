@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: udie-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: udie
+      POSTGRES_PASSWORD: udie
+      POSTGRES_DB: udie
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:7-alpine
+    container_name: udie-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: udie-backend
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://udie:udie@postgres:5432/udie
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:

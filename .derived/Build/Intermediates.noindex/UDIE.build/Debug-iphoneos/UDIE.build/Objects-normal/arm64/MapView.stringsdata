@@ -4,6 +4,14 @@
     "Localizable": [
       {
         "comment": "",
+        "key": "Data Source Notice",
+        "location": {
+          "startingColumn": 13,
+          "startingLine": 216
+        }
+      },
+      {
+        "comment": "",
         "key": "No disruptions in this area",
         "location": {
           "startingColumn": 26,
@@ -16,6 +24,14 @@
         "location": {
           "startingColumn": 26,
           "startingLine": 92
+        }
+      },
+      {
+        "comment": "",
+        "key": "OK",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 224
         }
       }
     ]

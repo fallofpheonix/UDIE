@@ -190,7 +190,13 @@ struct MapView: View {
                 routeRisk = nil
                 return
             }
-            routeRisk = viewModel.calculateRisk(for: newRoute)
+            Task {
+                do {
+                    routeRisk = try await viewModel.fetchRisk(for: newRoute)
+                } catch {
+                    routeRisk = nil
+                }
+            }
         }
 
         .onChange(of: region) { newRegion in
@@ -205,6 +211,21 @@ struct MapView: View {
         .sheet(isPresented: $showFilters) {
             FilterView()
                 .environmentObject(appState)
+        }
+        .alert(
+            "Data Source Notice",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { show in
+                    if !show { viewModel.errorMessage = nil }
+                }
+            )
+        ) {
+            Button("OK", role: .cancel) {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
         }
 
     }

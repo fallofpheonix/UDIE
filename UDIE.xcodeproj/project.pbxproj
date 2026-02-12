@@ -49,7 +49,6 @@
 				"Core/Extensions/Double+RiskFormatting.swift",
 				"Core/Extensions/MapKit+Extensions.swift",
 				"Core/Extensions/MKCoordinateRegion+BoundingBox.swift",
-				"Core/Extensions/MKPolyline+Coordinates.swift",
 				"Core/Extensions/String+URLEncoding.swift",
 				"Core/Extensions/View+BottomSheet.swift",
 			);
@@ -448,6 +447,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "UDIE uses your location to show nearby disruption events and safer routes.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -488,6 +488,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "UDIE uses your location to show nearby disruption events and safer routes.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

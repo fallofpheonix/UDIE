@@ -8,12 +8,12 @@
 import Foundation
 import Combine
 import MapKit
-import CoreLocation
 
 @MainActor
 final class MapViewModel: ObservableObject {
 
     @Published var events: [GeoEvent] = []
+    @Published var errorMessage: String?
 
     private let repository = EventRepository()
     @Published var isLoading: Bool = false
@@ -22,11 +22,18 @@ final class MapViewModel: ObservableObject {
     private var lastBoundingBox: BoundingBox?
 
     func loadEvents(for region: MKCoordinateRegion) {
+        let newBoundingBox = boundingBox(for: region)
+        if let oldBoundingBox = lastBoundingBox,
+           !isSignificantChange(from: oldBoundingBox, to: newBoundingBox) {
+            return
+        }
+
+        lastBoundingBox = newBoundingBox
+        errorMessage = nil
 
         fetchTask?.cancel()
 
         fetchTask = Task {
-
             isLoading = true
 
             try? await Task.sleep(nanoseconds: 600_000_000)
@@ -36,49 +43,48 @@ final class MapViewModel: ObservableObject {
                 return
             }
 
-            let generated = MockEventGenerator.generate(in: region)
-
-            self.events = generated
-
-            isLoading = false
-        }
-    }
-    func calculateRisk(for route: MKRoute) -> RouteRisk {
-
-        var totalRisk: Double = 0
-        let coordinates = polylineCoordinates(for: route.polyline)
-
-        for event in events {
-            for point in coordinates {
-                let distance = CLLocation(
-                    latitude: event.coordinate.latitude,
-                    longitude: event.coordinate.longitude
-                ).distance(from: CLLocation(
-                    latitude: point.latitude,
-                    longitude: point.longitude
-                ))
-                if distance < 300 {
-                    totalRisk += Double(event.severity) * event.confidence
-                    break
+            do {
+                let fetchedEvents = try await repository.getEvents(
+                    minLat: newBoundingBox.minLat,
+                    maxLat: newBoundingBox.maxLat,
+                    minLng: newBoundingBox.minLng,
+                    maxLng: newBoundingBox.maxLng
+                )
+                if Task.isCancelled {
+                    isLoading = false
+                    return
                 }
+                events = fetchedEvents
+                isLoading = false
+            } catch {
+                if Task.isCancelled {
+                    isLoading = false
+                    return
+                }
+                errorMessage = "Unable to fetch events from backend."
+                isLoading = false
             }
         }
+    }
 
-        let normalized = min(totalRisk / 10.0, 1.0)
+    func fetchRisk(for route: MKRoute) async throws -> RouteRisk {
+        let response = try await APIClient.shared.fetchRouteRisk(
+            coordinates: route.polyline.coordinates,
+            city: "BLR"
+        )
 
         let level: RiskLevel
-
-        switch normalized {
-        case 0..<0.33:
-            level = .low
-        case 0.33..<0.66:
+        switch response.level.uppercased() {
+        case "HIGH":
+            level = .high
+        case "MEDIUM":
             level = .medium
         default:
-            level = .high
+            level = .low
         }
 
         return RouteRisk(
-            score: normalized,
+            score: response.score,
             level: level,
             distanceKM: route.distance / 1000,
             durationMinutes: route.expectedTravelTime / 60
@@ -108,9 +114,11 @@ final class MapViewModel: ObservableObject {
                zoomShift > threshold
     }
 
-    private func polylineCoordinates(for polyline: MKPolyline) -> [CLLocationCoordinate2D] {
-        var coords = Array(repeating: kCLLocationCoordinate2DInvalid, count: polyline.pointCount)
-        polyline.getCoordinates(&coords, range: NSRange(location: 0, length: polyline.pointCount))
-        return coords
+    private func boundingBox(for region: MKCoordinateRegion) -> BoundingBox {
+        let minLat = region.center.latitude - region.span.latitudeDelta / 2
+        let maxLat = region.center.latitude + region.span.latitudeDelta / 2
+        let minLng = region.center.longitude - region.span.longitudeDelta / 2
+        let maxLng = region.center.longitude + region.span.longitudeDelta / 2
+        return BoundingBox(minLat: minLat, maxLat: maxLat, minLng: minLng, maxLng: maxLng)
     }
 }
