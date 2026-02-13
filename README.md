@@ -1,139 +1,167 @@
 # UDIE — Urban Disruption Intelligence Engine
 
-UDIE is a geospatial risk platform with an iOS client and a backend powered by NestJS + PostgreSQL/PostGIS.
+UDIE is a full-stack geospatial intelligence project focused on disruption-aware routing for urban environments.
+It combines an iOS client with a backend API and a PostGIS database to map disruption events and compute route risk server-side.
 
-The system visualizes disruption events on a map and computes route risk server-side using spatial distance decay.
+This repository is kept open source for learning, review, and extension.
 
-## What This Repository Contains
+## Project Report
 
-- `UDIE/`: iOS app (SwiftUI + MapKit)
-- `backend/`: NestJS API + PostGIS migrations + Docker setup
-- `UDIE.xcodeproj`: Xcode project for iOS app
+### 1. Problem Statement
+Traditional map navigation focuses on speed/ETA but does not explicitly model infrastructure disruptions (accidents, road blocks, construction, etc.) as a structured risk layer.
 
-## Architecture
+UDIE addresses this by:
+- collecting and serving geospatial events,
+- querying events by map region,
+- computing route risk from spatial proximity and event severity/confidence,
+- exposing that intelligence to a mobile UI.
 
-- **Frontend (iOS)**
-  - Renders map, filters, routes, and risk card
-  - Fetches events from backend (`/api/events`)
-  - Fetches route risk from backend (`/api/risk`)
-- **Backend (NestJS)**
-  - Serves region-based event queries
-  - Computes route risk with PostGIS
-  - Stores events in PostgreSQL with `GEOGRAPHY(POINT, 4326)`
-- **Database (PostgreSQL + PostGIS)**
-  - Spatial indexing (GiST)
-  - Migration-driven schema
+### 2. Solution Summary
+UDIE follows a backend-authoritative architecture:
+- iOS sends route geometry and map region bounds,
+- backend performs spatial computation using PostGIS,
+- iOS renders results (events, route, risk card).
 
-## Key Features
+This prevents logic duplication and keeps scoring consistent.
 
-- Bounding-box event query API
-- Server-side route-risk scoring (`LOW` / `MEDIUM` / `HIGH`)
-- PostGIS distance-decay weighting:
-  - `severity * confidence * exp(-distance/200)`
-- Dockerized local stack (backend + postgres/postgis + redis)
+### 3. Architecture
 
-## Quick Start
-
-### Prerequisites
-
-- macOS (Apple Silicon or Intel)
-- Xcode (for iOS)
-- Docker Desktop
-- `curl`
-
-### 1) Start Backend Stack
-
-```bash
-cd /Users/fallofpheonix/ios_swift/UDIE/backend
-cp .env.example .env
-docker compose up --build
+```mermaid
+flowchart LR
+  A[iOS SwiftUI + MapKit] -->|GET /api/events| B[NestJS API]
+  A -->|POST /api/risk| B
+  B --> C[(PostgreSQL + PostGIS)]
+  B --> D[(Redis)]
 ```
 
-### 2) Verify Backend Health
+#### Frontend
+- SwiftUI views for map, filters, route planner, risk display
+- `MapViewModel` for state orchestration
+- `APIClient` for backend communication
+- `MKMapView` wrapper for clustering + overlays
 
+#### Backend
+- NestJS modular API (`events`, `risk`, `health`, ingestion scaffold)
+- DTO validation for query/body safety
+- SQL/PostGIS powered risk function
+
+#### Data Layer
+- PostgreSQL with PostGIS extensions
+- Spatial indexing for performant geographic queries
+
+### 4. Technologies Used
+
+#### Languages
+- Swift
+- TypeScript
+- SQL / PLpgSQL
+- YAML
+- Shell
+
+#### Frameworks and Libraries
+- SwiftUI
+- MapKit
+- Combine
+- UIKit (haptics/interoperability)
+- NestJS
+- class-validator
+
+#### Databases and Infra
+- PostgreSQL
+- PostGIS
+- Redis
+- Docker / Docker Compose
+
+#### Tooling
+- Xcode
+- Git / GitHub
+- curl
+
+### 5. What Is Implemented
+
+#### Completed
+- iOS map rendering and event clustering
+- Route planning and route overlay rendering
+- Server-side risk API integration in iOS
+- Region-based event fetch from backend
+- Risk card with severity levels
+- Basic UX hardening (retry action, clear route action, loading/empty states)
+- Dockerized backend stack
+- Health endpoint and validation path
+
+#### In Progress / Scaffolded
+- Multi-source ingestion pipeline
+- deeper production hardening (auth, rate limiting, observability)
+
+### 6. Risk Model (Current)
+Route risk is computed server-side from nearby events:
+
+- filter events near route geometry,
+- weight each event by `severity * confidence`,
+- apply distance decay,
+- normalize to score and map to `LOW | MEDIUM | HIGH`.
+
+### 7. Open Source Setup
+
+## Prerequisites
+- macOS + Xcode
+- Docker Desktop
+- Git
+
+## Clone
+```bash
+git clone git@github.com:fallofpheonix/UDIE.git
+cd UDIE
+```
+
+## Backend Run
+```bash
+cd backend
+cp .env.example .env
+docker compose up -d --build
+```
+
+## Backend Health
 ```bash
 curl http://localhost:3000/api/health
 ```
-
 Expected:
-
 ```json
 {"status":"ok","db":"up"}
 ```
 
-### 3) (Optional) Seed Test Events
+## iOS Run
+- Open `/Users/fallofpheonix/ios_swift/UDIE/UDIE.xcodeproj`
+- Run `UDIE` target on simulator or device
 
-```bash
-docker compose exec postgres psql -U udie -d udie -c "
-INSERT INTO geo_events (
-  city_code, event_type, severity, confidence, source, start_time, geom
-) VALUES
-  ('BLR', 'ACCIDENT', 5, 0.9, 'ADMIN', now(), ST_SetSRID(ST_MakePoint(77.5948, 12.9718), 4326)::geography),
-  ('BLR', 'CONSTRUCTION', 3, 0.7, 'ADMIN', now(), ST_SetSRID(ST_MakePoint(77.5950, 12.9720), 4326)::geography),
-  ('BLR', 'HEAVY_TRAFFIC', 4, 0.8, 'ADMIN', now(), ST_SetSRID(ST_MakePoint(77.5945, 12.9715), 4326)::geography);
-"
-```
+For physical iPhone, set base URL to your Mac LAN IP:
+- key: `UDIE_API_BASE_URL`
+- value: `http://<your-mac-ip>:3000`
 
-### 4) Test Risk Endpoint
+### 8. API Contracts
 
-```bash
-curl -X POST http://localhost:3000/api/risk \
-  -H "Content-Type: application/json" \
-  -d '{"city":"BLR","coordinates":[{"lat":12.9716,"lng":77.5946},{"lat":12.9721,"lng":77.5951}]}'
-```
+#### `GET /api/health`
+Service + DB status.
 
-Expected shape:
-
-```json
-{"score":0.123,"level":"LOW","eventCount":2}
-```
-
-### 5) Open iOS App
-
-- Open `/Users/fallofpheonix/ios_swift/UDIE/UDIE.xcodeproj` in Xcode
-- Build and run `UDIE` scheme
-
-If running on a physical device, ensure backend base URL points to your Mac LAN IP (not `127.0.0.1`).
-
-## API Contracts
-
-### `GET /api/health`
-
-Health check for API and DB connectivity.
-
-### `GET /api/events`
-
+#### `GET /api/events`
 Query params:
+- `minLat`, `maxLat`, `minLng`, `maxLng` (required)
+- `city` (recommended)
+- optional filters: type/severity
 
-- `minLat` (number, required)
-- `maxLat` (number, required)
-- `minLng` (number, required)
-- `maxLng` (number, required)
-- `eventTypes` (csv string, optional)
-- `minSeverity` (number 1-5, optional)
-
-Example:
-
-```bash
-curl "http://localhost:3000/api/events?minLat=12.96&maxLat=12.99&minLng=77.58&maxLng=77.61"
-```
-
-### `POST /api/risk` (alias also available: `/api/route-risk`)
-
+#### `POST /api/risk`
 Request:
-
 ```json
 {
-  "city": "BLR",
+  "city": "DEL",
   "coordinates": [
-    {"lat": 12.9716, "lng": 77.5946},
-    {"lat": 12.9750, "lng": 77.6000}
+    {"lat": 28.6139, "lng": 77.2090},
+    {"lat": 28.6150, "lng": 77.2110}
   ]
 }
 ```
 
 Response:
-
 ```json
 {
   "score": 0.48,
@@ -142,57 +170,49 @@ Response:
 }
 ```
 
-## Migrations
+### 9. Demo Checklist
+Before demo:
+1. Start Docker backend.
+2. Verify health endpoint.
+3. Verify events endpoint returns rows for current city.
+4. Run iOS app.
+5. Use route preset and show risk update.
 
-Located in `backend/migrations/`:
+### 10. Troubleshooting
 
-- `001_init.sql`: extensions, enums, core tables
-- `002_indexes_and_views.sql`: indexes + active events view
-- `006_real_route_risk.sql`: PostGIS risk function
+#### Backend timeout on iPhone
+- ensure Mac + iPhone are on same network,
+- verify iPhone Safari can open `http://<mac-ip>:3000/api/health`,
+- update `UDIE_API_BASE_URL` accordingly.
 
-Apply latest migration manually if needed:
+#### Docker daemon error
+Start Docker Desktop and wait for engine running.
 
+#### Git push SSH error
 ```bash
-docker compose exec postgres psql -U udie -d udie -f /docker-entrypoint-initdb.d/006_real_route_risk.sql
+eval "$(ssh-agent -s)"
+ssh-add --apple-use-keychain ~/.ssh/id_ed25519
+ssh -T git@github.com
+git push origin main
 ```
 
-## Troubleshooting
+### 11. Known Limitations
+- Ingestion pipeline is scaffolded, not fully automated.
+- Production auth/rate limiting not finalized.
+- Model is heuristic, not predictive ML.
 
-### `Cannot POST /api/risk`
+### 12. Roadmap
+- ingestion automation and deduplication
+- time-decay and historical trend modeling
+- observability (metrics, logs, tracing)
+- secure production configuration
 
-Backend image is stale. Rebuild:
+### 13. Contribution
+PRs/issues are welcome for:
+- data ingestion connectors,
+- risk algorithm improvements,
+- UX/accessibility improvements,
+- testing and reliability hardening.
 
-```bash
-cd /Users/fallofpheonix/ios_swift/UDIE/backend
-docker compose build --no-cache backend
-docker compose up -d
-```
-
-### `/api/events` returns validation errors for numeric params
-
-Ensure backend is rebuilt with latest DTO parsing changes.
-
-### Docker warning: `version is obsolete`
-
-Safe warning from Compose v2. It does not block execution.
-
-### GitHub SSH message: `successfully authenticated, but GitHub does not provide shell access`
-
-This is expected. SSH auth is working for git operations.
-
-## Security Notes
-
-- Do not commit real secrets.
-- Keep `.env` local; commit only `.env.example`.
-- Validate that private keys and tokens are not tracked before pushing.
-
-## Current Project Status
-
-- Infrastructure: running
-- Risk engine: server-side and active
-- iOS integration: backend-driven risk wired
-- Ingestion pipeline: scaffolded, not fully implemented yet
-
-## License
-
-Add your preferred license file (`MIT`, `Apache-2.0`, etc.) before public release.
+### 14. License
+This project is open source. Add a `LICENSE` file (`MIT` recommended) for explicit reuse terms.
