@@ -20,11 +20,26 @@ enum RiskLevel {
     case medium
     case high
 
-    var color: Color {
+    var color: LinearGradient {
         switch self {
-        case .low: return .green
-        case .medium: return .orange
-        case .high: return .red
+        case .low:
+            return LinearGradient(
+                colors: [.green.opacity(0.8), .green],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .medium:
+            return LinearGradient(
+                colors: [.orange.opacity(0.8), .orange],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .high:
+            return LinearGradient(
+                colors: [.red.opacity(0.8), .red],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         }
     }
 

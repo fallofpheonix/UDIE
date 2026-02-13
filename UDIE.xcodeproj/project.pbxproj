@@ -51,6 +51,7 @@
 				"Core/Extensions/MKCoordinateRegion+BoundingBox.swift",
 				"Core/Extensions/String+URLEncoding.swift",
 				"Core/Extensions/View+BottomSheet.swift",
+				Info.plist,
 			);
 			target = 39C4DBF02F3DA80E00287629 /* UDIE */;
 		};
@@ -446,6 +447,7 @@
 				DEVELOPMENT_TEAM = 9HRB674593;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UDIE/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "UDIE uses your location to show nearby disruption events and safer routes.";
@@ -489,6 +491,7 @@
 				DEVELOPMENT_TEAM = 9HRB674593;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UDIE/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "UDIE uses your location to show nearby disruption events and safer routes.";

@@ -8,13 +8,15 @@
 
 import SwiftUI
 import MapKit
+import UIKit
 
 extension MKCoordinateRegion: Equatable {
     public static func == (lhs: MKCoordinateRegion, rhs: MKCoordinateRegion) -> Bool {
-        lhs.center.latitude == rhs.center.latitude &&
-        lhs.center.longitude == rhs.center.longitude &&
-        lhs.span.latitudeDelta == rhs.span.latitudeDelta &&
-        lhs.span.longitudeDelta == rhs.span.longitudeDelta
+        let tolerance = 0.00001
+        return abs(lhs.center.latitude - rhs.center.latitude) < tolerance &&
+        abs(lhs.center.longitude - rhs.center.longitude) < tolerance &&
+        abs(lhs.span.latitudeDelta - rhs.span.latitudeDelta) < tolerance &&
+        abs(lhs.span.longitudeDelta - rhs.span.longitudeDelta) < tolerance
     }
 }
 
@@ -62,6 +64,14 @@ struct MapView: View {
             .map { $0 }
     }
 
+    var lastUpdatedText: String {
+        guard let date = viewModel.lastUpdated else { return "Not synced yet" }
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.dateStyle = .none
+        return formatter.string(from: date)
+    }
+
     var body: some View {
 
         ZStack {
@@ -77,7 +87,16 @@ struct MapView: View {
                     activeSheet = .eventDetail(event)
                 }
             )
-
+            .ignoresSafeArea()
+            .opacity(viewModel.isLoading ? 0.6 : 1.0)
+            .animation(.easeInOut, value: viewModel.isLoading)
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: activeSheet == nil ? 0 : 24,
+                    style: .continuous
+                )
+            )
+            .padding(activeSheet == nil ? 0 : 10)
             .ignoresSafeArea()
             if viewModel.isLoading {
 
@@ -93,21 +112,23 @@ struct MapView: View {
             if isEmptyState {
 
                 VStack(spacing: 12) {
+                    VStack(spacing: 16) {
+                        Image(systemName: "waveform.path.ecg")
+                            .font(.system(size: 48))
+                            .foregroundStyle(.secondary)
 
-                    Image(systemName: "exclamationmark.circle")
-                        .font(.largeTitle)
-                        .foregroundColor(.secondary)
+                        Text("No disruptions in this area")
+                            .font(.headline)
 
-                    Text("No disruptions in this area")
-                        .font(.headline)
-
-                    Text("Try zooming out or adjusting filters")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        Text("Try zooming out or adjusting filters")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(24)
+                    .background(.thinMaterial)
+                    .cornerRadius(20)
+                    .shadow(radius: 10)
                 }
-                .padding()
-                .background(.ultraThinMaterial)
-                .cornerRadius(16)
                 .transition(.scale(scale: 0.95).combined(with: .opacity))
             }
 
@@ -115,44 +136,65 @@ struct MapView: View {
 
             VStack {
                 HStack {
-                    if disruptionSummary.isEmpty {
-                        Text("No active disruptions in this view")
-                            .font(.caption)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(10)
-                            .shadow(radius: 3)
-                            .transition(.opacity)
-                    } else {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                            ForEach(disruptionSummary, id: \.type) { item in
-                                HStack(spacing: 6) {
-                                    Circle()
-                                        .fill(item.type.displayColor)
-                                        .frame(width: 8, height: 8)
-                                    Text("\(item.type.displayName): \(item.count)")
-                                        .font(.caption2)
-                                        .fontWeight(.semibold)
-                                }
-                                .padding(.horizontal, 8)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Image(systemName: viewModel.errorMessage == nil ? "dot.radiowaves.left.and.right" : "exclamationmark.triangle.fill")
+                                .foregroundStyle(viewModel.errorMessage == nil ? .green : .red)
+                            Text(viewModel.errorMessage == nil ? "Backend connected" : "Backend warning")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                            Text("• \(filteredEvents.count) events")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Text("• Updated \(lastUpdatedText)")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(10)
+                        .shadow(radius: 3)
+
+                        if disruptionSummary.isEmpty {
+                            Text("No active disruptions in this view")
+                                .font(.caption2)
+                                .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
                                 .background(.ultraThinMaterial)
-                                .clipShape(Capsule())
-                                .transition(.move(edge: .top).combined(with: .opacity))
+                                .cornerRadius(10)
+                                .transition(.opacity)
+                        } else {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(disruptionSummary, id: \.type) { item in
+                                        HStack(spacing: 6) {
+                                            Circle()
+                                                .fill(item.type.displayColor)
+                                                .frame(width: 8, height: 8)
+                                            Text("\(item.type.displayName): \(item.count)")
+                                                .font(.caption2)
+                                                .fontWeight(.semibold)
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 6)
+                                        .background(.ultraThinMaterial)
+                                        .clipShape(Capsule())
+                                        .transition(.move(edge: .top).combined(with: .opacity))
+                                    }
+                                    .padding(.trailing, 6)
+                                }
                             }
-                            .padding(.trailing, 6)
+                            .transition(.opacity)
+                            .animation(
+                                .spring(response: 0.35, dampingFraction: 0.85),
+                                value: disruptionSummary.map { $0.count }
+                            )
+                            .animation(
+                                .spring(response: 0.35, dampingFraction: 0.85),
+                                value: disruptionSummary.map { $0.type.rawValue }
+                            )
                         }
-                        .transition(.opacity)
-                        .animation(
-                            .spring(response: 0.35, dampingFraction: 0.85),
-                            value: disruptionSummary.map { $0.count }
-                        )
-                        .animation(
-                            .spring(response: 0.35, dampingFraction: 0.85),
-                            value: disruptionSummary.map { $0.type.rawValue }
-                        )
                     }
                     Spacer()
                 }
@@ -176,10 +218,25 @@ struct MapView: View {
                         } else if let risk = viewModel.routeRisk {
 
                             VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text(risk.level.title)
+                                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                                        .foregroundColor(.white)
 
-                                Text(risk.level.title)
-                                    .font(.headline)
-                                    .foregroundColor(.white)
+                                    Spacer()
+
+                                    Button {
+                                        withAnimation(.easeInOut(duration: 0.25)) {
+                                            selectedRoute = nil
+                                            routes = []
+                                        }
+                                        viewModel.clearRisk()
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.white.opacity(0.9))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
 
                                 ProgressView(value: risk.score)
                                     .tint(.white)
@@ -204,7 +261,8 @@ struct MapView: View {
                             Image(systemName: "line.3.horizontal.decrease.circle")
                                 .padding()
                                 .background(.ultraThinMaterial)
-                                .clipShape(Circle())
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .shadow(radius: 8)
                         }
                         .buttonStyle(BouncyCircleButtonStyle())
 
@@ -214,7 +272,8 @@ struct MapView: View {
                             Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
                                 .padding()
                                 .background(.ultraThinMaterial)
-                                .clipShape(Circle())
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .shadow(radius: 8)
                         }
                         .buttonStyle(BouncyCircleButtonStyle())
 
@@ -222,12 +281,13 @@ struct MapView: View {
                             withAnimation(.easeInOut(duration: 0.25)) {
                                 refreshIconRotation += 360
                             }
-                            viewModel.loadEvents(for: region)
+                            viewModel.loadEvents(for: region, force: true)
                         } label: {
                             Image(systemName: "arrow.clockwise")
                                 .padding()
                                 .background(.ultraThinMaterial)
-                                .clipShape(Circle())
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .shadow(radius: 8)
                                 .rotationEffect(.degrees(refreshIconRotation))
                         }
                         .buttonStyle(BouncyCircleButtonStyle())
@@ -268,15 +328,16 @@ struct MapView: View {
             }
         }
  
-        .onChange(of: selectedRoute) { newRoute in
+        .onChange(of: selectedRoute) { _, newRoute in
             guard let newRoute else {
                 viewModel.clearRisk()
                 return
             }
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             viewModel.fetchRisk(for: newRoute)
         }
 
-        .onChange(of: region) { newRegion in
+        .onChange(of: region) { _, newRegion in
             viewModel.loadEvents(for: newRegion)
         }
 
@@ -298,6 +359,10 @@ struct MapView: View {
                 }
             )
         ) {
+            Button("Retry") {
+                viewModel.errorMessage = nil
+                viewModel.loadEvents(for: region, force: true)
+            }
             Button("OK", role: .cancel) {
                 viewModel.errorMessage = nil
             }
@@ -311,6 +376,7 @@ struct MapView: View {
         .animation(.spring(response: 0.35, dampingFraction: 0.82), value: viewModel.isRiskLoading)
         .animation(.spring(response: 0.35, dampingFraction: 0.82), value: viewModel.routeRisk?.score ?? -1)
         .animation(.easeInOut(duration: 0.2), value: isEmptyState)
+        .tint(.blue)
 
     }
 }
@@ -318,8 +384,7 @@ struct MapView: View {
 private struct BouncyCircleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.93 : 1.0)
-            .opacity(configuration.isPressed ? 0.85 : 1.0)
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }

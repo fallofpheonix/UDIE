@@ -27,6 +27,19 @@ struct RoutePlannerView: View {
         case destination
     }
 
+    private struct DemoRoutePreset: Identifiable {
+        let id = UUID()
+        let title: String
+        let origin: String
+        let destination: String
+    }
+
+    private let demoPresets: [DemoRoutePreset] = [
+        .init(title: "CP -> India Gate", origin: "Connaught Place, New Delhi", destination: "India Gate, New Delhi"),
+        .init(title: "Rajiv Chowk -> Khan Market", origin: "Rajiv Chowk Metro Station, New Delhi", destination: "Khan Market, New Delhi"),
+        .init(title: "NDLS -> AIIMS", origin: "New Delhi Railway Station", destination: "AIIMS Delhi")
+    ]
+
     var body: some View {
 
         ScrollView {
@@ -49,6 +62,22 @@ struct RoutePlannerView: View {
                         calculateRoute()
                     }
 
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(demoPresets) { preset in
+                            Button(preset.title) {
+                                originText = preset.origin
+                                destinationText = preset.destination
+                                statusMessage = "Preset loaded. Tap Calculate Route."
+                                isErrorStatus = false
+                                focusedField = nil
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
+                    }
+                }
+
                 Button {
                     calculateRoute()
                 } label: {
@@ -59,6 +88,7 @@ struct RoutePlannerView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(isLoading)
 
                 if let statusMessage {
                     Text(statusMessage)
@@ -102,21 +132,29 @@ struct RoutePlannerView: View {
 
         let geocoder = CLGeocoder()
 
-        geocoder.geocodeAddressString(originText) { originPlacemarks, _ in
+        geocoder.geocodeAddressString(originText) { originPlacemarks, error in
             guard let origin = originPlacemarks?.first?.location else {
                 DispatchQueue.main.async {
                     isLoading = false
-                    statusMessage = "Could not find origin. Try a fuller address."
+                    if let error {
+                        statusMessage = "Origin lookup failed: \(error.localizedDescription)"
+                    } else {
+                        statusMessage = "Could not find origin. Try a fuller address."
+                    }
                     isErrorStatus = true
                 }
                 return
             }
 
-            geocoder.geocodeAddressString(destinationText) { destPlacemarks, _ in
+            geocoder.geocodeAddressString(destinationText) { destPlacemarks, error in
                 guard let destination = destPlacemarks?.first?.location else {
                     DispatchQueue.main.async {
                         isLoading = false
-                        statusMessage = "Could not find destination. Try a fuller address."
+                        if let error {
+                            statusMessage = "Destination lookup failed: \(error.localizedDescription)"
+                        } else {
+                            statusMessage = "Could not find destination. Try a fuller address."
+                        }
                         isErrorStatus = true
                     }
                     return
@@ -129,7 +167,7 @@ struct RoutePlannerView: View {
 
                 let directions = MKDirections(request: request)
 
-                directions.calculate { response, _ in
+                directions.calculate { response, error in
                     DispatchQueue.main.async {
 
                         isLoading = false
@@ -144,7 +182,11 @@ struct RoutePlannerView: View {
                             isErrorStatus = false
                             onRouteReady?()
                         } else {
-                            statusMessage = "No drivable route found."
+                            if let error {
+                                statusMessage = "Route calculation failed: \(error.localizedDescription)"
+                            } else {
+                                statusMessage = "No drivable route found."
+                            }
                             isErrorStatus = true
                         }
 

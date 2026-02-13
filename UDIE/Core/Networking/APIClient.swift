@@ -28,12 +28,7 @@ final class APIClient {
 
     private init() {}
 
-    #if targetEnvironment(simulator)
     private static let fallbackBaseURLString = "http://127.0.0.1:3000"
-    #else
-    // Demo-safe default for physical device on same LAN as backend host.
-    private static let fallbackBaseURLString = "http://172.25.214.59:3000"
-    #endif
 
     private let baseURL: URL = {
         if let configured = ProcessInfo.processInfo.environment["UDIE_API_BASE_URL"],

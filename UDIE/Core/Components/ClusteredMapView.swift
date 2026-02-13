@@ -43,20 +43,31 @@ struct ClusteredMapView: UIViewRepresentable {
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
 
-        if mapView.region.center.latitude != region.center.latitude ||
-           mapView.region.center.longitude != region.center.longitude {
+        let latDelta = abs(mapView.region.center.latitude - region.center.latitude)
+        let lngDelta = abs(mapView.region.center.longitude - region.center.longitude)
+        if latDelta > 0.0001 || lngDelta > 0.0001 {
             mapView.setRegion(region, animated: true)
         }
 
-        mapView.removeAnnotations(mapView.annotations)
-        mapView.removeOverlays(mapView.overlays)
+        let eventIDs = Set(events.map(\.id))
+        let routeOverlays = routes.map(\.polyline)
 
-        let annotations = events.map { event -> EventAnnotation in
-            EventAnnotation(event: event)
+        if context.coordinator.lastEventIDs != eventIDs {
+            mapView.removeAnnotations(mapView.annotations)
+
+            let annotations = events.map { event -> EventAnnotation in
+                EventAnnotation(event: event)
+            }
+            mapView.addAnnotations(annotations)
+            context.coordinator.lastEventIDs = eventIDs
         }
 
-        mapView.addAnnotations(annotations)
-        mapView.addOverlays(routes.map(\.polyline))
+        let currentRoutes = Set(mapView.overlays.compactMap { $0 as? MKPolyline }.map(ObjectIdentifier.init))
+        let nextRoutes = Set(routeOverlays.map(ObjectIdentifier.init))
+        if currentRoutes != nextRoutes {
+            mapView.removeOverlays(mapView.overlays)
+            mapView.addOverlays(routeOverlays)
+        }
     }
 
     class Coordinator: NSObject, MKMapViewDelegate {
@@ -66,6 +77,8 @@ struct ClusteredMapView: UIViewRepresentable {
         init(_ parent: ClusteredMapView) {
             self.parent = parent
         }
+
+        var lastEventIDs: Set<UUID> = []
 
         func mapView(_ mapView: MKMapView,
                      regionDidChangeAnimated animated: Bool) {
@@ -99,9 +112,20 @@ struct ClusteredMapView: UIViewRepresentable {
             )
 
             view.clusteringIdentifier = "eventCluster"
-            // TODO: Map EventType to a display color when available (e.g., via a computed property or extension)
-            view.markerTintColor = .systemBlue
+            view.markerTintColor = UIColor(eventAnnotation.event.eventType.displayColor)
             view.canShowCallout = false
+            view.layer.removeAnimation(forKey: "severityPulse")
+
+            if eventAnnotation.event.severity >= 4 {
+                let pulse = CABasicAnimation(keyPath: "transform.scale")
+                pulse.fromValue = 1.0
+                pulse.toValue = 1.12
+                pulse.duration = 0.8
+                pulse.autoreverses = true
+                pulse.repeatCount = .infinity
+                pulse.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                view.layer.add(pulse, forKey: "severityPulse")
+            }
 
             return view
         }
@@ -111,13 +135,16 @@ struct ClusteredMapView: UIViewRepresentable {
                 return MKOverlayRenderer(overlay: overlay)
             }
 
-            let renderer = MKPolylineRenderer(polyline: polyline)
+            let renderer = ShadowPolylineRenderer(polyline: polyline)
 
             let isSelectedRoute = parent.selectedRoute?.polyline === polyline
             renderer.strokeColor = isSelectedRoute
                 ? UIColor.systemBlue
                 : UIColor.systemBlue.withAlphaComponent(0.35)
             renderer.lineWidth = isSelectedRoute ? 6 : 4
+            renderer.shadowColor = .black
+            renderer.shadowOffset = CGSize(width: 0, height: 2)
+            renderer.shadowOpacity = 0.3
 
             return renderer
         }
@@ -142,5 +169,22 @@ final class EventAnnotation: NSObject, MKAnnotation {
 
     init(event: GeoEvent) {
         self.event = event
+    }
+}
+
+final class ShadowPolylineRenderer: MKPolylineRenderer {
+    var shadowColor: UIColor = .clear
+    var shadowOffset: CGSize = .zero
+    var shadowOpacity: CGFloat = 0
+
+    override func draw(_ mapRect: MKMapRect, zoomScale: MKZoomScale, in context: CGContext) {
+        context.saveGState()
+        context.setShadow(
+            offset: shadowOffset,
+            blur: 4,
+            color: shadowColor.withAlphaComponent(shadowOpacity).cgColor
+        )
+        super.draw(mapRect, zoomScale: zoomScale, in: context)
+        context.restoreGState()
     }
 }

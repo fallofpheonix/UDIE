@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import MapKit
+import SwiftUI
 
 @MainActor
 final class MapViewModel: ObservableObject {
@@ -16,6 +17,7 @@ final class MapViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var routeRisk: RouteRisk?
     @Published var isRiskLoading: Bool = false
+    @Published var lastUpdated: Date?
 
     private let repository = EventRepository()
     private let cityCode = "DEL"
@@ -26,9 +28,10 @@ final class MapViewModel: ObservableObject {
     private var currentRiskRequestID: UUID?
     private var lastBoundingBox: BoundingBox?
 
-    func loadEvents(for region: MKCoordinateRegion) {
+    func loadEvents(for region: MKCoordinateRegion, force: Bool = false) {
         let newBoundingBox = boundingBox(for: region)
-        if let oldBoundingBox = lastBoundingBox,
+        if !force,
+           let oldBoundingBox = lastBoundingBox,
            !isSignificantChange(from: oldBoundingBox, to: newBoundingBox) {
             return
         }
@@ -40,17 +43,6 @@ final class MapViewModel: ObservableObject {
 
         fetchTask = Task {
             isLoading = true
-            do {
-                try await APIClient.shared.healthCheck()
-            } catch {
-                if Task.isCancelled {
-                    isLoading = false
-                    return
-                }
-                errorMessage = "Data source error: \(error.localizedDescription)"
-                isLoading = false
-                return
-            }
 
             try? await Task.sleep(nanoseconds: 600_000_000)
 
@@ -72,6 +64,7 @@ final class MapViewModel: ObservableObject {
                     return
                 }
                 events = fetchedEvents
+                lastUpdated = Date()
                 isLoading = false
             } catch {
                 if Task.isCancelled {
@@ -89,7 +82,9 @@ final class MapViewModel: ObservableObject {
 
     func fetchRisk(for route: MKRoute) {
         riskTask?.cancel()
-        routeRisk = nil
+        withAnimation(.easeInOut(duration: 0.3)) {
+            routeRisk = nil
+        }
         isRiskLoading = true
 
         let requestID = UUID()
@@ -115,19 +110,23 @@ final class MapViewModel: ObservableObject {
                     level = .low
                 }
 
-                routeRisk = RouteRisk(
-                    score: response.score,
-                    level: level,
-                    distanceKM: route.distance / 1000,
-                    durationMinutes: route.expectedTravelTime / 60
-                )
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    routeRisk = RouteRisk(
+                        score: response.score,
+                        level: level,
+                        distanceKM: route.distance / 1000,
+                        durationMinutes: route.expectedTravelTime / 60
+                    )
+                }
                 isRiskLoading = false
             } catch is CancellationError {
                 guard currentRiskRequestID == requestID else { return }
                 isRiskLoading = false
             } catch {
                 guard currentRiskRequestID == requestID else { return }
-                routeRisk = nil
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    routeRisk = nil
+                }
                 isRiskLoading = false
             }
         }
@@ -136,7 +135,9 @@ final class MapViewModel: ObservableObject {
     func clearRisk() {
         riskTask?.cancel()
         currentRiskRequestID = nil
-        routeRisk = nil
+        withAnimation(.easeInOut(duration: 0.3)) {
+            routeRisk = nil
+        }
         isRiskLoading = false
     }
 

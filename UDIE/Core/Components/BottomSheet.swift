@@ -57,7 +57,7 @@ struct BottomSheet<Content: View, ActiveSheet>: View {
                 width: geometry.size.width,
                 height: currentHeight
             )
-            .background(.ultraThinMaterial)
+            .background(.regularMaterial)
             .cornerRadius(20)
             .position(
                 x: geometry.size.width / 2,

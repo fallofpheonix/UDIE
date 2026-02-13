@@ -6,20 +6,10 @@
 //
 
 import SwiftUI
+import UIKit
 
 extension EventType {
-    var displayColor: Color {
-        switch self {
-        case .accident:
-            return .red
-        case .construction:
-            return .orange
-        case .flood:
-            return .blue
-        case .protest:
-            return .purple
-        case .heavyTraffic:
-            return .pink
-        }
+    var markerUIColor: UIColor {
+        UIColor(displayColor)
     }
 }
