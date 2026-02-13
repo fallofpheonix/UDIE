@@ -23,6 +23,7 @@ struct MapView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var locationManager: LocationManager
     @State private var showFilters = false
+    @State private var refreshIconRotation: Double = 0
 
     enum ActiveSheet {
         case routePlanner
@@ -35,10 +36,9 @@ struct MapView: View {
 
     @State private var routes: [MKRoute] = []
     @State private var selectedRoute: MKRoute?
-    @State private var routeRisk: RouteRisk?
 
     @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 12.9716, longitude: 77.5946),
+        center: CLLocationCoordinate2D(latitude: 28.6139, longitude: 77.2090),
         span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
     )
     var isEmptyState: Bool {
@@ -53,6 +53,15 @@ struct MapView: View {
         }
     }
 
+    var disruptionSummary: [(type: EventType, count: Int)] {
+        let grouped = Dictionary(grouping: filteredEvents, by: \.eventType)
+        return grouped
+            .map { (type: $0.key, count: $0.value.count) }
+            .sorted { $0.count > $1.count }
+            .prefix(3)
+            .map { $0 }
+    }
+
     var body: some View {
 
         ZStack {
@@ -62,6 +71,8 @@ struct MapView: View {
             ClusteredMapView(
                 region: $region,
                 events: filteredEvents,
+                routes: routes,
+                selectedRoute: selectedRoute,
                 onSelect: { event in
                     activeSheet = .eventDetail(event)
                 }
@@ -76,6 +87,7 @@ struct MapView: View {
 
                 ProgressView()
                     .scaleEffect(1.4)
+                    .transition(.opacity)
             }
 
             if isEmptyState {
@@ -96,11 +108,57 @@ struct MapView: View {
                 .padding()
                 .background(.ultraThinMaterial)
                 .cornerRadius(16)
+                .transition(.scale(scale: 0.95).combined(with: .opacity))
             }
 
             // MARK: Floating Controls
 
             VStack {
+                HStack {
+                    if disruptionSummary.isEmpty {
+                        Text("No active disruptions in this view")
+                            .font(.caption)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(10)
+                            .shadow(radius: 3)
+                            .transition(.opacity)
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                            ForEach(disruptionSummary, id: \.type) { item in
+                                HStack(spacing: 6) {
+                                    Circle()
+                                        .fill(item.type.displayColor)
+                                        .frame(width: 8, height: 8)
+                                    Text("\(item.type.displayName): \(item.count)")
+                                        .font(.caption2)
+                                        .fontWeight(.semibold)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Capsule())
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                            }
+                            .padding(.trailing, 6)
+                        }
+                        .transition(.opacity)
+                        .animation(
+                            .spring(response: 0.35, dampingFraction: 0.85),
+                            value: disruptionSummary.map { $0.count }
+                        )
+                        .animation(
+                            .spring(response: 0.35, dampingFraction: 0.85),
+                            value: disruptionSummary.map { $0.type.rawValue }
+                        )
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
+
                 Spacer()
 
                 HStack {
@@ -108,7 +166,14 @@ struct MapView: View {
 
                     VStack(spacing: 16) {
 
-                        if let risk = routeRisk {
+                        if viewModel.isRiskLoading {
+                            ProgressView()
+                                .padding()
+                                .background(.ultraThinMaterial)
+                                .cornerRadius(14)
+                                .shadow(radius: 6)
+                                .transition(.opacity)
+                        } else if let risk = viewModel.routeRisk {
 
                             VStack(alignment: .leading, spacing: 8) {
 
@@ -131,6 +196,7 @@ struct MapView: View {
                             .background(risk.level.color)
                             .cornerRadius(14)
                             .shadow(radius: 6)
+                            .transition(.move(edge: .trailing).combined(with: .opacity))
                         }
                         Button {
                             showFilters = true
@@ -140,6 +206,7 @@ struct MapView: View {
                                 .background(.ultraThinMaterial)
                                 .clipShape(Circle())
                         }
+                        .buttonStyle(BouncyCircleButtonStyle())
 
                         Button {
                             activeSheet = .routePlanner
@@ -149,15 +216,21 @@ struct MapView: View {
                                 .background(.ultraThinMaterial)
                                 .clipShape(Circle())
                         }
+                        .buttonStyle(BouncyCircleButtonStyle())
 
                         Button {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                refreshIconRotation += 360
+                            }
                             viewModel.loadEvents(for: region)
                         } label: {
                             Image(systemName: "arrow.clockwise")
                                 .padding()
                                 .background(.ultraThinMaterial)
                                 .clipShape(Circle())
+                                .rotationEffect(.degrees(refreshIconRotation))
                         }
+                        .buttonStyle(BouncyCircleButtonStyle())
                     }
                     .padding()
                 }
@@ -166,8 +239,15 @@ struct MapView: View {
             // MARK: Bottom Sheet
 
             if let sheet = activeSheet {
+                let startsExpanded: Bool = {
+                    if case .routePlanner = sheet { return true }
+                    return false
+                }()
 
-                BottomSheet(activeSheet: $activeSheet) {
+                BottomSheet(
+                    activeSheet: $activeSheet,
+                    initialPosition: startsExpanded ? .expanded : .collapsed
+                ) {
 
                     switch sheet {
 
@@ -175,7 +255,10 @@ struct MapView: View {
                         RoutePlannerView(
                             region: $region,
                             routes: $routes,
-                            selectedRoute: $selectedRoute
+                            selectedRoute: $selectedRoute,
+                            onRouteReady: {
+                                activeSheet = nil
+                            }
                         )
 
                     case .eventDetail(let event):
@@ -187,16 +270,10 @@ struct MapView: View {
  
         .onChange(of: selectedRoute) { newRoute in
             guard let newRoute else {
-                routeRisk = nil
+                viewModel.clearRisk()
                 return
             }
-            Task {
-                do {
-                    routeRisk = try await viewModel.fetchRisk(for: newRoute)
-                } catch {
-                    routeRisk = nil
-                }
-            }
+            viewModel.fetchRisk(for: newRoute)
         }
 
         .onChange(of: region) { newRegion in
@@ -227,6 +304,22 @@ struct MapView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
+        .onDisappear {
+            viewModel.clearRisk()
+        }
+        .animation(.easeInOut(duration: 0.2), value: viewModel.isLoading)
+        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: viewModel.isRiskLoading)
+        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: viewModel.routeRisk?.score ?? -1)
+        .animation(.easeInOut(duration: 0.2), value: isEmptyState)
 
+    }
+}
+
+private struct BouncyCircleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.93 : 1.0)
+            .opacity(configuration.isPressed ? 0.85 : 1.0)
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }

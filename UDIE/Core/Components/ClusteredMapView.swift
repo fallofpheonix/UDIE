@@ -13,6 +13,8 @@ struct ClusteredMapView: UIViewRepresentable {
 
     @Binding var region: MKCoordinateRegion
     var events: [GeoEvent]
+    var routes: [MKRoute]
+    var selectedRoute: MKRoute?
     var onSelect: (GeoEvent) -> Void
 
     func makeCoordinator() -> Coordinator {
@@ -47,12 +49,14 @@ struct ClusteredMapView: UIViewRepresentable {
         }
 
         mapView.removeAnnotations(mapView.annotations)
+        mapView.removeOverlays(mapView.overlays)
 
         let annotations = events.map { event -> EventAnnotation in
             EventAnnotation(event: event)
         }
 
         mapView.addAnnotations(annotations)
+        mapView.addOverlays(routes.map(\.polyline))
     }
 
     class Coordinator: NSObject, MKMapViewDelegate {
@@ -100,6 +104,22 @@ struct ClusteredMapView: UIViewRepresentable {
             view.canShowCallout = false
 
             return view
+        }
+
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            guard let polyline = overlay as? MKPolyline else {
+                return MKOverlayRenderer(overlay: overlay)
+            }
+
+            let renderer = MKPolylineRenderer(polyline: polyline)
+
+            let isSelectedRoute = parent.selectedRoute?.polyline === polyline
+            renderer.strokeColor = isSelectedRoute
+                ? UIColor.systemBlue
+                : UIColor.systemBlue.withAlphaComponent(0.35)
+            renderer.lineWidth = isSelectedRoute ? 6 : 4
+
+            return renderer
         }
 
         func mapView(_ mapView: MKMapView,

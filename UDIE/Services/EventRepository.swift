@@ -14,14 +14,16 @@ final class EventRepository {
         minLat: Double,
         maxLat: Double,
         minLng: Double,
-        maxLng: Double
+        maxLng: Double,
+        city: String
     ) async throws -> [GeoEvent] {
 
         try await APIClient.shared.fetchEvents(
             minLat: minLat,
             maxLat: maxLat,
             minLng: minLng,
-            maxLng: maxLng
+            maxLng: maxLng,
+            city: city
         )
     }
 }

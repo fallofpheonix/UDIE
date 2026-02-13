@@ -16,16 +16,18 @@ struct BottomSheet<Content: View, ActiveSheet>: View {
 
     @Binding var activeSheet: ActiveSheet?
 
-    @State private var position: SheetPosition = .collapsed
+    @State private var position: SheetPosition
     @GestureState private var dragOffset: CGFloat = 0
 
     let content: Content
 
     init(
         activeSheet: Binding<ActiveSheet?>,
+        initialPosition: SheetPosition = .collapsed,
         @ViewBuilder content: () -> Content
     ) {
         self._activeSheet = activeSheet
+        self._position = State(initialValue: initialPosition)
         self.content = content()
     }
 
@@ -84,6 +86,5 @@ struct BottomSheet<Content: View, ActiveSheet>: View {
             )
             .animation(.easeInOut, value: position)
         }
-        .ignoresSafeArea()
     }
 }

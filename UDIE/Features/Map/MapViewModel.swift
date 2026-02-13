@@ -14,11 +14,16 @@ final class MapViewModel: ObservableObject {
 
     @Published var events: [GeoEvent] = []
     @Published var errorMessage: String?
+    @Published var routeRisk: RouteRisk?
+    @Published var isRiskLoading: Bool = false
 
     private let repository = EventRepository()
+    private let cityCode = "DEL"
     @Published var isLoading: Bool = false
 
     private var fetchTask: Task<Void, Never>?
+    private var riskTask: Task<Void, Never>?
+    private var currentRiskRequestID: UUID?
     private var lastBoundingBox: BoundingBox?
 
     func loadEvents(for region: MKCoordinateRegion) {
@@ -35,6 +40,17 @@ final class MapViewModel: ObservableObject {
 
         fetchTask = Task {
             isLoading = true
+            do {
+                try await APIClient.shared.healthCheck()
+            } catch {
+                if Task.isCancelled {
+                    isLoading = false
+                    return
+                }
+                errorMessage = "Data source error: \(error.localizedDescription)"
+                isLoading = false
+                return
+            }
 
             try? await Task.sleep(nanoseconds: 600_000_000)
 
@@ -48,7 +64,8 @@ final class MapViewModel: ObservableObject {
                     minLat: newBoundingBox.minLat,
                     maxLat: newBoundingBox.maxLat,
                     minLng: newBoundingBox.minLng,
-                    maxLng: newBoundingBox.maxLng
+                    maxLng: newBoundingBox.maxLng,
+                    city: cityCode
                 )
                 if Task.isCancelled {
                     isLoading = false
@@ -61,34 +78,66 @@ final class MapViewModel: ObservableObject {
                     isLoading = false
                     return
                 }
-                errorMessage = "Unable to fetch events from backend."
+                #if DEBUG
+                print("Events fetch failed:", error.localizedDescription)
+                #endif
+                errorMessage = "Data source error: \(error.localizedDescription)"
                 isLoading = false
             }
         }
     }
 
-    func fetchRisk(for route: MKRoute) async throws -> RouteRisk {
-        let response = try await APIClient.shared.fetchRouteRisk(
-            coordinates: route.polyline.coordinates,
-            city: "BLR"
-        )
+    func fetchRisk(for route: MKRoute) {
+        riskTask?.cancel()
+        routeRisk = nil
+        isRiskLoading = true
 
-        let level: RiskLevel
-        switch response.level.uppercased() {
-        case "HIGH":
-            level = .high
-        case "MEDIUM":
-            level = .medium
-        default:
-            level = .low
+        let requestID = UUID()
+        currentRiskRequestID = requestID
+
+        riskTask = Task {
+            do {
+                let response = try await APIClient.shared.fetchRouteRisk(
+                    coordinates: route.polyline.coordinates,
+                    city: cityCode
+                )
+
+                try Task.checkCancellation()
+                guard currentRiskRequestID == requestID else { return }
+
+                let level: RiskLevel
+                switch response.level.uppercased() {
+                case "HIGH":
+                    level = .high
+                case "MEDIUM":
+                    level = .medium
+                default:
+                    level = .low
+                }
+
+                routeRisk = RouteRisk(
+                    score: response.score,
+                    level: level,
+                    distanceKM: route.distance / 1000,
+                    durationMinutes: route.expectedTravelTime / 60
+                )
+                isRiskLoading = false
+            } catch is CancellationError {
+                guard currentRiskRequestID == requestID else { return }
+                isRiskLoading = false
+            } catch {
+                guard currentRiskRequestID == requestID else { return }
+                routeRisk = nil
+                isRiskLoading = false
+            }
         }
+    }
 
-        return RouteRisk(
-            score: response.score,
-            level: level,
-            distanceKM: route.distance / 1000,
-            durationMinutes: route.expectedTravelTime / 60
-        )
+    func clearRisk() {
+        riskTask?.cancel()
+        currentRiskRequestID = nil
+        routeRisk = nil
+        isRiskLoading = false
     }
 
 

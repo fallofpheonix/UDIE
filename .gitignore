@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Xcode / iOS
+.derived/
+DerivedData/
+*.xcuserdatad
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
+# Backend
+backend/node_modules/
+backend/dist/
+backend/.env
+
+# Misc
+*.log
