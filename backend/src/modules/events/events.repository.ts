@@ -8,11 +8,18 @@ export class EventsRepository {
   constructor(private readonly db: DatabaseService) {}
 
   async findByBoundingBox(query: QueryEventsDto): Promise<GeoEventEntity[]> {
-    const values: unknown[] = [query.minLng, query.minLat, query.maxLng, query.maxLat];
+    const minLng = Number(query.minLng);
+    const minLat = Number(query.minLat);
+    const maxLng = Number(query.maxLng);
+    const maxLat = Number(query.maxLat);
+    const minSeverity = query.minSeverity ? Number(query.minSeverity) : undefined;
+    const city = query.city?.trim();
+
+    const values: unknown[] = [minLng, minLat, maxLng, maxLat];
     let sql = `
       SELECT
         id,
-        event_type::text,
+        LOWER(event_type::text) AS event_type,
         severity,
         confidence,
         source::text,
@@ -28,8 +35,13 @@ export class EventsRepository {
       )
     `;
 
-    if (query.minSeverity !== undefined) {
-      values.push(query.minSeverity);
+    if (city) {
+      values.push(city);
+      sql += ` AND city_code = $${values.length}`;
+    }
+
+    if (minSeverity !== undefined && !Number.isNaN(minSeverity)) {
+      values.push(minSeverity);
       sql += ` AND severity >= $${values.length}`;
     }
 

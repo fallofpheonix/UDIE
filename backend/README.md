@@ -36,4 +36,4 @@ curl "http://localhost:3000/api/events?minLat=12.9&maxLat=13.1&minLng=77.5&maxLn
 ## Frozen v1 contracts
 
 - `GET /api/events`
-- `POST /api/route-risk`
+- `POST /api/risk` (alias: `/api/route-risk`)
