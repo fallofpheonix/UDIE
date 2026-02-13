@@ -25,6 +25,7 @@ final class MapViewModel: ObservableObject {
 
     private var fetchTask: Task<Void, Never>?
     private var riskTask: Task<Void, Never>?
+    private var currentFetchRequestID: UUID?
     private var currentRiskRequestID: UUID?
     private var lastBoundingBox: BoundingBox?
 
@@ -40,6 +41,8 @@ final class MapViewModel: ObservableObject {
         errorMessage = nil
 
         fetchTask?.cancel()
+        let requestID = UUID()
+        currentFetchRequestID = requestID
 
         fetchTask = Task {
             isLoading = true
@@ -47,6 +50,7 @@ final class MapViewModel: ObservableObject {
             try? await Task.sleep(nanoseconds: 600_000_000)
 
             if Task.isCancelled {
+                guard currentFetchRequestID == requestID else { return }
                 isLoading = false
                 return
             }
@@ -60,17 +64,21 @@ final class MapViewModel: ObservableObject {
                     city: cityCode
                 )
                 if Task.isCancelled {
+                    guard currentFetchRequestID == requestID else { return }
                     isLoading = false
                     return
                 }
+                guard currentFetchRequestID == requestID else { return }
                 events = fetchedEvents
                 lastUpdated = Date()
                 isLoading = false
             } catch {
                 if Task.isCancelled {
+                    guard currentFetchRequestID == requestID else { return }
                     isLoading = false
                     return
                 }
+                guard currentFetchRequestID == requestID else { return }
                 #if DEBUG
                 print("Events fetch failed:", error.localizedDescription)
                 #endif

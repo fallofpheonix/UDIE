@@ -49,17 +49,21 @@ struct ClusteredMapView: UIViewRepresentable {
             mapView.setRegion(region, animated: true)
         }
 
-        let eventIDs = Set(events.map(\.id))
+        let eventSignatures = Set(
+            events.map { event in
+                "\(event.id.uuidString)|\(event.eventType.rawValue)|\(event.severity)|\(event.confidence)|\(event.latitude)|\(event.longitude)"
+            }
+        )
         let routeOverlays = routes.map(\.polyline)
 
-        if context.coordinator.lastEventIDs != eventIDs {
+        if context.coordinator.lastEventSignatures != eventSignatures {
             mapView.removeAnnotations(mapView.annotations)
 
             let annotations = events.map { event -> EventAnnotation in
                 EventAnnotation(event: event)
             }
             mapView.addAnnotations(annotations)
-            context.coordinator.lastEventIDs = eventIDs
+            context.coordinator.lastEventSignatures = eventSignatures
         }
 
         let currentRoutes = Set(mapView.overlays.compactMap { $0 as? MKPolyline }.map(ObjectIdentifier.init))
@@ -78,7 +82,7 @@ struct ClusteredMapView: UIViewRepresentable {
             self.parent = parent
         }
 
-        var lastEventIDs: Set<UUID> = []
+        var lastEventSignatures: Set<String> = []
 
         func mapView(_ mapView: MKMapView,
                      regionDidChangeAnimated animated: Bool) {

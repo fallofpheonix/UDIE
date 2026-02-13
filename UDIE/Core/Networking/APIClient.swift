@@ -31,12 +31,20 @@ final class APIClient {
     private static let fallbackBaseURLString = "http://127.0.0.1:3000"
 
     private let baseURL: URL = {
-        if let configured = ProcessInfo.processInfo.environment["UDIE_API_BASE_URL"],
-           let url = URL(string: configured) {
-            return url
+        let env = ProcessInfo.processInfo.environment
+        // Accept both names to avoid config mismatch during scheme setup.
+        let envKeys = ["UDIE_API_BASE_URL", "INFOPLIST_KEY_UDIE_API_BASE_URL"]
+        for key in envKeys {
+            if let configured = env[key]?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !configured.isEmpty,
+               let url = URL(string: configured) {
+                return url
+            }
         }
         if let infoURL = Bundle.main.object(forInfoDictionaryKey: "UDIE_API_BASE_URL") as? String,
-           let url = URL(string: infoURL) {
+           let configured = infoURL.trimmingCharacters(in: .whitespacesAndNewlines),
+           !configured.isEmpty,
+           let url = URL(string: configured) {
             return url
         }
         return URL(string: APIClient.fallbackBaseURLString)!
