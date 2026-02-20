@@ -1,0 +1,5 @@
+- [ ] No request-time spatial computation added
+- [ ] Writes only occur through ingestion pipeline
+- [ ] Query complexity unchanged (O(route_cells))
+- [ ] No ORM or hidden SQL introduced
+- [ ] Benchmark harness passes locally

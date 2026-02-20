@@ -1,6 +1,8 @@
 services:
   postgres:
-    image: postgis/postgis:16-3.4
+    build:
+      context: .
+      dockerfile: docker/Postgres.Dockerfile
     container_name: udie-postgres
     restart: unless-stopped
     environment:

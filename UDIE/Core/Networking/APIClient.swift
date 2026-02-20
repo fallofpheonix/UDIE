@@ -29,6 +29,8 @@ final class APIClient {
     private init() {}
 
     private static let fallbackBaseURLString = "http://127.0.0.1:3000"
+    private let maxRetries = 2
+    private let retryDelayNanos: UInt64 = 250_000_000
 
     private let baseURL: URL = {
         let env = ProcessInfo.processInfo.environment
@@ -41,11 +43,11 @@ final class APIClient {
                 return url
             }
         }
-        if let infoURL = Bundle.main.object(forInfoDictionaryKey: "UDIE_API_BASE_URL") as? String,
-           let configured = infoURL.trimmingCharacters(in: .whitespacesAndNewlines),
-           !configured.isEmpty,
-           let url = URL(string: configured) {
-            return url
+        if let infoURL = Bundle.main.object(forInfoDictionaryKey: "UDIE_API_BASE_URL") as? String {
+            let configured = infoURL.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !configured.isEmpty, let url = URL(string: configured) {
+                return url
+            }
         }
         return URL(string: APIClient.fallbackBaseURLString)!
     }()
@@ -61,7 +63,7 @@ final class APIClient {
     func healthCheck() async throws {
         let url = baseURL.appendingPathComponent("api/health")
         do {
-            let (_, response) = try await session.data(from: url)
+            let (_, response) = try await performDataRequest(url: url)
             guard let httpResponse = response as? HTTPURLResponse,
                   200..<300 ~= httpResponse.statusCode else {
                 throw URLError(.badServerResponse)
@@ -76,7 +78,7 @@ final class APIClient {
         maxLat: Double,
         minLng: Double,
         maxLng: Double,
-        city: String = "BLR"
+        city: String
     ) async throws -> [GeoEvent] {
 
         var components = URLComponents(
@@ -85,10 +87,10 @@ final class APIClient {
         )
 
         components?.queryItems = [
-            URLQueryItem(name: "minLat", value: "\(minLat)"),
-            URLQueryItem(name: "maxLat", value: "\(maxLat)"),
-            URLQueryItem(name: "minLng", value: "\(minLng)"),
-            URLQueryItem(name: "maxLng", value: "\(maxLng)"),
+            URLQueryItem(name: "minLat", value: String(format: "%.6f", minLat)),
+            URLQueryItem(name: "maxLat", value: String(format: "%.6f", maxLat)),
+            URLQueryItem(name: "minLng", value: String(format: "%.6f", minLng)),
+            URLQueryItem(name: "maxLng", value: String(format: "%.6f", maxLng)),
             URLQueryItem(name: "city", value: city)
         ]
 
@@ -97,19 +99,27 @@ final class APIClient {
         }
 
         #if DEBUG
-        print("API base URL:", baseURL.absoluteString)
+        print("🚀 API Request [GET]: \(url.absoluteString)")
         #endif
 
         let (data, response): (Data, URLResponse)
         do {
-            (data, response) = try await session.data(from: url)
+            (data, response) = try await performDataRequest(url: url)
         } catch let error as URLError {
+            #if DEBUG
+            print("❌ API Error [GET]: \(error.localizedDescription) at \(baseURL.absoluteString)")
+            #endif
             throw APIClientError.connectivity(baseURL: baseURL.absoluteString, underlying: error)
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
+
+        #if DEBUG
+        print("✅ API Response [GET]: \(httpResponse.statusCode)")
+        #endif
+
         guard 200..<300 ~= httpResponse.statusCode else {
             throw APIClientError.invalidResponse(
                 statusCode: httpResponse.statusCode,
@@ -138,16 +148,28 @@ final class APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(payload)
 
+        #if DEBUG
+        print("🚀 API Request [POST]: \(url.absoluteString) | Body size: \(request.httpBody?.count ?? 0) bytes")
+        #endif
+
         let (data, response): (Data, URLResponse)
         do {
-            (data, response) = try await session.data(for: request)
+            (data, response) = try await performDataRequest(request: request)
         } catch let error as URLError {
+            #if DEBUG
+            print("❌ API Error [POST]: \(error.localizedDescription) at \(baseURL.absoluteString)")
+            #endif
             throw APIClientError.connectivity(baseURL: baseURL.absoluteString, underlying: error)
         }
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
+
+        #if DEBUG
+        print("✅ API Response [POST]: \(httpResponse.statusCode)")
+        #endif
+
         guard 200..<300 ~= httpResponse.statusCode else {
             throw APIClientError.invalidResponse(
                 statusCode: httpResponse.statusCode,
@@ -156,5 +178,46 @@ final class APIClient {
         }
 
         return try JSONDecoder().decode(RouteRiskResponse.self, from: data)
+    }
+
+    private func performDataRequest(url: URL) async throws -> (Data, URLResponse) {
+        var attempt = 0
+        while true {
+            try Task.checkCancellation()
+            do {
+                return try await session.data(from: url)
+            } catch let error as URLError {
+                if attempt >= maxRetries || !isRetriable(error: error) {
+                    throw error
+                }
+                attempt += 1
+                try await Task.sleep(nanoseconds: retryDelayNanos * UInt64(attempt))
+            }
+        }
+    }
+
+    private func performDataRequest(request: URLRequest) async throws -> (Data, URLResponse) {
+        var attempt = 0
+        while true {
+            try Task.checkCancellation()
+            do {
+                return try await session.data(for: request)
+            } catch let error as URLError {
+                if attempt >= maxRetries || !isRetriable(error: error) {
+                    throw error
+                }
+                attempt += 1
+                try await Task.sleep(nanoseconds: retryDelayNanos * UInt64(attempt))
+            }
+        }
+    }
+
+    private func isRetriable(error: URLError) -> Bool {
+        switch error.code {
+        case .timedOut, .cannotFindHost, .cannotConnectToHost, .networkConnectionLost, .notConnectedToInternet:
+            return true
+        default:
+            return false
+        }
     }
 }

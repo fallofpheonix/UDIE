@@ -10,7 +10,7 @@ import SwiftUI
 import MapKit
 import UIKit
 
-extension MKCoordinateRegion: Equatable {
+extension MKCoordinateRegion: @retroactive Equatable {
     public static func == (lhs: MKCoordinateRegion, rhs: MKCoordinateRegion) -> Bool {
         let tolerance = 0.00001
         return abs(lhs.center.latitude - rhs.center.latitude) < tolerance &&
@@ -137,24 +137,11 @@ struct MapView: View {
             VStack {
                 HStack {
                     VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 8) {
-                            Image(systemName: viewModel.errorMessage == nil ? "dot.radiowaves.left.and.right" : "exclamationmark.triangle.fill")
-                                .foregroundStyle(viewModel.errorMessage == nil ? .green : .red)
-                            Text(viewModel.errorMessage == nil ? "Backend connected" : "Backend warning")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                            Text("• \(filteredEvents.count) events")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            Text("• Updated \(lastUpdatedText)")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(10)
-                        .shadow(radius: 3)
+                        StatusBadgeView(
+                            isError: viewModel.errorMessage != nil,
+                            eventCount: filteredEvents.count,
+                            lastUpdated: lastUpdatedText
+                        )
 
                         if disruptionSummary.isEmpty {
                             Text("No active disruptions in this view")
@@ -216,43 +203,14 @@ struct MapView: View {
                                 .shadow(radius: 6)
                                 .transition(.opacity)
                         } else if let risk = viewModel.routeRisk {
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text(risk.level.title)
-                                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                                        .foregroundColor(.white)
-
-                                    Spacer()
-
-                                    Button {
-                                        withAnimation(.easeInOut(duration: 0.25)) {
-                                            selectedRoute = nil
-                                            routes = []
-                                        }
-                                        viewModel.clearRisk()
-                                    } label: {
-                                        Image(systemName: "xmark.circle.fill")
-                                            .foregroundColor(.white.opacity(0.9))
-                                    }
-                                    .buttonStyle(.plain)
+                            RiskCardView(risk: risk) {
+                                withAnimation(.easeInOut(duration: 0.25)) {
+                                    selectedRoute = nil
+                                    routes = []
                                 }
-
-                                ProgressView(value: risk.score)
-                                    .tint(.white)
-
-                                HStack {
-                                    Text(String(format: "%.1f km", risk.distanceKM))
-                                    Spacer()
-                                    Text(String(format: "%.0f min", risk.durationMinutes))
-                                }
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.9))
+                                viewModel.clearRisk()
                             }
-                            .padding()
-                            .background(risk.level.color)
-                            .cornerRadius(14)
-                            .shadow(radius: 6)
+                            .frame(width: 280)
                             .transition(.move(edge: .trailing).combined(with: .opacity))
                         }
                         Button {

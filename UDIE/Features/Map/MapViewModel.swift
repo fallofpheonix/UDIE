@@ -18,16 +18,25 @@ final class MapViewModel: ObservableObject {
     @Published var routeRisk: RouteRisk?
     @Published var isRiskLoading: Bool = false
     @Published var lastUpdated: Date?
-
-    private let repository = EventRepository()
-    private let cityCode = "DEL"
     @Published var isLoading: Bool = false
 
+    var cityCode = "DEL" // Default, can be updated via location logic
+
+    private let repository = EventRepository()
     private var fetchTask: Task<Void, Never>?
     private var riskTask: Task<Void, Never>?
     private var currentFetchRequestID: UUID?
     private var currentRiskRequestID: UUID?
     private var lastBoundingBox: BoundingBox?
+
+    func setCity(_ code: String) {
+        let normalized = code.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalized != cityCode else { return }
+        cityCode = normalized
+        #if DEBUG
+        print("🏙️ City switched to: \(normalized)")
+        #endif
+    }
 
     func loadEvents(for region: MKCoordinateRegion, force: Bool = false) {
         let newBoundingBox = boundingBox(for: region)
@@ -38,7 +47,9 @@ final class MapViewModel: ObservableObject {
         }
 
         lastBoundingBox = newBoundingBox
-        errorMessage = nil
+        
+        // Only clear error if we are force refreshing or it was a connectivity error
+        if force { errorMessage = nil }
 
         fetchTask?.cancel()
         let requestID = UUID()
@@ -47,11 +58,11 @@ final class MapViewModel: ObservableObject {
         fetchTask = Task {
             isLoading = true
 
-            try? await Task.sleep(nanoseconds: 600_000_000)
+            // Debounce for rapid map movements
+            try? await Task.sleep(nanoseconds: 400_000_000)
 
             if Task.isCancelled {
-                guard currentFetchRequestID == requestID else { return }
-                isLoading = false
+                if currentFetchRequestID == requestID { isLoading = false }
                 return
             }
 
@@ -63,28 +74,27 @@ final class MapViewModel: ObservableObject {
                     maxLng: newBoundingBox.maxLng,
                     city: cityCode
                 )
-                if Task.isCancelled {
-                    guard currentFetchRequestID == requestID else { return }
-                    isLoading = false
+                
+                guard !Task.isCancelled, currentFetchRequestID == requestID else {
                     return
                 }
-                guard currentFetchRequestID == requestID else { return }
+                
                 events = fetchedEvents
                 lastUpdated = Date()
-                isLoading = false
+                errorMessage = nil
             } catch {
-                if Task.isCancelled {
-                    guard currentFetchRequestID == requestID else { return }
-                    isLoading = false
+                guard !Task.isCancelled, currentFetchRequestID == requestID else {
                     return
                 }
-                guard currentFetchRequestID == requestID else { return }
+                
                 #if DEBUG
-                print("Events fetch failed:", error.localizedDescription)
+                print("❌ Events fetch failed: \(error.localizedDescription)")
                 #endif
-                errorMessage = "Data source error: \(error.localizedDescription)"
-                isLoading = false
+                
+                // Keep existing events but show a warning
+                errorMessage = "Sync Error: \(error.localizedDescription)"
             }
+            isLoading = false
         }
     }
 
@@ -118,7 +128,7 @@ final class MapViewModel: ObservableObject {
                     level = .low
                 }
 
-                withAnimation(.easeInOut(duration: 0.3)) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                     routeRisk = RouteRisk(
                         score: response.score,
                         level: level,
@@ -126,31 +136,27 @@ final class MapViewModel: ObservableObject {
                         durationMinutes: route.expectedTravelTime / 60
                     )
                 }
-                isRiskLoading = false
             } catch is CancellationError {
-                guard currentRiskRequestID == requestID else { return }
-                isRiskLoading = false
+                // Ignore
             } catch {
                 guard currentRiskRequestID == requestID else { return }
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    routeRisk = nil
-                }
-                isRiskLoading = false
+                #if DEBUG
+                print("❌ Risk fetch failed: \(error.localizedDescription)")
+                #endif
+                errorMessage = "Risk service unavailable"
             }
+            isRiskLoading = false
         }
     }
 
     func clearRisk() {
         riskTask?.cancel()
         currentRiskRequestID = nil
-        withAnimation(.easeInOut(duration: 0.3)) {
+        withAnimation(.easeInOut(duration: 0.2)) {
             routeRisk = nil
         }
         isRiskLoading = false
     }
-
-
-
 
     private func isSignificantChange(
         from old: BoundingBox,
@@ -159,17 +165,18 @@ final class MapViewModel: ObservableObject {
 
         let latShift = abs(old.minLat - new.minLat)
         let lngShift = abs(old.minLng - new.minLng)
-
+        
         let oldSpan = old.maxLat - old.minLat
         let newSpan = new.maxLat - new.minLat
-
         let zoomShift = abs(oldSpan - newSpan)
 
-        let threshold = 0.01
+        // Threshold optimized for mobile viewport
+        let movementThreshold = oldSpan * 0.15 
+        let zoomThreshold = oldSpan * 0.20
 
-        return latShift > threshold ||
-               lngShift > threshold ||
-               zoomShift > threshold
+        return latShift > movementThreshold ||
+               lngShift > movementThreshold ||
+               zoomShift > zoomThreshold
     }
 
     private func boundingBox(for region: MKCoordinateRegion) -> BoundingBox {

@@ -17,7 +17,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_geo_events_dedupe_key
 CREATE INDEX IF NOT EXISTS idx_raw_events_status
   ON raw_events (status);
 
-CREATE OR REPLACE VIEW active_geo_events AS
+DROP VIEW IF EXISTS active_geo_events;
+CREATE VIEW active_geo_events AS
 SELECT *
 FROM geo_events
 WHERE end_time IS NULL OR end_time >= now();

@@ -1,0 +1,38 @@
+{
+    "incidents": [
+        {
+            "source_id": "BENCH_001",
+            "event_type": "CONSTRUCTION",
+            "severity": 3,
+            "lat": 28.6139,
+            "lng": 77.2090,
+            "text": "Canonical Construction at Connaught Place"
+        },
+        {
+            "source_id": "BENCH_002",
+            "event_type": "COLLISION",
+            "severity": 5,
+            "lat": 28.6200,
+            "lng": 77.2150,
+            "text": "Major Collision on Ring Road"
+        },
+        {
+            "source_id": "BENCH_003",
+            "event_type": "PROTEST",
+            "severity": 4,
+            "lat": 28.6100,
+            "lng": 77.2300,
+            "text": "Civic Protest near India Gate"
+        }
+    ],
+    "routes": [
+        {
+            "name": "CP_TO_RING_ROAD",
+            "geojson": "LINESTRING(77.2090 28.6139, 77.2150 28.6200)"
+        },
+        {
+            "name": "GATE_TO_SUBURB",
+            "geojson": "LINESTRING(77.2300 28.6100, 77.2500 28.6500)"
+        }
+    ]
+}

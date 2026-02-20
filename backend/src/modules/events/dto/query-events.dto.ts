@@ -1,4 +1,5 @@
-import { IsNumberString, IsOptional, IsString, Matches } from 'class-validator';
+import { IsNumberString, IsOptional, IsString, Length, Matches, Max, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class QueryEventsDto {
   @IsNumberString()
@@ -15,6 +16,7 @@ export class QueryEventsDto {
 
   @IsOptional()
   @IsString()
+  @Length(3, 3)
   city?: string;
 
   @IsOptional()
@@ -25,4 +27,15 @@ export class QueryEventsDto {
   @IsNumberString()
   @Matches(/^[1-5]$/, { message: 'minSeverity must be between 1 and 5' })
   minSeverity?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1)
+  @Max(1000)
+  limit?: number = 100;
+
+  @IsOptional()
+  @Type(() => Number)
+  @Min(0)
+  offset?: number = 0;
 }

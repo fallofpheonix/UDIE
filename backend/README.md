@@ -1,39 +1,44 @@
 # UDIE Backend
 
-Backend-first implementation for Urban Disruption Intelligence Engine.
+Backend implementation for the Urban Disruption Intelligence Engine. A NestJS service orchestrating a PostGIS "Weather Model" for spatial risk.
 
-## Run locally
+## Key Features
+- **Hardened Ingestion**: Append-only log truth with spatial deduplication.
+- **Materialized Read Path**: Risk scoring via `risk_cells` (O(cells) complexity).
+- **Lifecycle Engine**: Automated confidence decay and event expiry.
+- **API Guards**: Geometric bounding on route complexity.
 
-1. Copy env:
+## Run Locally
 
+1. Install dependencies:
 ```bash
-cp .env.example .env
+npm install
 ```
 
 2. Start infra and backend:
-
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
-3. Health check:
-
+3. Apply all migrations:
 ```bash
-curl http://localhost:3000/api/health
+npm run migration:up
 ```
 
-4. Query events:
-
+4. Verify core contracts:
 ```bash
-curl "http://localhost:3000/api/events?minLat=12.9&maxLat=13.1&minLng=77.5&maxLng=77.7"
+npm run test:risk
+npm run validate:plan
+npm run validate:rebuild
 ```
 
-## Migrations
+## Documentation
+For deep implementation details, see the project [Docs Index](../docs/INDEX.md):
+- [Architecture](../docs/ARCHITECTURE.md)
+- [Risk Model](../docs/RISK_MODEL.md)
+- [Guardrails](../docs/GUARDRAILS.md)
 
-- `migrations/001_init.sql` creates extensions, enums, and base tables.
-- `migrations/002_indexes_and_views.sql` creates indexes and active events view.
-
-## Frozen v1 contracts
-
-- `GET /api/events`
-- `POST /api/risk` (alias: `/api/route-risk`)
+## Frozen API Contracts
+- `GET /api/events`: Spatially filtered active events.
+- `POST /api/risk`: Normalized risk score for route geometries.
+- `GET /api/health`: Service + Database status.

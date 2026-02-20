@@ -5,7 +5,7 @@ import { GeoEventEntity } from './entities/geo-event.entity';
 
 @Injectable()
 export class EventsRepository {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(private readonly db: DatabaseService) { }
 
   async findByBoundingBox(query: QueryEventsDto): Promise<GeoEventEntity[]> {
     const minLng = Number(query.minLng);
@@ -19,13 +19,16 @@ export class EventsRepository {
     let sql = `
       SELECT
         id,
-        LOWER(event_type::text) AS event_type,
+        event_type,
         severity,
         confidence,
-        source::text,
+        status,
+        source_id,
         description,
-        start_time,
-        end_time,
+        observed_at,
+        expires_at,
+        last_observed,
+        h3_index,
         ST_Y(geom::geometry) AS latitude,
         ST_X(geom::geometry) AS longitude
       FROM active_geo_events
