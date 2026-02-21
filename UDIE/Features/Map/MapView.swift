@@ -5,7 +5,6 @@
 //  Created by Ujjwal Singh on 12/02/26.
 //
 
-
 import SwiftUI
 import MapKit
 import UIKit
@@ -25,7 +24,6 @@ struct MapView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var locationManager: LocationManager
     @State private var showFilters = false
-    @State private var refreshIconRotation: Double = 0
 
     enum ActiveSheet {
         case routePlanner
@@ -33,7 +31,6 @@ struct MapView: View {
     }
 
     @State private var activeSheet: ActiveSheet?
-
     @StateObject private var viewModel = MapViewModel()
 
     @State private var routes: [MKRoute] = []
@@ -43,9 +40,8 @@ struct MapView: View {
         center: CLLocationCoordinate2D(latitude: 28.6139, longitude: 77.2090),
         span: MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
     )
-    var isEmptyState: Bool {
-        !viewModel.isLoading && filteredEvents.isEmpty
-    }
+
+    private let theme = ThemeManager.default
 
     var filteredEvents: [GeoEvent] {
         viewModel.events.filter {
@@ -55,16 +51,17 @@ struct MapView: View {
         }
     }
 
-    var disruptionSummary: [(type: EventType, count: Int)] {
-        let grouped = Dictionary(grouping: filteredEvents, by: \.eventType)
-        return grouped
-            .map { (type: $0.key, count: $0.value.count) }
-            .sorted { $0.count > $1.count }
-            .prefix(3)
-            .map { $0 }
+    var uiState: MapUIState {
+        MapUIState(
+            region: region,
+            annotations: filteredEvents,
+            routePolyline: routes,
+            riskLevel: viewModel.routeRisk?.level,
+            isLoading: viewModel.isLoading
+        )
     }
 
-    var lastUpdatedText: String {
+    private var lastUpdatedText: String {
         guard let date = viewModel.lastUpdated else { return "Not synced yet" }
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -72,189 +69,143 @@ struct MapView: View {
         return formatter.string(from: date)
     }
 
+    private var isEmptyState: Bool {
+        !viewModel.isLoading && filteredEvents.isEmpty
+    }
+
+    private var riskViewData: RouteRiskViewData? {
+        guard let risk = viewModel.routeRisk else { return nil }
+        let eventCount = filteredEvents.count
+        let delayMinutes = max(1, Int((risk.durationMinutes * risk.score * 0.25).rounded()))
+
+        let recommendation: String
+        switch risk.level {
+        case .low:
+            recommendation = "Route is operationally stable. Proceed with standard caution."
+        case .medium:
+            recommendation = "Moderate disruption expected. Keep alternate streets available."
+        case .high:
+            recommendation = "High disruption density. Prefer reroute before departure."
+        }
+
+        return RouteRiskViewData(
+            levelTitle: risk.level.title,
+            levelColor: risk.level.tokenColor,
+            delayEstimate: "~\(delayMinutes) min",
+            eventCount: eventCount,
+            recommendation: recommendation
+        )
+    }
+
     var body: some View {
-
-        ZStack {
-
-            // MARK: Map (Clustered)
-
-            ClusteredMapView(
+        ZStack(alignment: .topLeading) {
+            MapSurfaceView(
                 region: $region,
-                events: filteredEvents,
-                routes: routes,
+                events: uiState.annotations,
+                routes: uiState.routePolyline,
                 selectedRoute: selectedRoute,
                 onSelect: { event in
                     activeSheet = .eventDetail(event)
                 }
             )
-            .ignoresSafeArea()
-            .opacity(viewModel.isLoading ? 0.6 : 1.0)
-            .animation(.easeInOut, value: viewModel.isLoading)
-            .clipShape(
-                RoundedRectangle(
-                    cornerRadius: activeSheet == nil ? 0 : 24,
-                    style: .continuous
-                )
-            )
-            .padding(activeSheet == nil ? 0 : 10)
-            .ignoresSafeArea()
-            if viewModel.isLoading {
 
-                Color.black.opacity(0.2)
+            LinearGradient(
+                colors: [ColorTokens.mapFadeTop, .clear, ColorTokens.mapFadeBottom],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+
+            if uiState.isLoading {
+                Color.black.opacity(0.15)
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
 
                 ProgressView()
-                    .scaleEffect(1.4)
+                    .scaleEffect(1.15)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(.opacity)
             }
 
             if isEmptyState {
-
-                VStack(spacing: 12) {
-                    VStack(spacing: 16) {
-                        Image(systemName: "waveform.path.ecg")
-                            .font(.system(size: 48))
-                            .foregroundStyle(.secondary)
-
-                        Text("No disruptions in this area")
-                            .font(.headline)
-
-                        Text("Try zooming out or adjusting filters")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(24)
-                    .background(.thinMaterial)
-                    .cornerRadius(20)
-                    .shadow(radius: 10)
-                }
-                .transition(.scale(scale: 0.95).combined(with: .opacity))
-            }
-
-            // MARK: Floating Controls
-
-            VStack {
-                HStack {
-                    VStack(alignment: .leading, spacing: 8) {
-                        StatusBadgeView(
-                            isError: viewModel.errorMessage != nil,
-                            eventCount: filteredEvents.count,
-                            lastUpdated: lastUpdatedText
+                VStack {
+                    Spacer()
+                    Text("No disruptions in this area")
+                        .font(.headline)
+                        .padding(.horizontal, theme.spacing.lg)
+                        .padding(.vertical, theme.spacing.md)
+                        .background(ColorTokens.cardSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: theme.elevation.cardRadius, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: theme.elevation.cardRadius, style: .continuous)
+                                .stroke(ColorTokens.cardStroke)
                         )
-
-                        if disruptionSummary.isEmpty {
-                            Text("No active disruptions in this view")
-                                .font(.caption2)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(.ultraThinMaterial)
-                                .cornerRadius(10)
-                                .transition(.opacity)
-                        } else {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 8) {
-                                    ForEach(disruptionSummary, id: \.type) { item in
-                                        HStack(spacing: 6) {
-                                            Circle()
-                                                .fill(item.type.displayColor)
-                                                .frame(width: 8, height: 8)
-                                            Text("\(item.type.displayName): \(item.count)")
-                                                .font(.caption2)
-                                                .fontWeight(.semibold)
-                                        }
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 6)
-                                        .background(.ultraThinMaterial)
-                                        .clipShape(Capsule())
-                                        .transition(.move(edge: .top).combined(with: .opacity))
-                                    }
-                                    .padding(.trailing, 6)
-                                }
-                            }
-                            .transition(.opacity)
-                            .animation(
-                                .spring(response: 0.35, dampingFraction: 0.85),
-                                value: disruptionSummary.map { $0.count }
-                            )
-                            .animation(
-                                .spring(response: 0.35, dampingFraction: 0.85),
-                                value: disruptionSummary.map { $0.type.rawValue }
-                            )
-                        }
-                    }
                     Spacer()
                 }
-                .padding(.horizontal)
-                .padding(.top, 8)
+                .frame(maxWidth: .infinity)
+                .transition(.opacity)
+            }
+
+            VStack(alignment: .leading, spacing: theme.spacing.md) {
+                StatusBadgeView(
+                    isError: viewModel.errorMessage != nil,
+                    eventCount: filteredEvents.count,
+                    lastUpdated: lastUpdatedText
+                )
+
+                if !filteredEvents.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: theme.spacing.sm) {
+                            ForEach(filteredEvents.prefix(5)) { event in
+                                EventCellView(event: event)
+                                    .frame(width: 210)
+                            }
+                        }
+                    }
+                    .transition(.opacity)
+                }
 
                 Spacer()
 
-                HStack {
+                HStack(alignment: .bottom) {
+                    if viewModel.isRiskLoading {
+                        ProgressView()
+                            .padding(theme.spacing.md)
+                            .background(ColorTokens.cardSurface)
+                            .clipShape(RoundedRectangle(cornerRadius: theme.elevation.cardRadius, style: .continuous))
+                    } else if let riskViewData {
+                        RiskSummaryCard(model: riskViewData) {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedRoute = nil
+                                routes = []
+                            }
+                            viewModel.clearRisk()
+                        }
+                        .frame(width: 300)
+                        .transition(.opacity)
+                    }
+
                     Spacer()
 
-                    VStack(spacing: 16) {
-
-                        if viewModel.isRiskLoading {
-                            ProgressView()
-                                .padding()
-                                .background(.ultraThinMaterial)
-                                .cornerRadius(14)
-                                .shadow(radius: 6)
-                                .transition(.opacity)
-                        } else if let risk = viewModel.routeRisk {
-                            RiskCardView(risk: risk) {
-                                withAnimation(.easeInOut(duration: 0.25)) {
-                                    selectedRoute = nil
-                                    routes = []
-                                }
-                                viewModel.clearRisk()
-                            }
-                            .frame(width: 280)
-                            .transition(.move(edge: .trailing).combined(with: .opacity))
-                        }
-                        Button {
+                    VStack(spacing: theme.spacing.sm) {
+                        FloatingButton(systemName: "line.3.horizontal.decrease.circle") {
                             showFilters = true
-                        } label: {
-                            Image(systemName: "line.3.horizontal.decrease.circle")
-                                .padding()
-                                .background(.ultraThinMaterial)
-                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                                .shadow(radius: 8)
                         }
-                        .buttonStyle(BouncyCircleButtonStyle())
 
-                        Button {
+                        FloatingButton(systemName: "arrow.triangle.turn.up.right.diamond.fill") {
                             activeSheet = .routePlanner
-                        } label: {
-                            Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
-                                .padding()
-                                .background(.ultraThinMaterial)
-                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                                .shadow(radius: 8)
                         }
-                        .buttonStyle(BouncyCircleButtonStyle())
 
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                refreshIconRotation += 360
-                            }
+                        FloatingButton(systemName: "arrow.clockwise") {
                             viewModel.loadEvents(for: region, force: true)
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                                .padding()
-                                .background(.ultraThinMaterial)
-                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                                .shadow(radius: 8)
-                                .rotationEffect(.degrees(refreshIconRotation))
                         }
-                        .buttonStyle(BouncyCircleButtonStyle())
                     }
-                    .padding()
                 }
             }
-
-            // MARK: Bottom Sheet
+            .padding(.horizontal, theme.spacing.md)
+            .padding(.top, theme.spacing.md)
+            .padding(.bottom, theme.spacing.lg)
 
             if let sheet = activeSheet {
                 let startsExpanded: Bool = {
@@ -266,40 +217,33 @@ struct MapView: View {
                     activeSheet: $activeSheet,
                     initialPosition: startsExpanded ? .expanded : .collapsed
                 ) {
-
                     switch sheet {
-
                     case .routePlanner:
-                        RoutePlannerView(
+                        RouteInputSheet(
                             region: $region,
                             routes: $routes,
                             selectedRoute: $selectedRoute,
-                            onRouteReady: {
+                            onRouteRequested: {
                                 activeSheet = nil
                             }
                         )
-
                     case .eventDetail(let event):
-                        EventDetailView(event: event)
+                        EventDetailModal(event: event)
                     }
                 }
             }
         }
- 
         .onChange(of: selectedRoute) { _, newRoute in
             guard let newRoute else {
                 viewModel.clearRisk()
                 return
             }
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
             viewModel.fetchRisk(for: newRoute)
         }
-
         .onChange(of: region) { _, newRegion in
             viewModel.loadEvents(for: newRegion)
         }
-
-
         .onAppear {
             locationManager.requestPermission()
             viewModel.loadEvents(for: region)
@@ -330,19 +274,9 @@ struct MapView: View {
         .onDisappear {
             viewModel.clearRisk()
         }
-        .animation(.easeInOut(duration: 0.2), value: viewModel.isLoading)
-        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: viewModel.isRiskLoading)
-        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: viewModel.routeRisk?.score ?? -1)
-        .animation(.easeInOut(duration: 0.2), value: isEmptyState)
-        .tint(.blue)
-
-    }
-}
-
-private struct BouncyCircleButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+        .animation(.easeInOut(duration: 0.18), value: viewModel.isLoading)
+        .animation(.easeInOut(duration: 0.18), value: viewModel.isRiskLoading)
+        .animation(.easeInOut(duration: 0.18), value: viewModel.routeRisk?.score ?? -1)
+        .tint(ColorTokens.neutralAccent)
     }
 }

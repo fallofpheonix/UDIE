@@ -187,3 +187,13 @@ final class MapViewModel: ObservableObject {
         return BoundingBox(minLat: minLat, maxLat: maxLat, minLng: minLng, maxLng: maxLng)
     }
 }
+
+extension MapViewModel: MapPresentationLogic {
+    func requestRoute() {
+        // Route input is handled by RouteInputSheet and emitted via UI bindings.
+    }
+
+    func refreshRisk() {
+        // Risk recomputation is triggered when selectedRoute updates.
+    }
+}

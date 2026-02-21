@@ -24,22 +24,33 @@ enum RiskLevel {
         switch self {
         case .low:
             return LinearGradient(
-                colors: [.green.opacity(0.8), .green],
+                colors: [ColorTokens.lowRisk.opacity(0.85), ColorTokens.lowRisk],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         case .medium:
             return LinearGradient(
-                colors: [.orange.opacity(0.8), .orange],
+                colors: [ColorTokens.mediumRisk.opacity(0.85), ColorTokens.mediumRisk],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         case .high:
             return LinearGradient(
-                colors: [.red.opacity(0.8), .red],
+                colors: [ColorTokens.highRisk.opacity(0.85), ColorTokens.highRisk],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
+        }
+    }
+
+    var tokenColor: Color {
+        switch self {
+        case .low:
+            return ColorTokens.lowRisk
+        case .medium:
+            return ColorTokens.mediumRisk
+        case .high:
+            return ColorTokens.highRisk
         }
     }
 
