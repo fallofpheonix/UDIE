@@ -1,41 +1,50 @@
 import SwiftUI
 
 struct EventCellView: View {
-    let event: GeoEvent
-
-    private var severityProgress: Double {
-        min(max(Double(event.severity) / 5.0, 0), 1)
-    }
+    let model: EventListCardViewData
 
     var body: some View {
-        VStack(alignment: .leading, spacing: SpacingScale.xs) {
+        VStack(alignment: .leading, spacing: SpacingScale.xs2) {
             HStack {
-                Text(event.eventType.displayName)
-                    .font(.caption)
+                Text(model.title)
+                    .font(.subheadline)
                     .fontWeight(.semibold)
+                    .foregroundStyle(ColorTokens.textPrimary)
                 Spacer()
-                Text("S\(event.severity)")
+                Text(model.severityLabel)
                     .font(.caption2)
                     .fontWeight(.bold)
+                    .foregroundStyle(ColorTokens.textPrimary)
+                    .padding(.horizontal, SpacingScale.xs)
+                    .padding(.vertical, SpacingScale.xxs)
+                    .background(ColorTokens.chipBackground)
+                    .clipShape(Capsule())
             }
 
-            ProgressView(value: severityProgress)
-                .tint(event.eventType.displayColor)
+            HStack(spacing: SpacingScale.xs) {
+                Circle()
+                    .fill(model.tint)
+                    .frame(width: 8, height: 8)
+                Text(model.distanceText)
+                    .font(.caption)
+                    .foregroundStyle(ColorTokens.textSecondary)
+            }
 
             HStack {
-                Text("Conf: \(Int((event.confidence * 100).rounded()))%")
-                Spacer()
-                Text(String(format: "%.4f, %.4f", event.latitude, event.longitude))
+                Text(model.confidenceText)
+                Text("•")
+                Text(model.coordinateText)
             }
             .font(.caption2)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(ColorTokens.textSecondary)
         }
-        .padding(SpacingScale.sm)
-        .background(ColorTokens.cardSurface)
+        .padding(SpacingScale.md)
+        .background(model.background)
         .clipShape(RoundedRectangle(cornerRadius: ElevationTokens.cardRadius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: ElevationTokens.cardRadius, style: .continuous)
                 .stroke(ColorTokens.cardStroke)
         )
+        .shadow(color: ElevationTokens.shadowSoft, radius: 8, y: 4)
     }
 }

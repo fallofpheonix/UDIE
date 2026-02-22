@@ -20,6 +20,7 @@ struct RoutePlannerView: View {
     @State private var isLoading = false
     @State private var statusMessage: String?
     @State private var isErrorStatus = false
+    @State private var routeSummary: RouteSummary?
     @FocusState private var focusedField: Field?
 
     private enum Field {
@@ -34,6 +35,12 @@ struct RoutePlannerView: View {
         let destination: String
     }
 
+    private struct RouteSummary {
+        let etaText: String
+        let distanceText: String
+        let arrivalText: String
+    }
+
     private let demoPresets: [DemoRoutePreset] = [
         .init(title: "CP -> India Gate", origin: "Connaught Place, New Delhi", destination: "India Gate, New Delhi"),
         .init(title: "Rajiv Chowk -> Khan Market", origin: "Rajiv Chowk Metro Station, New Delhi", destination: "Khan Market, New Delhi"),
@@ -41,66 +48,32 @@ struct RoutePlannerView: View {
     ]
 
     var body: some View {
+        VStack(spacing: SpacingScale.md) {
+            header
+            inputCard
+            presetsRow
 
-        ScrollView {
-            VStack(spacing: 16) {
-
-                TextField("Origin", text: $originText)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($focusedField, equals: .origin)
-                    .submitLabel(.next)
-                    .onSubmit {
-                        focusedField = .destination
-                    }
-
-                TextField("Destination", text: $destinationText)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($focusedField, equals: .destination)
-                    .submitLabel(.done)
-                    .onSubmit {
-                        focusedField = nil
-                        calculateRoute()
-                    }
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(demoPresets) { preset in
-                            Button(preset.title) {
-                                originText = preset.origin
-                                destinationText = preset.destination
-                                statusMessage = "Preset loaded. Tap Calculate Route."
-                                isErrorStatus = false
-                                focusedField = nil
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
-                        }
-                    }
-                }
-
-                Button {
-                    calculateRoute()
-                } label: {
-                    if isLoading {
-                        ProgressView()
-                    } else {
-                        Text("Calculate Route")
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(isLoading)
-
-                if let statusMessage {
-                    Text(statusMessage)
-                        .font(.footnote)
-                        .foregroundStyle(isErrorStatus ? .red : .secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                Spacer(minLength: 8)
+            if let routeSummary {
+                routeReadyCard(summary: routeSummary)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
-            .padding()
+
+            if let statusMessage {
+                Text(statusMessage)
+                    .font(.footnote)
+                    .foregroundStyle(isErrorStatus ? ColorTokens.highRisk : ColorTokens.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, SpacingScale.xs)
+            }
+
+            Spacer(minLength: SpacingScale.sm)
+
+            actionButton
         }
+        .padding(.horizontal, SpacingScale.md)
+        .padding(.top, SpacingScale.md)
+        .padding(.bottom, SpacingScale.lg)
+        .background(ColorTokens.appBackground)
         .contentShape(Rectangle())
         .onTapGesture {
             focusedField = nil
@@ -116,10 +89,169 @@ struct RoutePlannerView: View {
         }
     }
 
+    private var header: some View {
+        VStack(alignment: .leading, spacing: SpacingScale.xs2) {
+            Text("Plan a risk-aware route")
+                .font(.headline)
+                .foregroundStyle(ColorTokens.textPrimary)
+            Text("Find a route and let UDIE overlay live disruption risk.")
+                .font(.subheadline)
+                .foregroundStyle(ColorTokens.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var inputCard: some View {
+        VStack(spacing: SpacingScale.sm) {
+            inputField(
+                title: "Origin",
+                placeholder: "Enter pickup location",
+                text: $originText,
+                field: .origin,
+                submitLabel: .next
+            ) {
+                focusedField = .destination
+            }
+
+            inputField(
+                title: "Destination",
+                placeholder: "Enter destination",
+                text: $destinationText,
+                field: .destination,
+                submitLabel: .done
+            ) {
+                focusedField = nil
+                calculateRoute()
+            }
+        }
+        .padding(SpacingScale.md)
+        .background(ColorTokens.surfacePrimary)
+        .clipShape(RoundedRectangle(cornerRadius: ElevationTokens.sheetRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: ElevationTokens.sheetRadius, style: .continuous)
+                .stroke(ColorTokens.cardStroke)
+        )
+        .shadow(color: ElevationTokens.shadowSoft, radius: 8, y: 4)
+    }
+
+    private var presetsRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: SpacingScale.xs) {
+                ForEach(demoPresets) { preset in
+                    Button(preset.title) {
+                        originText = preset.origin
+                        destinationText = preset.destination
+                        statusMessage = "Preset loaded. Tap Analyze Route."
+                        isErrorStatus = false
+                        routeSummary = nil
+                        focusedField = nil
+                    }
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(ColorTokens.textPrimary)
+                    .padding(.horizontal, SpacingScale.sm)
+                    .padding(.vertical, SpacingScale.xs)
+                    .background(ColorTokens.chipBackground)
+                    .clipShape(Capsule())
+                    .overlay(
+                        Capsule().stroke(ColorTokens.cardStroke)
+                    )
+                    .buttonStyle(PressScaleButtonStyle())
+                }
+            }
+        }
+    }
+
+    private var actionButton: some View {
+        Button {
+            calculateRoute()
+        } label: {
+            HStack(spacing: SpacingScale.xs) {
+                if isLoading {
+                    ProgressView()
+                        .tint(ColorTokens.surfacePrimary)
+                }
+                Text(isLoading ? "Analyzing" : "Analyze Route")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
+            .foregroundStyle(ColorTokens.surfacePrimary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, SpacingScale.sm)
+            .background(ColorTokens.neutralPrimary)
+            .clipShape(RoundedRectangle(cornerRadius: ElevationTokens.pillRadius, style: .continuous))
+        }
+        .buttonStyle(PressScaleButtonStyle())
+        .disabled(isLoading)
+        .opacity(isLoading ? 0.8 : 1)
+    }
+
+    private func routeReadyCard(summary: RouteSummary) -> some View {
+        VStack(alignment: .leading, spacing: SpacingScale.xs) {
+            Text("Route Ready")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(ColorTokens.neutralPrimary)
+
+            HStack {
+                routeStat(summary.etaText, icon: "clock")
+                Spacer()
+                routeStat(summary.distanceText, icon: "map")
+                Spacer()
+                routeStat(summary.arrivalText, icon: "calendar")
+            }
+        }
+        .padding(SpacingScale.md)
+        .background(ColorTokens.surfaceTintedA)
+        .clipShape(RoundedRectangle(cornerRadius: ElevationTokens.cardRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: ElevationTokens.cardRadius, style: .continuous)
+                .stroke(ColorTokens.cardStroke)
+        )
+    }
+
+    private func routeStat(_ value: String, icon: String) -> some View {
+        HStack(spacing: SpacingScale.xxs) {
+            Image(systemName: icon)
+            Text(value)
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(ColorTokens.textSecondary)
+    }
+
+    private func inputField(
+        title: String,
+        placeholder: String,
+        text: Binding<String>,
+        field: Field,
+        submitLabel: SubmitLabel,
+        onSubmit: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: SpacingScale.xxs) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(ColorTokens.textSecondary)
+
+            TextField(placeholder, text: text)
+                .focused($focusedField, equals: field)
+                .submitLabel(submitLabel)
+                .onSubmit(onSubmit)
+                .padding(.horizontal, SpacingScale.sm)
+                .padding(.vertical, SpacingScale.sm)
+                .background(ColorTokens.surfaceSecondary)
+                .foregroundStyle(ColorTokens.textPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: ElevationTokens.pillRadius, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: ElevationTokens.pillRadius, style: .continuous)
+                        .stroke(ColorTokens.cardStroke)
+                )
+        }
+    }
+
     private func calculateRoute() {
         focusedField = nil
         statusMessage = nil
         isErrorStatus = false
+        routeSummary = nil
 
         guard !originText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               !destinationText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -178,8 +310,9 @@ struct RoutePlannerView: View {
                             routes = foundRoutes
                             selectedRoute = first
                             region = MKCoordinateRegion(first.polyline.boundingMapRect)
-                            statusMessage = "Route ready. Showing on map."
+                            statusMessage = "Route ready. Showing risk overlays on map."
                             isErrorStatus = false
+                            routeSummary = makeRouteSummary(from: first)
                             onRouteReady?()
                         } else {
                             if let error {
@@ -194,5 +327,21 @@ struct RoutePlannerView: View {
                 }
             }
         }
+    }
+
+    private func makeRouteSummary(from route: MKRoute) -> RouteSummary {
+        let eta = max(1, Int((route.expectedTravelTime / 60).rounded()))
+        let distance = String(format: "%.1f km", route.distance / 1000)
+        let arrivalDate = Date().addingTimeInterval(route.expectedTravelTime)
+
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.dateStyle = .none
+
+        return RouteSummary(
+            etaText: "\(eta) min",
+            distanceText: distance,
+            arrivalText: formatter.string(from: arrivalDate)
+        )
     }
 }

@@ -128,7 +128,7 @@ final class MapViewModel: ObservableObject {
                     level = .low
                 }
 
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                withAnimation(.easeInOut(duration: 0.20)) {
                     routeRisk = RouteRisk(
                         score: response.score,
                         level: level,

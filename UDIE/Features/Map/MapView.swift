@@ -73,10 +73,27 @@ struct MapView: View {
         !viewModel.isLoading && filteredEvents.isEmpty
     }
 
+    private var eventCardModels: [EventListCardViewData] {
+        filteredEvents.prefix(6).map { event in
+            EventListCardViewData.from(event: event, distanceText: nearbyLabel(for: event))
+        }
+    }
+
     private var riskViewData: RouteRiskViewData? {
         guard let risk = viewModel.routeRisk else { return nil }
+
         let eventCount = filteredEvents.count
         let delayMinutes = max(1, Int((risk.durationMinutes * risk.score * 0.25).rounded()))
+        let etaMinutes = max(1, Int(risk.durationMinutes.rounded()))
+        let distanceKM = String(format: "%.1f km", risk.distanceKM)
+        let arrivalDate = Date().addingTimeInterval(risk.durationMinutes * 60)
+        let arrivalFormatter = DateFormatter()
+        arrivalFormatter.timeStyle = .short
+        arrivalFormatter.dateStyle = .none
+        let arrivalText = arrivalFormatter.string(from: arrivalDate)
+
+        let primaryInstruction = selectedRoute?.steps.first(where: { !$0.instructions.isEmpty })?.instructions ?? "Proceed on selected route"
+        let secondaryInstruction = "Risk-aware guidance from live disruptions"
 
         let recommendation: String
         switch risk.level {
@@ -91,6 +108,11 @@ struct MapView: View {
         return RouteRiskViewData(
             levelTitle: risk.level.title,
             levelColor: risk.level.tokenColor,
+            etaText: "\(etaMinutes) min",
+            distanceText: distanceKM,
+            arrivalText: arrivalText,
+            primaryInstruction: primaryInstruction,
+            secondaryInstruction: secondaryInstruction,
             delayEstimate: "~\(delayMinutes) min",
             eventCount: eventCount,
             recommendation: recommendation
@@ -118,12 +140,11 @@ struct MapView: View {
             .allowsHitTesting(false)
 
             if uiState.isLoading {
-                Color.black.opacity(0.15)
+                ColorTokens.mapOverlaySoft
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
 
                 ProgressView()
-                    .scaleEffect(1.15)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .transition(.opacity)
             }
@@ -133,9 +154,10 @@ struct MapView: View {
                     Spacer()
                     Text("No disruptions in this area")
                         .font(.headline)
+                        .foregroundStyle(ColorTokens.textPrimary)
                         .padding(.horizontal, theme.spacing.lg)
                         .padding(.vertical, theme.spacing.md)
-                        .background(ColorTokens.cardSurface)
+                        .background(ColorTokens.surfacePrimary)
                         .clipShape(RoundedRectangle(cornerRadius: theme.elevation.cardRadius, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: theme.elevation.cardRadius, style: .continuous)
@@ -147,61 +169,84 @@ struct MapView: View {
                 .transition(.opacity)
             }
 
-            VStack(alignment: .leading, spacing: theme.spacing.md) {
+            VStack(alignment: .leading, spacing: theme.spacing.md2) {
                 StatusBadgeView(
                     isError: viewModel.errorMessage != nil,
                     eventCount: filteredEvents.count,
                     lastUpdated: lastUpdatedText
                 )
+                .transition(.opacity.combined(with: .move(edge: .top)))
 
-                if !filteredEvents.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: theme.spacing.sm) {
-                            ForEach(filteredEvents.prefix(5)) { event in
-                                EventCellView(event: event)
-                                    .frame(width: 210)
-                            }
-                        }
+                if viewModel.isRiskLoading {
+                    HStack {
+                        ProgressView()
+                        Text("Analyzing route risk")
+                            .font(.subheadline)
+                            .foregroundStyle(ColorTokens.textSecondary)
                     }
-                    .transition(.opacity)
+                    .padding(theme.spacing.sm)
+                    .background(ColorTokens.surfacePrimary)
+                    .clipShape(RoundedRectangle(cornerRadius: ElevationTokens.pillRadius, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: ElevationTokens.pillRadius, style: .continuous)
+                            .stroke(ColorTokens.cardStroke)
+                    )
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                } else if let riskViewData {
+                    RiskSummaryCard(model: riskViewData) {
+                        withAnimation(.easeInOut(duration: 0.20)) {
+                            selectedRoute = nil
+                            routes = []
+                        }
+                        viewModel.clearRisk()
+                    }
+                    .frame(maxWidth: 430)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
                 Spacer()
 
-                HStack(alignment: .bottom) {
-                    if viewModel.isRiskLoading {
-                        ProgressView()
-                            .padding(theme.spacing.md)
-                            .background(ColorTokens.cardSurface)
-                            .clipShape(RoundedRectangle(cornerRadius: theme.elevation.cardRadius, style: .continuous))
-                    } else if let riskViewData {
-                        RiskSummaryCard(model: riskViewData) {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                selectedRoute = nil
-                                routes = []
+                if !eventCardModels.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: theme.spacing.sm) {
+                            ForEach(eventCardModels) { model in
+                                EventCellView(model: model)
+                                    .frame(width: 244)
+                                    .onTapGesture {
+                                        if let event = filteredEvents.first(where: { $0.id == model.id }) {
+                                            activeSheet = .eventDetail(event)
+                                        }
+                                    }
                             }
-                            viewModel.clearRisk()
                         }
-                        .frame(width: 300)
-                        .transition(.opacity)
                     }
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                }
 
-                    Spacer()
-
-                    VStack(spacing: theme.spacing.sm) {
+                HStack(alignment: .bottom, spacing: theme.spacing.sm) {
+                    HStack(spacing: theme.spacing.sm) {
                         FloatingButton(systemName: "line.3.horizontal.decrease.circle") {
                             showFilters = true
                         }
-
                         FloatingButton(systemName: "arrow.triangle.turn.up.right.diamond.fill") {
                             activeSheet = .routePlanner
                         }
-
                         FloatingButton(systemName: "arrow.clockwise") {
                             viewModel.loadEvents(for: region, force: true)
                         }
                     }
+                    .padding(theme.spacing.xs)
+                    .background(ColorTokens.surfacePrimary)
+                    .clipShape(RoundedRectangle(cornerRadius: ElevationTokens.sheetRadius, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: ElevationTokens.sheetRadius, style: .continuous)
+                            .stroke(ColorTokens.cardStroke)
+                    )
+                    .shadow(color: ElevationTokens.shadowMedium, radius: 10, y: 5)
+
+                    Spacer()
                 }
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
             .padding(.horizontal, theme.spacing.md)
             .padding(.top, theme.spacing.md)
@@ -274,9 +319,20 @@ struct MapView: View {
         .onDisappear {
             viewModel.clearRisk()
         }
-        .animation(.easeInOut(duration: 0.18), value: viewModel.isLoading)
-        .animation(.easeInOut(duration: 0.18), value: viewModel.isRiskLoading)
-        .animation(.easeInOut(duration: 0.18), value: viewModel.routeRisk?.score ?? -1)
+        .animation(.easeInOut(duration: 0.20), value: viewModel.isLoading)
+        .animation(.easeInOut(duration: 0.20), value: viewModel.isRiskLoading)
+        .animation(.easeInOut(duration: 0.20), value: viewModel.routeRisk?.score ?? -1)
         .tint(ColorTokens.neutralAccent)
+        .background(ColorTokens.appBackground)
+    }
+
+    private func nearbyLabel(for event: GeoEvent) -> String {
+        let center = CLLocation(latitude: region.center.latitude, longitude: region.center.longitude)
+        let point = CLLocation(latitude: event.latitude, longitude: event.longitude)
+        let km = center.distance(from: point) / 1000
+        if km < 1 {
+            return "Within 1 km"
+        }
+        return String(format: "%.1f km away", km)
     }
 }

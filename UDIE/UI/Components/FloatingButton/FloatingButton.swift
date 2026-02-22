@@ -3,21 +3,38 @@ import SwiftUI
 struct FloatingButton: View {
     let systemName: String
     let action: () -> Void
+    let size: CGFloat
 
     var body: some View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(ColorTokens.neutralPrimary)
-                .frame(width: 50, height: 50)
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: ElevationTokens.buttonRadius, style: .continuous))
+                .foregroundStyle(ColorTokens.textPrimary)
+                .frame(width: size, height: size)
+                .background(ColorTokens.controlFill)
+                .clipShape(RoundedRectangle(cornerRadius: ElevationTokens.floatingControlRadius, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: ElevationTokens.buttonRadius, style: .continuous)
+                    RoundedRectangle(cornerRadius: ElevationTokens.floatingControlRadius, style: .continuous)
                         .stroke(ColorTokens.cardStroke)
                 )
-                .shadow(color: ElevationTokens.cardShadow, radius: ElevationTokens.cardShadowRadius, y: 6)
+                .shadow(color: ElevationTokens.shadowMedium, radius: 8, y: 4)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleButtonStyle())
+    }
+}
+
+extension FloatingButton {
+    init(systemName: String, size: CGFloat = 50, action: @escaping () -> Void) {
+        self.systemName = systemName
+        self.action = action
+        self.size = size
+    }
+}
+
+struct PressScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.easeInOut(duration: 0.16), value: configuration.isPressed)
     }
 }

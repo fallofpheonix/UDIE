@@ -6,38 +6,31 @@ struct StatusBadgeView: View {
     let lastUpdated: String
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: SpacingScale.xs) {
             Image(systemName: isError ? "exclamationmark.triangle.fill" : "dot.radiowaves.left.and.right")
-                .foregroundStyle(isError ? .red : .mint)
-            
+                .foregroundStyle(isError ? ColorTokens.highRisk : ColorTokens.neutralAccent)
+
             Text(isError ? "Backend Warning" : "Backend Connected")
                 .font(.caption)
                 .fontWeight(.semibold)
-            
+
             Text("• \(eventCount) events")
                 .font(.caption2)
-                .foregroundStyle(.white.opacity(0.8))
-            
+                .foregroundStyle(ColorTokens.textSecondary)
+
             Text("• \(lastUpdated)")
                 .font(.caption2)
-                .foregroundStyle(.white.opacity(0.8))
+                .foregroundStyle(ColorTokens.textSecondary)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(
-            LinearGradient(
-                colors: isError
-                    ? [Color.red.opacity(0.35), Color.black.opacity(0.3)]
-                    : [Color.teal.opacity(0.32), Color.black.opacity(0.28)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .cornerRadius(10)
+        .foregroundStyle(ColorTokens.textPrimary)
+        .padding(.horizontal, SpacingScale.sm)
+        .padding(.vertical, SpacingScale.xs)
+        .background(isError ? ColorTokens.surfaceTintedC : ColorTokens.surfaceSecondary)
+        .clipShape(RoundedRectangle(cornerRadius: ElevationTokens.pillRadius, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(.white.opacity(0.15), lineWidth: 1)
+            RoundedRectangle(cornerRadius: ElevationTokens.pillRadius, style: .continuous)
+                .stroke(ColorTokens.cardStroke, lineWidth: 1)
         )
-        .shadow(radius: 4)
+        .shadow(color: ElevationTokens.shadowSoft, radius: 5, y: 2)
     }
 }
