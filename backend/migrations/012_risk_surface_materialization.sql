@@ -10,16 +10,47 @@ CREATE TABLE IF NOT EXISTS risk_cells (
 -- Procedure to refresh risk_cells layer
 CREATE OR REPLACE FUNCTION refresh_risk_surface()
 RETURNS VOID AS $$
+DECLARE
+  v_alpha DOUBLE PRECISION;
+  v_density_cap DOUBLE PRECISION;
 BEGIN
+  SELECT COALESCE(value, 0.3) INTO v_alpha FROM model_parameters WHERE key = 'DENSITY_ALPHA';
+  SELECT COALESCE(value, 3.0) INTO v_density_cap FROM model_parameters WHERE key = 'DENSITY_FACTOR_MAX';
+
   INSERT INTO risk_cells (h3_index, weight, updated_at)
+  WITH active_events AS (
+    SELECT h3_index, severity, confidence
+    FROM geo_events
+    WHERE status = 'ACTIVE'
+      AND (expires_at IS NULL OR expires_at > now())
+  ),
+  base AS (
+    SELECT h3_index, SUM(severity * confidence) AS base_weight
+    FROM active_events
+    GROUP BY h3_index
+  ),
+  density AS (
+    SELECT
+      b.h3_index,
+      b.base_weight,
+      (
+        SELECT COUNT(*)::int
+        FROM active_events ae
+        WHERE ae.h3_index IN (
+          SELECT (neighbor.cell)::bigint
+          FROM h3_grid_disk(b.h3_index::h3index, 1) AS neighbor(cell)
+        )
+      ) AS neighbor_event_count
+    FROM base b
+  )
   SELECT
     h3_index,
-    SUM(severity * confidence) as weight,
+    base_weight * LEAST(
+      v_density_cap,
+      1 + (v_alpha * LN(1 + neighbor_event_count))
+    ) AS weight,
     now()
-  FROM geo_events
-  WHERE status = 'ACTIVE'
-    AND (expires_at IS NULL OR expires_at > now())
-  GROUP BY h3_index
+  FROM density
   ON CONFLICT (h3_index)
   DO UPDATE SET
     weight = EXCLUDED.weight,

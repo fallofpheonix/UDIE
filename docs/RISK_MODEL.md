@@ -91,25 +91,28 @@ These bands are interpretive only and must not affect computation.
 
 ---
 
-## 6. Temporal Confidence Evolution
+## 6. Temporal Window Aggregation
+UDIE has transitioned from a continuous decay model to a sliding temporal window (default: 6h).
 
-Each event’s confidence evolves over time via lifecycle decay:
+Risk is computed as:
+W = \sum_{e \in window} (S_e \cdot e^{-\gamma \cdot age})
 
-Ct+1=Ct⋅γC_{t+1} = C_t \cdot \gamma**C**t**+**1****=**C**t****⋅**γ**
-Where:
-
-* γ\gamma**γ** = decay multiplier applied per cycle.
-
-### Default Parameter
-
-γ=0.97 per 15-minute cycle\gamma = 0.97 \text{ per 15-minute cycle}**γ**=**0.97** per 15-minute cycle
-Reinforcement from new observations increases confidence before decay is applied again.
-
-This ensures stale disruptions fade naturally without manual cleanup.
+This ensures stale disruptions fade naturally while maintaining lower compute overhead than per-event lifecycle management.
 
 ---
 
-## 7. Computational Guarantees
+## 7. Spatial Density Amplification
+To capture clustering effects where multiple disruptions reinforce each other, a density factor is applied during aggregation:
+
+W_{final} = W \cdot (1 + \alpha \cdot \ln(1 + N))
+
+Where:
+* N = number of concurrent events in the cell or immediate neighborhood.
+* \alpha = amplification factor (configurable in `model_parameters`).
+
+---
+
+## 8. Computational Guarantees
 
 The model is designed to enforce the following:
 

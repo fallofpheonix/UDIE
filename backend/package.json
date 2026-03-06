@@ -11,7 +11,11 @@
     "migration:up": "bash ./scripts/migrate_all.sh",
     "test:risk": "npm run build && node --test test/risk.service.test.cjs",
     "validate:rebuild": "bash ./scripts/validate_rebuild.sh",
-    "validate:plan": "bash ./scripts/check_risk_query_plan.sh"
+    "validate:plan": "bash ./scripts/check_risk_query_plan.sh",
+    "verify:architecture": "bash ./scripts/verify_architecture.sh",
+    "bench:memory-grid": "ts-node benchmarks/memory_grid_bench.ts",
+    "bench:intelligence": "ts-node benchmarks/intelligence_eval.ts",
+    "test:architecture": "node --test test/hotspot-clustering.test.cjs test/forecast-stability.test.cjs test/density-amplification.test.cjs"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

@@ -8,7 +8,7 @@ type LockRow = QueryResultRow & { locked: boolean };
 @Injectable()
 export class LifecycleService implements OnModuleInit {
     private readonly logger = new Logger(LifecycleService.name);
-    private readonly advisoryLockKey = 41002;
+    private readonly workerName = 'lifecycle_worker';
 
     constructor(private readonly db: DatabaseService) { }
 
@@ -29,7 +29,10 @@ export class LifecycleService implements OnModuleInit {
         const start = performance.now();
 
         try {
-            const lockResult = await this.db.query<LockRow>('SELECT pg_try_advisory_lock($1) AS locked', [this.advisoryLockKey]);
+            const lockResult = await this.db.query(
+                'SELECT acquire_worker_lock($1, $2) AS locked',
+                [this.workerName, performance.now().toString()]
+            );
             if (!lockResult.rows[0]?.locked) {
                 this.logger.log('[LIFECYCLE] skipped=true reason=lock-held');
                 return;
@@ -64,7 +67,7 @@ export class LifecycleService implements OnModuleInit {
             );
             this.logger.error(`[LIFECYCLE] status=FAILED error=${message}`);
         } finally {
-            await this.db.query('SELECT pg_advisory_unlock($1)', [this.advisoryLockKey]);
+            // Heartbeat/lock handled by acquire_worker_lock in DB
         }
     }
 }

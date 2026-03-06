@@ -7,6 +7,11 @@ This guide defines how we prove that UDIE is both technically correct and scient
 - **Success**: Latency delta < 3%.
 - **Command**: `ts-node benchmarks/scale_test.ts`
 
+## 1.1 Hot Path Latency
+- **Experiment**: In-memory route scoring path.
+- **Success**: Median route evaluation below 1 ms under benchmark dataset.
+- **Command**: `npm run test:risk`
+
 ## 2. Model Fidelity (The Real World)
 - **Experiment**: Ground Truth Correlation.
 - **Action**: Compare `system_score` against verified news reports.
@@ -32,7 +37,9 @@ This guide defines how we prove that UDIE is both technically correct and scient
 
 ## 7. Density Stress
 - **Experiment**: Urban core vs Sparse outskirts.
-- **Goal**: Core areas must not perpetually saturate at "HIGH". Requires localized normalization metrics.
+- **Goal**: Core areas must not perpetually saturate at "HIGH". Density amplification must remain bounded and stable.
+- **Model**: `density_factor = 1 + alpha * log(1 + neighbor_event_count)` with `alpha` from `model_parameters`.
+- **Guardrail**: apply configured cap (`DENSITY_FACTOR_MAX`) during materialization.
 
 ## 8. Duplication Resistance
 - **Experiment**: 100-report burst for one incident.
@@ -44,7 +51,30 @@ This guide defines how we prove that UDIE is both technically correct and scient
 - **Target**: no `Seq Scan on geo_events` in explain output.
 - **Command**: `npm run validate:plan`
 
+## 9.1 Architecture Audit
+- **Experiment**: run invariant checks via diagnostics service.
+- **Target**: healthy status for query-plan, rebuild, partition, and hot-path checks.
+- **Command**: `npm run verify:architecture` and `GET /api/v1/diagnostics/architecture`
+
+## 10. Snapshot Surface Validation
+- **Experiment**: Verify 5-minute snapshot cadence and bounded retrieval.
+- **Action**: ensure `risk_snapshots` row count grows monotonically and `/risk-snapshots` response obeys bbox+time filters.
+- **Command**: run snapshot worker and query `/api/v1/risk-snapshots`.
+
+## 11. Performance Sentinel
+- **Experiment**: collect periodic performance state.
+- **Target**: risk latency average within threshold and healthy buffer hit ratio.
+- **Source**: `system_state.performance_sentinel`.
+
+## 12. Simulation Isolation
+- **Experiment**: inject synthetic events through simulation API.
+- **Target**: no mutation to `events_log`/`risk_cells` from simulation stream.
+- **Command**: `POST /api/v1/simulation/events` then verify production tables unchanged.
+
 ---
 
 ## The Evaluation Harness
 All verification must run through the automated `benchmarks/spatial_baseline_v1` dataset to ensure regressions are identified instantly.
+
+## Runtime Prerequisite
+- `validate:rebuild` and `validate:plan` require `DATABASE_URL` in environment.

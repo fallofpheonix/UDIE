@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsNumber, IsString, Max, Min, MinLength, ValidateNested } from 'class-validator';
+import { ArrayMinSize, IsArray, IsNumber, Max, Min, ValidateNested } from 'class-validator';
 
-class CoordinateDto {
+export class CoordinateDto {
   @IsNumber()
   @Min(-90)
   @Max(90)
@@ -19,8 +19,4 @@ export class RouteRiskDto {
   @ValidateNested({ each: true })
   @Type(() => CoordinateDto)
   coordinates!: CoordinateDto[];
-
-  @IsString()
-  @MinLength(1)
-  city!: string;
 }

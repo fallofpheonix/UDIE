@@ -1,4 +1,4 @@
-import { IsNumberString, IsOptional, IsString, Length, Matches, Max, Min } from 'class-validator';
+import { IsNumberString, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class QueryEventsDto {
@@ -16,12 +16,11 @@ export class QueryEventsDto {
 
   @IsOptional()
   @IsString()
-  @Length(3, 3)
-  city?: string;
+  eventTypes?: string;
 
   @IsOptional()
   @IsString()
-  eventTypes?: string;
+  regionId?: string;
 
   @IsOptional()
   @IsNumberString()

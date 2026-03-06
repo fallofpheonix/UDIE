@@ -1,115 +1,207 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { QueryResultRow } from 'pg';
-import { DatabaseService } from '../../database/database.service';
+import * as h3 from 'h3-js';
 import { RouteRiskDto } from './dto/route-risk.dto';
-import { RouteRiskResponseDto } from './dto/route-risk-response.dto';
-
-type RouteRiskRow = QueryResultRow & {
-  risk_score: number;
-  event_count: number;
-};
-
-type ModelParamRow = QueryResultRow & {
-  key: string;
-  value: number;
-};
+import { RiskGridService } from './risk-grid.service';
+import { SpatialService } from '../common/spatial.service';
+import { resolveRouteRegion } from '../common/region-resolver.util';
+import { ObservabilityService } from '../common/observability.service';
 
 @Injectable()
 export class RiskService {
   private readonly logger = new Logger(RiskService.name);
+  private readonly K_NORMALIZATION = 10.0; // Rational normalization constant
+  private readonly MAX_VERTICES = 1000;
 
-  constructor(private readonly db: DatabaseService) { }
+  constructor(
+    private readonly riskGrid: RiskGridService,
+    private readonly spatial: SpatialService,
+    private readonly observability: ObservabilityService,
+  ) { }
 
-  async calculateRouteRisk(payload: RouteRiskDto): Promise<RouteRiskResponseDto> {
-    const { coordinates, city } = payload;
-    const start = performance.now();
-    const requestID = Math.random().toString(36).substring(7);
-    const config = await this.getRiskConfig();
+  /**
+   * Calculates route risk with <1ms latency using the In-Memory Grid.
+   * Implements:
+   * 1. H3 Polyline-based route coverage (fixes boundary jitter).
+   * 2. Length-normalized risk density (fixes route-length bias).
+   * 3. Rational normalization (preserves ranking resolution).
+   */
+  async calculateRouteRisk(dto: RouteRiskDto) {
+    const startTime = performance.now();
+    const simplifiedCoordinates = this.simplifyRoute(dto.coordinates);
+    const regionId = resolveRouteRegion(simplifiedCoordinates);
 
-    if (!coordinates || coordinates.length < 2) {
-      this.logger.warn(`[REQ:${requestID}] Insufficient coordinates for risk calculation in city: ${city}`);
-      return { score: 0, level: 'LOW', eventCount: 0 };
-    }
-
-    if (coordinates.length > config.maxVertices) {
-      this.logger.error(`[REQ:${requestID}] Route exceeds vertex limit (${coordinates.length} > ${config.maxVertices})`);
-      throw new Error(`Route too complex. Max vertices allowed: ${config.maxVertices}`);
-    }
-
-    // Basic distance estimation (sum of segments)
-    let totalDist = 0;
-    for (let i = 0; i < coordinates.length - 1; i++) {
-      const p1 = coordinates[i];
-      const p2 = coordinates[i + 1];
-      totalDist += Math.sqrt(Math.pow(p2.lat - p1.lat, 2) + Math.pow(p2.lng - p1.lng, 2));
-    }
-
-    // Crude approx (1 degree ~ 111km)
-    if (totalDist * 111 > config.maxDistanceKm) {
-      this.logger.error(`[REQ:${requestID}] Route exceeds distance limit (${(totalDist * 111).toFixed(2)}km > ${config.maxDistanceKm}km)`);
-      throw new Error(`Route too long. Max distance: ${config.maxDistanceKm}km`);
-    }
-
-    this.logger.log(`[Risk v2] [REQ:${requestID}] Calculating for ${city} with ${coordinates.length} points`);
-
-    const lineString =
-      'LINESTRING(' +
-      coordinates.map((point) => `${point.lng} ${point.lat}`).join(', ') +
-      ')';
-
-    try {
-      const result = await this.db.query<RouteRiskRow>(
-        `SELECT raw_risk_score as risk_score, cell_count as event_count FROM calculate_route_risk_v3(ST_GeogFromText($1));`,
-        [lineString],
-      );
-
-      const rawScore = Number(result.rows[0]?.risk_score ?? 0);
-      const eventCount = Number(result.rows[0]?.event_count ?? 0);
-
-      const normalized = 1 - Math.exp(-rawScore / config.sigmoidK);
-
-      const level: RouteRiskResponseDto['level'] =
-        normalized >= 0.7 ? 'HIGH' : normalized >= 0.35 ? 'MEDIUM' : 'LOW';
-
-      const latency = (performance.now() - start).toFixed(2);
-
-      // Day 1-2: Instrument Reality - Baseline performance logging for CSV extraction
-      // Format: BASELINE,points,latency_ms,events_scanned,rows_returned
-      this.logger.log(`[BASELINE] points:${coordinates.length}, latency:${latency}ms, events_scanned:${eventCount}, rows_returned:1`);
-      this.logger.log(`[Risk v2] [RES:${requestID}] Latency: ${latency}ms, Raw: ${rawScore.toFixed(2)}, Norm: ${normalized.toFixed(4)}, Level: ${level}, Events: ${eventCount}`);
-
+    // 1. Convert route to H3 Res 9 polyline coverage
+    const routeCells = this.getRouteCells(simplifiedCoordinates);
+    if (routeCells.length === 0) {
+      const elapsedSec = (performance.now() - startTime) / 1000;
+      this.observability.observeRiskEvalLatency(elapsedSec);
       return {
-        score: Number(normalized.toFixed(3)),
-        level,
-        eventCount,
-        modelVersion: 2,
-        latencyMs: parseFloat(latency),
+        riskScore: 0,
+        riskDensity: 0,
+        routeLengthKm: 0,
+        latencyMs: parseFloat((performance.now() - startTime).toFixed(2))
       };
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'unknown';
-      const stack = error instanceof Error ? error.stack : undefined;
-      this.logger.error(`[Risk v2] [ERR:${requestID}] Database error: ${message}`, stack);
-      throw error;
+    }
+
+    // 2. Calculate raw integrated risk
+    let rawRisk = 0;
+    const pathDistance = this.calculatePathDistance(simplifiedCoordinates);
+
+    for (const cell of routeCells) {
+      // Direct hit weight
+      rawRisk += this.riskGrid.getWeight(cell);
+
+      // Neighborhood influence (k=1 to k=3)
+        const neighbors = this.spatial.getInfluenceNeighbors(cell, 3);
+      for (const neighbor of neighbors) {
+        if (neighbor === cell) continue;
+        const dist = this.spatial.getGridDistance(cell, neighbor);
+        const influenceWeight = this.spatial.getInfluenceWeight(dist);
+        rawRisk += this.riskGrid.getWeight(neighbor) * influenceWeight;
+      }
+    }
+
+    // 3. Length Normalization (Risk Density)
+    // Rdensity = Rraw / route_length (prevent bias for longer routes)
+    const riskDensity = pathDistance > 0 ? rawRisk / pathDistance : rawRisk;
+
+    // 4. Rational Normalization
+    // Rnorm = R / (R + k) (better ranking resolution in dense urban areas)
+    const normalizedScore = riskDensity / (riskDensity + this.K_NORMALIZATION);
+
+    const latencyMs = performance.now() - startTime;
+    this.observability.observeRiskEvalLatency(latencyMs / 1000);
+    this.logger.debug(`[RISK] region=${regionId} risk=${normalizedScore.toFixed(4)} latency_ms=${latencyMs.toFixed(2)}`);
+
+    return {
+      riskScore: parseFloat(normalizedScore.toFixed(4)),
+      riskDensity: parseFloat(riskDensity.toFixed(4)),
+      routeLengthKm: parseFloat(pathDistance.toFixed(2)),
+      cellCount: routeCells.length,
+      latencyMs: parseFloat(latencyMs.toFixed(2)),
+    };
+  }
+
+  private simplifyRoute(coords: { lat: number; lng: number }[]): { lat: number; lng: number }[] {
+    if (coords.length <= 2) {
+      return coords;
+    }
+
+    const epsilon = this.computeEpsilon(coords);
+    const simplified = this.douglasPeucker(coords, epsilon);
+
+    if (simplified.length <= this.MAX_VERTICES) {
+      return simplified;
+    }
+
+    const step = Math.ceil(simplified.length / this.MAX_VERTICES);
+    const capped: { lat: number; lng: number }[] = [];
+    for (let i = 0; i < simplified.length; i += step) {
+      capped.push(simplified[i]);
+    }
+    const last = simplified[simplified.length - 1];
+    if (capped[capped.length - 1] !== last) {
+      capped.push(last);
+    }
+    return capped.slice(0, this.MAX_VERTICES);
+  }
+
+  private computeEpsilon(coords: { lat: number; lng: number }[]): number {
+    const totalDistanceKm = this.calculatePathDistance(coords);
+    // 10m baseline tolerance scaled by route length.
+    return Math.max(0.00005, Math.min(0.00025, totalDistanceKm / 500000));
+  }
+
+  private douglasPeucker(coords: { lat: number; lng: number }[], epsilon: number): { lat: number; lng: number }[] {
+    if (coords.length < 3) {
+      return coords;
+    }
+
+    let maxDistance = 0;
+    let splitIndex = 0;
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+
+    for (let i = 1; i < coords.length - 1; i += 1) {
+      const distance = this.perpendicularDistance(coords[i], first, last);
+      if (distance > maxDistance) {
+        maxDistance = distance;
+        splitIndex = i;
+      }
+    }
+
+    if (maxDistance > epsilon) {
+      const left = this.douglasPeucker(coords.slice(0, splitIndex + 1), epsilon);
+      const right = this.douglasPeucker(coords.slice(splitIndex), epsilon);
+      return left.slice(0, left.length - 1).concat(right);
+    }
+
+    return [first, last];
+  }
+
+  private perpendicularDistance(
+    point: { lat: number; lng: number },
+    lineStart: { lat: number; lng: number },
+    lineEnd: { lat: number; lng: number },
+  ): number {
+    const x0 = point.lng;
+    const y0 = point.lat;
+    const x1 = lineStart.lng;
+    const y1 = lineStart.lat;
+    const x2 = lineEnd.lng;
+    const y2 = lineEnd.lat;
+
+    const denominator = Math.hypot(y2 - y1, x2 - x1);
+    if (denominator === 0) {
+      return Math.hypot(x0 - x1, y0 - y1);
+    }
+    return Math.abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1) / denominator;
+  }
+
+  /**
+   * Uses H3 Polyline for stable cell coverage.
+   */
+  private getRouteCells(coords: { lat: number, lng: number }[]): string[] {
+    try {
+      const line = coords.map(c => [c.lat, c.lng]);
+      // Use h3.gridPathCells for polyline coverage at resolution 9
+      // Note: h3.gridPathCells expects [lat, lng] pairs
+      const indices = new Set<string>();
+      for (let i = 0; i < line.length - 1; i++) {
+        const path = h3.gridPathCells(
+          h3.latLngToCell(line[i][0], line[i][1], 9),
+          h3.latLngToCell(line[i + 1][0], line[i + 1][1], 9)
+        );
+        path.forEach(cell => indices.add(cell));
+      }
+      return Array.from(indices);
+    } catch (error) {
+      // Fallback to point sampling if path fails
+      const indices = new Set<string>();
+      coords.forEach(c => indices.add(h3.latLngToCell(c.lat, c.lng, 9)));
+      return Array.from(indices);
     }
   }
 
-  private async getRiskConfig(): Promise<{
-    sigmoidK: number;
-    maxVertices: number;
-    maxDistanceKm: number;
-  }> {
-    const result = await this.db.query<ModelParamRow>(
-      `SELECT key, value
-       FROM model_parameters
-       WHERE key = ANY($1)`,
-      [['SIGMOID_K', 'MAX_ROUTE_VERTICES', 'MAX_ROUTE_DISTANCE_KM']],
-    );
+  /**
+   * Basic Haversine path distance calculation.
+   */
+  private calculatePathDistance(coords: { lat: number, lng: number }[]): number {
+    let dist = 0;
+    for (let i = 0; i < coords.length - 1; i++) {
+      dist += this.haversine(coords[i], coords[i + 1]);
+    }
+    return dist;
+  }
 
-    const map = new Map(result.rows.map((row) => [row.key, Number(row.value)]));
-    return {
-      sigmoidK: map.get('SIGMOID_K') ?? 20.0,
-      maxVertices: Math.round(map.get('MAX_ROUTE_VERTICES') ?? 1000),
-      maxDistanceKm: map.get('MAX_ROUTE_DISTANCE_KM') ?? 50.0,
-    };
+  private haversine(c1: { lat: number, lng: number }, c2: { lat: number, lng: number }): number {
+    const R = 6371; // km
+    const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+    const dLng = (c2.lng - c1.lng) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   }
 }

@@ -5,6 +5,11 @@ UDIE leverages a modern, full-stack technologies focused on performance and spat
 ## Frontend (Mobile)
 - **Language**: Swift 5.10
 - **Framework**: SwiftUI
+### Visual & Interaction Layer
+- **Visualization**: Leaflet.js
+- **Analytics**: Chart.js
+- **Spatial Engine**: H3-js (Client-side polygon generation)
+- **UI Architecture**: Glassmorphism 2.0 (Modern CSS3)
 - **Maps**: Apple MapKit
 - **Networking**: URLSession + Async/Await
 - **Reactivity**: Combine

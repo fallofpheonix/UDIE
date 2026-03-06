@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UDIE | City Intelligence Hub</title>
+    <!-- Premium Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <!-- Spatial Engine -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/h3-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dark-theme">
+    <div id="app" class="dashboard-grid">
+        <!-- Sidebar: Navigation & Controls -->
+        <aside class="sidebar glass">
+            <div class="brand">
+                <div class="logo-icon"></div>
+                <div class="brand-text">
+                    <span class="accent">UDIE</span>
+                    <span class="subtext">Spatial Intelligence</span>
+                </div>
+            </div>
+
+            <nav class="main-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <span class="icon">📊</span> City Dashboard
+                </a>
+                <a href="#" class="nav-item" data-view="risk">
+                    <span class="icon">🛡️</span> Risk Analysis
+                </a>
+                <a href="#" class="nav-item" data-view="intelligence">
+                    <span class="icon">🧠</span> Pattern Intel
+                </a>
+                <a href="#" class="nav-item" data-view="users">
+                    <span class="icon">👥</span> Admin
+                </a>
+                <a href="#" class="nav-item" data-view="health">
+                    <span class="icon">🧪</span> System Health
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="system-status">
+                    <div class="status-indicator online"></div>
+                    <span>Streaming Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content: Map & Real-time Layer -->
+        <main class="map-viewport">
+            <div id="map"></div>
+
+            <!-- Map Overlay UI -->
+            <div class="map-overlay top-left">
+                <div class="search-box glass">
+                    <input type="text" placeholder="Inspect region (e.g. London, Delhi)...">
+                    <button>🔍</button>
+                </div>
+                <div class="instruction-toast glass" id="route-tip">
+                    🖱️ Right-click to set route origin/destination
+                </div>
+            </div>
+
+            <div class="map-overlay bottom-center">
+                <div class="timeline-control glass">
+                    <div class="timeline-header">
+                        <span>Temporal Playback</span>
+                        <span id="current-time">LIVE</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="timeline-slider" min="0" max="100" value="100">
+                    </div>
+                    <div class="timeline-ticks">
+                        <span>-12h</span>
+                        <span>-6h</span>
+                        <span>Now</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel: Intelligence Feed & Stats -->
+        <section class="intelligence-panel glass">
+            <div class="panel-header">
+                <h2>Intelligence Hub</h2>
+                <div class="layer-toggles">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="forecast-toggle">
+                        <span class="slider round"></span>
+                        <span class="label">Forecast Mode</span>
+                    </label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="reliability-toggle">
+                        <span class="slider round"></span>
+                        <span class="label">Reliability Index (IRI)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="label">City Risk Index</span>
+                    <span class="value high">0.74</span>
+                    <div class="mini-chart" id="risk-trend"></div>
+                </div>
+                <div class="stat-card">
+                    <span class="label">Detected Patterns</span>
+                    <span class="value" id="pattern-count">0</span>
+                </div>
+            </div>
+
+            <!-- AI Intelligence Radar -->
+            <div class="intelligence-radar card">
+                <h3><span class="ai-chip">AI</span> Pattern Radar</h3>
+                <div id="radar-alerts" class="radar-list">
+                    <!-- AI Insight cards will be injected here -->
+                </div>
+            </div>
+
+            <div class="panel-header" style="margin-top: 24px;">
+                <h3>Live Incident Feed</h3>
+                <div class="filters">
+                    <span class="badge active">All</span>
+                    <span class="badge">Critical</span>
+                </div>
+            </div>
+
+            <div class="incident-feed" id="feed-container">
+                <div class="loading-shimmer"></div>
+            </div>
+
+            <!-- Route Comparison (Hidden by default) -->
+            <div class="route-comparison card" id="route-panel" style="display: none;">
+                <h3>Route Risk Analysis</h3>
+                <div class="route-list" id="route-results"></div>
+            </div>
+
+            <!-- System Health Dashboard (Hidden by default) -->
+            <div class="health-dashboard card" id="health-panel" style="display: none;">
+                <div class="panel-header">
+                    <h3><span class="ai-chip">SELF-DIAGNOSIS</span> Platform Health</h3>
+                </div>
+                <div class="health-grid">
+                    <div class="health-card" id="audit-arch">
+                        <label>Architecture</label>
+                        <div class="status-badge">Checking...</div>
+                    </div>
+                    <div class="health-card" id="audit-query">
+                        <label>Query Plan</label>
+                        <div class="status-badge">Checking...</div>
+                    </div>
+                    <div class="health-card" id="audit-perf">
+                        <label>Latency (P99)</label>
+                        <div class="value">-- ms</div>
+                    </div>
+                    <div class="health-card" id="audit-model">
+                        <label>Model Stability</label>
+                        <div class="status-badge">Stable</div>
+                    </div>
+                </div>
+                <div class="health-log" id="system-audit-log">
+                    <div class="log-entry">Waiting for audit cycle...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Disruption Inspector (Modal/Floating) -->
+        <div id="inspector" class="inspector-panel glass hidden">
+            <button class="close-btn">×</button>
+            <div class="inspector-content">
+                <header>
+                    <span class="h3-label">Cell: 89283082a...</span>
+                    <h3 class="incident-title">Construction Cluster</h3>
+                </header>
+                <div class="metrics">
+                    <div class="metric">
+                        <label>Current Risk</label>
+                        <div class="value-bar">
+                            <div class="fill" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <label>Reliability</label>
+                        <span class="val">Fair (0.6)</span>
+                    </div>
+                </div>
+                <div class="explanation">
+                    <p>This cell is experiencing persistent disruption linked to 3 active construction logs.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates -->
+    <template id="incident-item-template">
+        <div class="incident-item">
+            <div class="incident-icon"></div>
+            <div class="incident-info">
+                <div class="type">Traffic Spike</div>
+                <div class="location">Downtown Sector</div>
+            </div>
+            <div class="incident-risk">0.8</div>
+        </div>
+    </template>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

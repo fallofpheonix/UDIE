@@ -13,6 +13,10 @@ export class DatabaseService implements OnModuleDestroy {
     return this.pool.query<T>(text, params);
   }
 
+  getPool() {
+    return this.pool;
+  }
+
   async healthCheck() {
     await this.pool.query('SELECT 1');
   }

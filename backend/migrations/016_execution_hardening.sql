@@ -66,7 +66,9 @@ $$ LANGUAGE plpgsql;
 INSERT INTO model_parameters (key, value, description) VALUES
 ('MAX_ROUTE_VERTICES', 1000.0, 'Maximum vertices accepted by /risk route payload'),
 ('MAX_ROUTE_DISTANCE_KM', 50.0, 'Maximum route distance accepted by /risk'),
-('MATERIALIZATION_STALE_SECONDS', 300.0, 'Max age allowed for risk surface freshness in health checks')
+('MATERIALIZATION_STALE_SECONDS', 300.0, 'Max age allowed for risk surface freshness in health checks'),
+('DENSITY_ALPHA', 0.3, 'Spatial density amplification alpha'),
+('DENSITY_FACTOR_MAX', 3.0, 'Maximum density amplification multiplier')
 ON CONFLICT (key) DO UPDATE SET
   value = EXCLUDED.value,
   description = EXCLUDED.description,
