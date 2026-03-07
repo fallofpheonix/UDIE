@@ -22,7 +22,7 @@ struct MockEventGenerator {
 
             let event = GeoEvent(
                 id: UUID(),
-                eventType: EventType.allCases.randomElement()!,
+                eventType: EventType.allCases.randomElement() ?? .accident,
                 severity: Int.random(in: 1...5),
                 confidence: Double.random(in: 0.5...1.0),
                 latitude: region.center.latitude + latOffset,

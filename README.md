@@ -1,174 +1,86 @@
-# UDIE — Urban Disruption Intelligence Engine
+# 🌪️ UDIE — Urban Disruption Intelligence Engine
 
-UDIE is a spatial intelligence system that models urban disruption as a continuously updated risk field.
-It ingests noisy real-world signals, reconciles them through lifecycle rules, and exposes a bounded-cost API for evaluating route exposure.
-
-This is not a navigation engine.
-It is a geospatial computation layer designed to remain deterministic, rebuildable, and scalable.
-
-➡ Start with the documentation index: **`docs/INDEX.md`**
+**UDIE** is a next-generation spatial intelligence substrate that models urban disruption as a continuously evolving, deterministic risk field. By ingesting diverse real-world signals, UDIE provides a mathematically-grounded view of city-wide disruptions, exposing a high-performance API for real-time risk evaluation.
 
 ---
 
-## What Problem UDIE Solves
-
-Conventional navigation optimizes ETA but ignores infrastructure instability.
-UDIE introduces a structured **risk layer** that quantifies environmental disruption such as:
-
-* accidents,
-* flooding or water logging,
-* construction,
-* road blocks,
-* civic disturbances.
-
-The system converts these transient signals into a stable spatial model usable by mobile clients or logistics systems.
+> [!IMPORTANT]
+> **Architectural Integrity**: This is a geospatial computation layer, not a simple navigation app. It is designed for maximum determinism, observability, and sub-millisecond scaling.
 
 ---
 
-## System Model (Weather-Style Computation)
+## 🏛️ System Architecture (v2.0)
 
-UDIE behaves like a weather simulation.
-It continuously recomputes a spatial field instead of answering queries directly from raw data.
+UDIE operates on a **Spatial Event Sourcing** philosophy, treating the urban landscape as a spatiotemporal scalar risk field.
 
-```
-          External Signals
-     (reports, feeds, sensors)
-                  │
-                  ▼
-            Append-Only Log
-              events_log
-                  │
-                  ▼
-        Deduplication + Reinforcement
-                  │
-                  ▼
-           Lifecycle Projection
-            events_active
-          (decay / expiry)
-                  │
-                  ▼
-        Spatial Materialization (H3)
-               risk_cells
-                  │
-                  ▼
-            Bounded Read API
-           /events   /risk
+```mermaid
+graph TD
+    Signals[External Signals] -- "Immutable" --> Ingest[Ingestion Worker]
+    Ingest -- "Stream" --> Bus{Event Bus: NATS/Kafka}
+    Bus -- "Persist" --> DB[(PostGIS Event Log)]
+    Bus -- "Ordered Feed" --> Engine[Risk Computation Engine]
+    Engine -- "Update" --> Cache[(Redis Spatial Cache)]
+    Cache -- "O1 Query" --> Consumer{{API / Intelligence Feed}}
 ```
 
-**Key invariant:** Query cost depends only on the evaluated route, never on total historical data.
+### 💎 Key Invariants
+- **Deterministic Replay**: The entire system state can be recreated from the authoritative `events_log`.
+- **Bounded Cost**: API query performance is $O(\text{route\_cells})$, independent of total event volume.
+- **Event Log as Truth**: All risk grids are derived projections; the Event Log is the only persistent authority.
 
 ---
 
-## Core Characteristics
+## 🗺️ Repository Map & Navigation
 
-* Append-only ingestion ensures full replayability.
-* Lifecycle decay removes stale signals automatically.
-* Spatial aggregation precomputes risk into H3 cells.
-* `/risk` queries operate in `O(route_cells)` time.
-* Derived tables are disposable. The log is the source of truth.
+UDIE is organized into decoupled layers for scalability and maintainable intelligence.
 
----
-
-## Technology Stack (Purpose-Driven)
-
-| Layer            | Technology              | Role                                          |
-| ---------------- | ----------------------- | --------------------------------------------- |
-| Client           | SwiftUI + MapKit        | Visualization and route geometry only         |
-| API              | NestJS (TypeScript)     | Orchestration, validation, lifecycle triggers |
-| Database         | PostgreSQL 16 + PostGIS | Authoritative computation engine              |
-| Spatial Indexing | H3-PG                   | Deterministic spatial bucketing               |
-| Infra            | Docker Compose          | Reproducible environment                      |
-| Cache            | Redis (optional)        | Non-authoritative read acceleration           |
+| Directory | Layer | Description |
+| :--- | :--- | :--- |
+| [`engine-backend/`](engine-backend/) | **Substrate** | NestJS/PostGIS spatial compute engine. |
+| [`UDIE/`](UDIE/) | **Client** | Swift iOS operational interface. |
+| [`docs/`](docs/) | **Contract** | Specifications, specifications, and protocols. |
+| [`infra/`](infra/) | **Infrastructure** | Docker-compose, PG/Redis configs, & Monitoring. |
+| [`scripts/`](scripts/) | **Automation** | Deployment, diagnostics, and operational tools. |
 
 ---
 
-## Run Locally
+## 📖 Documentation Substrate
 
-### 1. Clone Repository
+### 🏗️ 1. Architecture
+- [**System Workflow**](docs/architecture/system_workflow.md) — Request lifecycle and data propagation.
+- [**Mathematical Appendix**](docs/architecture/MATHEMATICAL_APPENDIX.md) — Formal derivations and stability proofs.
+- [**Roadmap**](docs/architecture/ROADMAP.md) — Our **8-Phase Strategic Evolution**.
+- [**Structure Spec**](docs/architecture/REPOSITORY_STRUCTURE.md) — Directory laws and ownership.
+
+### ⚙️ 2. Operations
+- [**API Spec**](docs/operations/API.md) — REST & WebSocket interface definitions.
+- [**Operational Playbook**](docs/operations/PLAYBOOK.md) — Recovery, scaling, and maintenance SOPs.
+- [**Setup & Onboarding**](docs/operations/SETUP.md) — Bootstrapping the local environment.
+- [**Integrity Report**](docs/operations/INTEGRITY_REPORT.md) — 4-layer system verification status.
+
+### 🤖 3. Agents & Governance
+- [**Agent Protocol**](docs/agents/AGENTS.md) — Mandatory procedures for AI/Autonomous contributors.
+- [**Diagnostic Workflow**](docs/agents/DIAGNOSTIC_PROTOCOL.md) — Layered troubleshooting strategy.
+
+---
+
+## 🚀 Quick Start
+
+Spin up the entire UDIE substrate in minutes using Docker.
 
 ```bash
-git clone git@github.com:fallofpheonix/UDIE.git
-cd UDIE
+# 1. Boot the engine
+cd infra
+docker-compose up -d --build
+
+# 2. Verify System Integrity (Mandatory)
+./scripts/verify-full-system-integrity.sh
+
+# 3. Agent Bootstrap (If using autonomous tools)
+./scripts/agent-bootstrap.sh
 ```
-
-### 2. Start Backend + Database
-
-```bash
-cd backend
-cp .env.example .env
-docker compose up --build
-```
-
-### 3. Verify System Health
-
-```bash
-curl http://localhost:3000/api/health
-```
-
-Expected response:
-
-```json
-{"status":"ok","db":"up"}
-```
-
-### 4. Run iOS Client
-
-Open:
-
-```
-UDIE.xcodeproj
-```
-
-Set API base URL:
-
-* Simulator → `http://127.0.0.1:3000`
-* Device → `http://<your-mac-ip>:3000`
 
 ---
 
-## Where To Read Next
-
-Read documentation in this order:
-
-1. `docs/ARCHITECTURE.md`
-2. `docs/RISK_MODEL.md`
-3. `docs/SYSTEM_REQUIREMENTS.md`
-4. `docs/VERIFICATION_VALIDATION.md`
-
-This explains the system before inspecting code.
-
----
-
-## Development Status
-
-* Append-only ingestion pipeline implemented.
-* Lifecycle decay and expiry operational.
-* H3-based spatial aggregation enabled.
-* Materialized `risk_cells` powering bounded queries.
-* iOS client visualizes real-time evaluated risk.
-
-Verification and scaling validation are ongoing.
-
----
-
-## Contribution
-
-Contributions should target:
-
-* ingestion adapters,
-* validation tooling,
-* spatial model improvements,
-* reliability and observability.
-
-Before submitting changes, ensure they do not violate bounded-query guarantees.
-
----
-
-## License
-
-Add an explicit license file (MIT recommended) before distribution.
-
----
-
-**Design Rule:**
-If a change increases data touched per request, it is incorrect.
+MIT © 2026 **UDIE Engineering Group**. 
+"Stability is a function of structure. Intelligence is a function of stability."

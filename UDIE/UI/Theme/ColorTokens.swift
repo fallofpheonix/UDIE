@@ -25,51 +25,9 @@ enum ColorTokens {
     static let textSecondary = Color(light: "4E626E", dark: "9FB0BA")
     static let controlFill = Color(light: "F0F4F6", dark: "2C373F")
     static let chipBackground = Color(light: "E7EFF2", dark: "2B3740")
-}
-
-extension Color {
-    init(light: String, dark: String) {
-        self.init(uiColor: UIColor { trait in
-            trait.userInterfaceStyle == .dark ? UIColor(hex: dark) : UIColor(hex: light)
-        })
-    }
-
-    init(hex: String) {
-        let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: cleaned).scanHexInt64(&int)
-
-        let a, r, g, b: UInt64
-        switch cleaned.count {
-        case 3:
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6:
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8:
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
-        }
-
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
-        )
-    }
-}
-
-private extension UIColor {
-    convenience init(hex: String) {
-        let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: cleaned).scanHexInt64(&int)
-
-        let r = CGFloat((int >> 16) & 0xFF) / 255.0
-        let g = CGFloat((int >> 8) & 0xFF) / 255.0
-        let b = CGFloat(int & 0xFF) / 255.0
-        self.init(red: r, green: g, blue: b, alpha: 1)
-    }
+    static let accent = Color.accent
+    
+    // Adaptive Aliases
+    static var adaptiveSurface: Color { Color.adaptiveSurface }
+    static var adaptiveBackground: Color { Color.adaptiveBackground }
 }

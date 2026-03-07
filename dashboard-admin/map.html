@@ -1,0 +1,26 @@
+<div class="map-operations">
+    <div class="map-controls">
+        <select id="city-selector">
+            <option value="DEL">Delhi</option>
+            <option value="MUM">Mumbai</option>
+        </select>
+        <input type="text" placeholder="Search location...">
+        <div class="layer-toggles">
+            <label><input type="checkbox" checked> Forecast</label>
+            <label><input type="checkbox"> Reliability</label>
+        </div>
+    </div>
+
+    <div id="full-map-container" class="map-surface">
+        <!-- Map visualization logic in map.js -->
+        <div class="map-placeholder">Spatial Intelligence Map</div>
+    </div>
+
+    <div class="timeline-container">
+        <input type="range" min="0" max="100" value="100" id="time-slider">
+        <div class="timeline-labels">
+            <span>Historical</span>
+            <span>Live</span>
+        </div>
+    </div>
+</div>

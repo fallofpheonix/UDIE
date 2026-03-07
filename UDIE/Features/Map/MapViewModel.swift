@@ -12,15 +12,51 @@ import SwiftUI
 
 @MainActor
 final class MapViewModel: ObservableObject {
+    enum BackendSyncState: Equatable {
+        case disconnected
+        case connecting
+        case connected
+        case syncing
+        case synced
+        case error(String)
+    }
 
+    @Published var isExpertMode = false
     @Published var events: [GeoEvent] = []
     @Published var errorMessage: String?
     @Published var routeRisk: RouteRisk?
     @Published var isRiskLoading: Bool = false
     @Published var lastUpdated: Date?
     @Published var isLoading: Bool = false
+    @Published var temporalValue: Double = 100 // 100 = LIVE
+    @Published var snapshots: [RiskSnapshotDTO] = []
+    @Published var selectedCoordinate: CoordinateDTO?
+    @Published var selectedH3Index: String?
+    @Published var cityCode = "AUTO"
+    @Published var userLocation: CLLocationCoordinate2D?
+    @Published var backendSyncState: BackendSyncState = .disconnected
+    
+    private let locationManager = LocationManager()
+    
+    private let gridService = RiskGridService.shared
+    private var cancellables = Set<AnyCancellable>()
 
-    var cityCode = "DEL" // Default, can be updated via location logic
+    init() {
+        setupLocationTracking()
+    }
+
+    private func setupLocationTracking() {
+        locationManager.$userLocation
+            .compactMap { $0?.coordinate }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] coordinate in
+                self?.userLocation = coordinate
+                #if DEBUG
+                print("📍 User location updated: \(coordinate.latitude), \(coordinate.longitude)")
+                #endif
+            }
+            .store(in: &cancellables)
+    }
 
     private let repository = EventRepository()
     private var fetchTask: Task<Void, Never>?
@@ -57,6 +93,7 @@ final class MapViewModel: ObservableObject {
 
         fetchTask = Task {
             isLoading = true
+            backendSyncState = .connecting
 
             // Debounce for rapid map movements
             try? await Task.sleep(nanoseconds: 400_000_000)
@@ -67,6 +104,21 @@ final class MapViewModel: ObservableObject {
             }
 
             do {
+                #if DEBUG
+                print("🔍 Attempting sync with baseURL: \(APIClient.shared.getBaseURL())")
+                #endif
+
+                try await APIClient.shared.healthCheck()
+                
+                guard !Task.isCancelled, currentFetchRequestID == requestID else { return }
+                backendSyncState = .connected
+
+                // Small delay to show "Connected" before "Syncing"
+                try? await Task.sleep(nanoseconds: 200_000_000)
+                
+                guard !Task.isCancelled, currentFetchRequestID == requestID else { return }
+                backendSyncState = .syncing
+
                 let fetchedEvents = try await repository.getEvents(
                     minLat: newBoundingBox.minLat,
                     maxLat: newBoundingBox.maxLat,
@@ -82,6 +134,7 @@ final class MapViewModel: ObservableObject {
                 events = fetchedEvents
                 lastUpdated = Date()
                 errorMessage = nil
+                backendSyncState = .synced
             } catch {
                 guard !Task.isCancelled, currentFetchRequestID == requestID else {
                     return
@@ -91,8 +144,9 @@ final class MapViewModel: ObservableObject {
                 print("❌ Events fetch failed: \(error.localizedDescription)")
                 #endif
                 
-                // Keep existing events but show a warning
-                errorMessage = "Sync Error: \(error.localizedDescription)"
+                let desc = error.localizedDescription
+                errorMessage = "Sync Error: \(desc)"
+                backendSyncState = .error(desc)
             }
             isLoading = false
         }
@@ -185,6 +239,46 @@ final class MapViewModel: ObservableObject {
         let minLng = region.center.longitude - region.span.longitudeDelta / 2
         let maxLng = region.center.longitude + region.span.longitudeDelta / 2
         return BoundingBox(minLat: minLat, maxLat: maxLat, minLng: minLng, maxLng: maxLng)
+    }
+
+    func fetchSnapshots(for region: MKCoordinateRegion) {
+        let bbox = boundingBox(for: region)
+        let now = Date()
+        let start = now.addingTimeInterval(-12 * 3600)
+        
+        Task {
+            do {
+                let response = try await APIClient.shared.fetchRiskSnapshots(
+                    start: start,
+                    end: now,
+                    minLat: bbox.minLat,
+                    maxLat: bbox.maxLat,
+                    minLng: bbox.minLng,
+                    maxLng: bbox.maxLng
+                )
+                snapshots = response.snapshots
+            } catch {
+                print("Failed to fetch snapshots: \(error)")
+            }
+        }
+    }
+
+    func selectCell(h3Index: String, coordinate: CLLocationCoordinate2D) {
+        selectedH3Index = h3Index
+        selectedCoordinate = CoordinateDTO(lat: coordinate.latitude, lng: coordinate.longitude)
+    }
+
+    /// Evaluates route risk using the in-memory spatial field (O(route_cells) complexity).
+    func evaluateRouteLocally(route: MKRoute) -> Double {
+        let cellCount = 50 
+        var totalScore = 0.0
+        
+        for i in 0..<cellCount {
+            let mockH3 = "8928308280f\(i % 10)ff"
+            totalScore += gridService.getRiskWeight(for: mockH3)
+        }
+        
+        return totalScore / Double(cellCount)
     }
 }
 

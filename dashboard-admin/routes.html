@@ -1,0 +1,31 @@
+<div class="route-analysis">
+    <section class="route-input card">
+        <h3>Analyze Route exposure</h3>
+        <div class="input-group">
+            <input type="text" placeholder="Origin" id="route-origin">
+            <input type="text" placeholder="Destination" id="route-dest">
+            <button onclick="routes.calculate()">Analyze</button>
+        </div>
+    </section>
+
+    <div class="comparison-grid">
+        <div class="route-card low" onclick="routes.select('A')">
+            <div class="label">Route A</div>
+            <div class="risk">Low Risk</div>
+            <div class="meta">23 min | 12.4 km</div>
+        </div>
+        <div class="route-card medium" onclick="routes.select('B')">
+            <div class="label">Route B</div>
+            <div class="risk">Moderate</div>
+            <div class="meta">21 min | 11.2 km</div>
+        </div>
+    </div>
+
+    <section class="risk-profile card">
+        <h3>Route Risk Profile</h3>
+        <div id="risk-profile-graph">
+            <!-- Canvas or SVG for the risk segments -->
+            <div class="profile-placeholder">Risk intensity along path</div>
+        </div>
+    </section>
+</div>

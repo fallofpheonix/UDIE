@@ -1,0 +1,95 @@
+services:
+  postgres:
+    build:
+      context: ../engine-backend
+      dockerfile: docker/Postgres.Dockerfile
+    container_name: udie-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: udie
+      POSTGRES_PASSWORD: udie
+      POSTGRES_DB: udie
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U udie -d udie" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../engine-backend/migrations:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:7-alpine
+    container_name: udie-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ../engine-backend
+      dockerfile: docker/Dockerfile
+    container_name: udie-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://udie:udie@postgres:5432/udie
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - ../engine-backend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    image: prom/prometheus
+    container_name: udie-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    container_name: udie-grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+  node-exporter:
+    image: prom/node-exporter
+    container_name: udie-node-exporter
+    ports:
+      - "9100:9100"
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: udie-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://udie:udie@udie-postgres:5432/udie?sslmode=disable"
+    ports:
+      - "9187:9187"
+
+  redis-exporter:
+    image: oliver006/redis_exporter
+    container_name: udie-redis-exporter
+    environment:
+      REDIS_ADDR: redis://udie-redis:6379
+    ports:
+      - "9121:9121"
+
+volumes:
+  postgres_data:
+  grafana-storage:

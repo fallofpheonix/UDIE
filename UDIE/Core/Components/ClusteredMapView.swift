@@ -13,6 +13,7 @@ struct ClusteredMapView: UIViewRepresentable {
 
     @Binding var region: MKCoordinateRegion
     var events: [GeoEvent]
+    var snapshots: [RiskSnapshotDTO]
     var routes: [MKRoute]
     var selectedRoute: MKRoute?
     var onSelect: (GeoEvent) -> Void
@@ -46,7 +47,13 @@ struct ClusteredMapView: UIViewRepresentable {
         let latDelta = abs(mapView.region.center.latitude - region.center.latitude)
         let lngDelta = abs(mapView.region.center.longitude - region.center.longitude)
         if latDelta > 0.0001 || lngDelta > 0.0001 {
-            mapView.setRegion(region, animated: true)
+            let camera = MKMapCamera(
+                lookingAtCenter: region.center,
+                fromDistance: mapView.camera.centerCoordinateDistance,
+                pitch: mapView.camera.pitch,
+                heading: mapView.camera.heading
+            )
+            mapView.setCamera(camera, animated: true)
         }
 
         let eventSignatures = Set(
@@ -69,8 +76,24 @@ struct ClusteredMapView: UIViewRepresentable {
         let currentRoutes = Set(mapView.overlays.compactMap { $0 as? MKPolyline }.map(ObjectIdentifier.init))
         let nextRoutes = Set(routeOverlays.map(ObjectIdentifier.init))
         if currentRoutes != nextRoutes {
-            mapView.removeOverlays(mapView.overlays)
+            let activePolylines = mapView.overlays.filter { $0 is MKPolyline }
+            mapView.removeOverlays(activePolylines)
             mapView.addOverlays(routeOverlays)
+        }
+
+        let snapshotIndices = Set(snapshots.map { "\($0.h3Index)|\($0.riskWeight)" })
+        if context.coordinator.lastSnapshotIndices != snapshotIndices {
+            let activePolygons = mapView.overlays.filter { $0 is MKPolygon }
+            mapView.removeOverlays(activePolygons)
+
+            let polygons = snapshots.compactMap { snapshot -> MKPolygon? in
+                guard let vertices = H3CoordinateHelper.getVertices(for: snapshot.h3Index) else { return nil }
+                let polygon = MKPolygon(coordinates: vertices, count: vertices.count)
+                polygon.title = "risk_cell|\(snapshot.riskWeight)"
+                return polygon
+            }
+            mapView.addOverlays(polygons)
+            context.coordinator.lastSnapshotIndices = snapshotIndices
         }
     }
 
@@ -83,6 +106,7 @@ struct ClusteredMapView: UIViewRepresentable {
         }
 
         var lastEventSignatures: Set<String> = []
+        var lastSnapshotIndices: Set<String> = []
 
         func mapView(_ mapView: MKMapView,
                      regionDidChangeAnimated animated: Bool) {
@@ -135,26 +159,51 @@ struct ClusteredMapView: UIViewRepresentable {
         }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-            guard let polyline = overlay as? MKPolyline else {
-                return MKOverlayRenderer(overlay: overlay)
+            if let polyline = overlay as? MKPolyline {
+                let renderer = ShadowPolylineRenderer(polyline: polyline)
+                let isSelectedRoute = parent.selectedRoute?.polyline === polyline
+                renderer.strokeColor = isSelectedRoute
+                    ? UIColor.systemBlue
+                    : UIColor.systemBlue.withAlphaComponent(0.35)
+                renderer.lineWidth = isSelectedRoute ? 6 : 4
+                renderer.shadowColor = .black
+                renderer.shadowOffset = CGSize(width: 0, height: 2)
+                renderer.shadowOpacity = 0.3
+                return renderer
+            } else if let polygon = overlay as? MKPolygon {
+                let weight = Double(polygon.title?.split(separator: "|").last ?? "0") ?? 0
+                let renderer = SoftGlowPolygonRenderer(polygon: polygon)
+                let color = colorForWeight(weight)
+                renderer.fillColor = color.withAlphaComponent(0.35)
+                renderer.strokeColor = color.withAlphaComponent(0.6)
+                renderer.lineWidth = 1.5
+                renderer.glowColor = color
+                return renderer
             }
+            return MKOverlayRenderer(overlay: overlay)
+        }
 
-            let renderer = ShadowPolylineRenderer(polyline: polyline)
-
-            let isSelectedRoute = parent.selectedRoute?.polyline === polyline
-            renderer.strokeColor = isSelectedRoute
-                ? UIColor.systemBlue
-                : UIColor.systemBlue.withAlphaComponent(0.35)
-            renderer.lineWidth = isSelectedRoute ? 6 : 4
-            renderer.shadowColor = .black
-            renderer.shadowOffset = CGSize(width: 0, height: 2)
-            renderer.shadowOpacity = 0.3
-
-            return renderer
+        private func colorForWeight(_ weight: Double) -> UIColor {
+            if weight > 8 { return UIColor(ColorTokens.highRisk) }
+            if weight > 4 { return UIColor(ColorTokens.mediumRisk) }
+            return UIColor(ColorTokens.lowRisk)
         }
 
         func mapView(_ mapView: MKMapView,
                      didSelect view: MKAnnotationView) {
+
+            // Tap glow feedback
+            UIView.animate(withDuration: 0.12, delay: 0, options: .curveEaseOut, animations: {
+                view.transform = CGAffineTransform(scaleX: 1.15, y: 1.15)
+                view.layer.shadowColor = (view as? MKMarkerAnnotationView)?.markerTintColor?.cgColor
+                view.layer.shadowOpacity = 0.8
+                view.layer.shadowRadius = 10
+            }, completion: { _ in
+                UIView.animate(withDuration: 0.12) {
+                    view.transform = .identity
+                    view.layer.shadowOpacity = 0.3
+                }
+            })
 
             if let eventAnnotation = view.annotation as? EventAnnotation {
                 parent.onSelect(eventAnnotation.event)

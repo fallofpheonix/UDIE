@@ -261,72 +261,69 @@ struct RoutePlannerView: View {
         }
 
         isLoading = true
-
-        let geocoder = CLGeocoder()
-
-        geocoder.geocodeAddressString(originText) { originPlacemarks, error in
-            guard let origin = originPlacemarks?.first?.location else {
-                DispatchQueue.main.async {
-                    isLoading = false
-                    if let error {
-                        statusMessage = "Origin lookup failed: \(error.localizedDescription)"
-                    } else {
-                        statusMessage = "Could not find origin. Try a fuller address."
-                    }
-                    isErrorStatus = true
-                }
-                return
-            }
-
-            geocoder.geocodeAddressString(destinationText) { destPlacemarks, error in
-                guard let destination = destPlacemarks?.first?.location else {
-                    DispatchQueue.main.async {
-                        isLoading = false
-                        if let error {
-                            statusMessage = "Destination lookup failed: \(error.localizedDescription)"
-                        } else {
-                            statusMessage = "Could not find destination. Try a fuller address."
-                        }
-                        isErrorStatus = true
-                    }
-                    return
-                }
+        Task { @MainActor in
+            do {
+                let sourceItem = try await geocodeMapItem(address: originText)
+                let destinationItem = try await geocodeMapItem(address: destinationText)
 
                 let request = MKDirections.Request()
-                request.source = MKMapItem(placemark: MKPlacemark(coordinate: origin.coordinate))
-                request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destination.coordinate))
+                request.source = sourceItem
+                request.destination = destinationItem
                 request.transportType = .automobile
 
                 let directions = MKDirections(request: request)
+                let response = try await directions.calculate()
 
-                directions.calculate { response, error in
-                    DispatchQueue.main.async {
+                isLoading = false
 
-                        isLoading = false
-
-                        if let foundRoutes = response?.routes,
-                           let first = foundRoutes.first {
-
-                            routes = foundRoutes
-                            selectedRoute = first
-                            region = MKCoordinateRegion(first.polyline.boundingMapRect)
-                            statusMessage = "Route ready. Showing risk overlays on map."
-                            isErrorStatus = false
-                            routeSummary = makeRouteSummary(from: first)
-                            onRouteReady?()
-                        } else {
-                            if let error {
-                                statusMessage = "Route calculation failed: \(error.localizedDescription)"
-                            } else {
-                                statusMessage = "No drivable route found."
-                            }
-                            isErrorStatus = true
-                        }
-
-                    }
+                if let first = response.routes.first {
+                    routes = response.routes
+                    selectedRoute = first
+                    region = MKCoordinateRegion(first.polyline.boundingMapRect)
+                    statusMessage = "Route ready. Showing risk overlays on map."
+                    isErrorStatus = false
+                    routeSummary = makeRouteSummary(from: first)
+                    onRouteReady?()
+                } else {
+                    statusMessage = "No drivable route found."
+                    isErrorStatus = true
                 }
+            } catch {
+                isLoading = false
+                statusMessage = "Route calculation failed: \(error.localizedDescription)"
+                isErrorStatus = true
             }
         }
+    }
+
+    private func geocodeMapItem(address: String) async throws -> MKMapItem {
+        if #available(iOS 26.0, *) {
+            guard let request = MKGeocodingRequest(addressString: address) else {
+                throw NSError(domain: "UDIE.RoutePlanner", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid address: \(address)"])
+            }
+            let items = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[MKMapItem], Error>) in
+                request.getMapItems(completionHandler: { mapItems, error in
+                    if let error {
+                        continuation.resume(throwing: error)
+                        return
+                    }
+                    continuation.resume(returning: mapItems ?? [])
+                })
+            }
+            guard let item = items.first else {
+                throw NSError(domain: "UDIE.RoutePlanner", code: 1, userInfo: [NSLocalizedDescriptionKey: "No result for \(address)"])
+            }
+            return item
+        }
+
+        let searchRequest = MKLocalSearch.Request()
+        searchRequest.naturalLanguageQuery = address
+        let search = MKLocalSearch(request: searchRequest)
+        let response = try await search.start()
+        guard let item = response.mapItems.first else {
+            throw NSError(domain: "UDIE.RoutePlanner", code: 1, userInfo: [NSLocalizedDescriptionKey: "No result for \(address)"])
+        }
+        return item
     }
 
     private func makeRouteSummary(from route: MKRoute) -> RouteSummary {

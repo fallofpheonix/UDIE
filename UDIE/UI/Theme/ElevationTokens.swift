@@ -7,7 +7,10 @@ enum ElevationTokens {
     static let sheetRadius: CGFloat = 22
     static let pillRadius: CGFloat = 14
     static let cardShadow = Color.black.opacity(0.16)
-    static let shadowSoft = Color.black.opacity(0.12)
-    static let shadowMedium = Color.black.opacity(0.18)
-    static let cardShadowRadius: CGFloat = 10
+    static let shadowSoft = Color.black.opacity(0.08)
+    static let shadowMedium = Color.black.opacity(0.14)
+    static let shadowStrong = Color.black.opacity(0.22)
+    static let shadowFloating = Color.black.opacity(0.28)
+    static let cardShadowRadius: CGFloat = 8
+    static let cardShadowRadiusHover: CGFloat = 14
 }

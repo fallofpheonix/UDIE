@@ -34,7 +34,7 @@ extension FloatingButton {
 struct PressScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1)
-            .animation(.easeInOut(duration: 0.16), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.spring(response: 0.12, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }

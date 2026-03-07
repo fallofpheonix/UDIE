@@ -1,0 +1,51 @@
+<div class="system-health">
+    <section class="audit-status card">
+        <div class="status-icon success">🛡️</div>
+        <h3>Architecture Audit</h3>
+        <div class="status-badge live">STATUS: HEALTHY</div>
+    </section>
+
+    <div class="metrics-grid">
+        <div class="card metric-card">
+            <h4>Risk Evaluation Latency</h4>
+            <div class="value">4 ms <span class="trend down">avg</span></div>
+        </div>
+        <div class="card metric-card">
+            <h4>Aggregation Refresh</h4>
+            <div class="value">15 min <span class="trend stable">OK</span></div>
+        </div>
+    </div>
+
+    <section class="service-list card">
+        <h3>Backend Node Status</h3>
+        <div id="service-container">
+            <div class="service-item">
+                <span class="label">Spatial Partition Engine</span>
+                <span class="status-dot green"></span>
+                <div class="card">
+                    <h3>Performance & Throughput (H3 In-Memory Grid)</h3>
+                    <div class="metric">
+                        <span>Grid Size</span>
+                        <span id="grid-size">1.24 MB</span>
+                    </div>
+                    <div class="metric">
+                        <span>Evaluations / Sec</span>
+                        <span id="eval-rate">1,240 rps</span>
+                    </div>
+                    <div class="metric">
+                        <span>Complexity</span>
+                        <span class="badge" style="background: var(--accent-light);">O(route_cells)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="service-item">
+                <span class="label">Risk Gradient Processor</span>
+                <span class="status-dot green"></span>
+            </div>
+            <div class="service-item">
+                <span class="label">Forecast Model Server</span>
+                <span class="status-dot yellow"></span>
+            </div>
+        </div>
+    </section>
+</div>

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct EventCellView: View {
     let model: EventListCardViewData
+    @State private var isHovered = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: SpacingScale.xs2) {
@@ -45,6 +46,15 @@ struct EventCellView: View {
             RoundedRectangle(cornerRadius: ElevationTokens.cardRadius, style: .continuous)
                 .stroke(ColorTokens.cardStroke)
         )
-        .shadow(color: ElevationTokens.shadowSoft, radius: 8, y: 4)
+        .shadow(
+            color: isHovered ? Color.black.opacity(0.24) : ElevationTokens.shadowSoft,
+            radius: isHovered ? 12 : 8,
+            y: isHovered ? 8 : 4
+        )
+        .scaleEffect(isHovered ? 1.02 : 1.0)
+        .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isHovered)
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 }

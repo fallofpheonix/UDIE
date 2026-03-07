@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "2620"
+   LastUpgradeVersion = "2630"
    version = "2.2">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -76,7 +76,7 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "UDIE_API_BASE_URL"
-            value = "http://172.25.214.59:3000"
+            value = "http://localhost:3000"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

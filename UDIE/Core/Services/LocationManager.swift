@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import CoreLocation
 import Combine
+import CoreLocation
 
 final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 

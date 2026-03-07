@@ -33,8 +33,11 @@ final class UDIEUITests: XCTestCase {
 
     @MainActor
     func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
+        // Measure launch time with a single iteration to avoid "Lost connection to testmanagerd"
+        // (repeated launches in default measure() can overload the simulator).
+        let options = XCTMeasureOptions()
+        options.iterationCount = 1
+        measure(metrics: [XCTApplicationLaunchMetric()], options: options) {
             XCUIApplication().launch()
         }
     }

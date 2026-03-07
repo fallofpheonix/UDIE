@@ -1,0 +1,33 @@
+<div class="settings-panel">
+    <section class="card">
+        <h3>Theme Control</h3>
+        <div class="control-group">
+            <button onclick="theme.set('light')">Light</button>
+            <button class="active" onclick="theme.set('dark')">Dark</button>
+            <button onclick="theme.set('system')">System</button>
+        </div>
+    </section>
+
+    <section class="card">
+        <h3>Intelligence Layers</h3>
+        <div class="toggle-list">
+            <label><input type="checkbox" checked> Disruption Forecasts</label>
+            <label><input type="checkbox"> Infrastructure Reliability</label>
+            <label><input type="checkbox" checked> Real-time Alerts</label>
+        </div>
+    </section>
+
+    <section class="card">
+        <h3>Regional Configuration</h3>
+        <div class="input-group">
+            <label>Master Deployment: Delhi</label>
+            <button class="ghost">Change Region</button>
+        </div>
+    </section>
+
+    <section class="card system">
+        <h3>Administrative Actions</h3>
+        <button class="danger">Clear Heatmap Cache</button>
+        <button>Export Architecture Audit</button>
+    </section>
+</div>

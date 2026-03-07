@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct EventDetailModal: View {
     let event: GeoEvent
