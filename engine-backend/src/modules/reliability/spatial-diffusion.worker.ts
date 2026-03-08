@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { QueryResultRow } from 'pg';
 import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
@@ -31,8 +32,13 @@ export class SpatialDiffusionWorker {
                 return;
             }
 
-            // Trigger the Law 5 diffusion kernel integrated in refresh_risk_surface_v2
-            await this.db.query('SELECT refresh_risk_surface_v2();');
+            const hasV2 = await this.hasRefreshRiskSurfaceV2();
+            if (hasV2) {
+                await this.db.query('SELECT refresh_risk_surface_v2();');
+            } else {
+                // Backward compatibility for databases missing migration 038/042.
+                await this.db.query('SELECT refresh_risk_surface();');
+            }
 
             const duration = (performance.now() - start).toFixed(2);
             this.logger.log(`[DIFFUSION] status=SUCCESS duration_ms=${duration}`);
@@ -44,5 +50,12 @@ export class SpatialDiffusionWorker {
         } catch (error: any) {
             this.logger.error(`[DIFFUSION] status=FAILED error=${error.message}`);
         }
+    }
+
+    private async hasRefreshRiskSurfaceV2(): Promise<boolean> {
+        const result = await this.db.query<QueryResultRow>(
+            `SELECT to_regprocedure('public.refresh_risk_surface_v2()') IS NOT NULL AS present`,
+        );
+        return Boolean(result.rows[0]?.present);
     }
 }

@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
+import { PartitionManagementService } from '../database/partition-management.service';
+import { SpatialService } from '../common/spatial.service';
+import { CreateEventDto } from './dto/create-event.dto';
 import { QueryEventsDto } from './dto/query-events.dto';
 import { GeoEventEntity } from './entities/geo-event.entity';
-import { CreateEventDto } from './dto/create-event.dto';
-import { SpatialService } from '../common/spatial.service';
-import * as h3 from 'h3-js';
 
 @Injectable()
 export class EventsRepository {
   constructor(
     private readonly db: DatabaseService,
-    private readonly spatial: SpatialService
-  ) { }
+    private readonly spatial: SpatialService,
+    private readonly partitionManager: PartitionManagementService,
+  ) {}
 
   async findByBoundingBox(query: QueryEventsDto): Promise<GeoEventEntity[]> {
     const minLng = Number(query.minLng);
@@ -22,34 +23,62 @@ export class EventsRepository {
     const regionId = query.regionId?.trim();
     const limit = query.limit || 100;
     const offset = query.offset || 0;
-    const includeSimulation = query.includeSimulation; // Assuming includeSimulation is part of QueryEventsDto
+    const includeSimulation = query.includeSimulation;
 
     const values: unknown[] = [minLng, minLat, maxLng, maxLat];
 
-    const tableName = includeSimulation ? 'simulation_events' : 'regional_geo_events_v';
-    const statusFilter = includeSimulation ? "'SIMULATION'" : "'ACTIVE'";
-    const identityColumn = includeSimulation ? 'id' : 'event_id';
+    if (includeSimulation) {
+      let simulationSql = `
+        SELECT
+          id::text AS id,
+          event_type,
+          severity,
+          1.0::double precision AS confidence,
+          'SIMULATION'::text AS status,
+          NULL::text AS h3_index,
+          lat AS latitude,
+          lng AS longitude,
+          created_at AS observed_at
+        FROM simulation_events
+        WHERE lng BETWEEN $1 AND $3
+          AND lat BETWEEN $2 AND $4
+      `;
 
-    // We query the versioned regional table or simulation table. 
-    // Law 5: No mutations, query only the latest immutable version.
+      if (minSeverity !== undefined && !Number.isNaN(minSeverity)) {
+        values.push(minSeverity);
+        simulationSql += ` AND severity >= $${values.length}`;
+      }
+
+      if (query.eventTypes) {
+        const eventTypes = query.eventTypes.split(',').map((value) => value.trim().toUpperCase());
+        values.push(eventTypes);
+        simulationSql += ` AND event_type::text = ANY($${values.length})`;
+      }
+
+      values.push(limit, offset);
+      simulationSql += ` ORDER BY created_at DESC LIMIT $${values.length - 1} OFFSET $${values.length}`;
+      const simulationResult = await this.db.queryRead<GeoEventEntity>(simulationSql, values);
+      return simulationResult.rows;
+    }
+
     let sql = `
-          SELECT DISTINCT ON (${identityColumn})
-            ${identityColumn} AS id,
-            event_type,
-            severity,
-            confidence,
-            status,
-            h3_index::text,
-            ST_Y(geom::geometry) AS latitude,
-            ST_X(geom::geometry) AS longitude,
-            observed_at
-          FROM ${tableName}
-          WHERE status IN (${statusFilter})
-            AND ST_Intersects(
-              geom::geometry,
-              ST_MakeEnvelope($1, $2, $3, $4, 4326)
-            )
-        `;
+      SELECT DISTINCT ON (event_id)
+        event_id AS id,
+        event_type,
+        severity,
+        confidence,
+        status,
+        h3_index::text,
+        ST_Y(geom::geometry) AS latitude,
+        ST_X(geom::geometry) AS longitude,
+        observed_at
+      FROM regional_geo_events_v
+      WHERE status = 'ACTIVE'
+        AND ST_Intersects(
+          geom::geometry,
+          ST_MakeEnvelope($1, $2, $3, $4, 4326)
+        )
+    `;
 
     if (minSeverity !== undefined && !Number.isNaN(minSeverity)) {
       values.push(minSeverity);
@@ -66,7 +95,6 @@ export class EventsRepository {
       values.push(regionId);
       sql += ` AND h3_parent::text = $${values.length}`;
     } else {
-      // Automatic Partition Pruning: Calculate parents covering the box
       const parents = this.spatial.getCoveringRegions(minLat, minLng, maxLat, maxLng);
       if (parents.length > 0) {
         values.push(parents);
@@ -75,8 +103,7 @@ export class EventsRepository {
     }
 
     values.push(limit, offset);
-    // Order by event_id for DISTINCT ON, then by version DESC for latest
-    sql += ` ORDER BY ${identityColumn}, version DESC LIMIT $${values.length - 1} OFFSET $${values.length}`;
+    sql += ` ORDER BY event_id, version DESC LIMIT $${values.length - 1} OFFSET $${values.length}`;
 
     const result = await this.db.queryRead<GeoEventEntity>(sql, values);
     return result.rows;
@@ -84,40 +111,50 @@ export class EventsRepository {
 
   async create(dto: CreateEventDto): Promise<{ id: string }> {
     const h3Index = this.spatial.getH3Index(dto.lat, dto.lng);
-    const parent = h3.cellToParent(h3Index, 6);
+    const h3IndexDb = BigInt(`0x${h3Index}`).toString(10);
+    const h3Parent = this.spatial.getRegionId(dto.lat, dto.lng);
+    const severity = Math.max(1, Math.min(5, Math.floor(dto.weight * 5) + 1));
+    const observedAt = new Date().toISOString();
+
+    await this.partitionManager.ensurePartition(h3Parent);
 
     const sql = `
-      INSERT INTO geo_events (
-        event_type, 
-        severity, 
-        confidence, 
-        status, 
-        h3_index, 
+      INSERT INTO regional_geo_events_v (
+        event_id,
+        version,
         h3_parent,
+        h3_index,
+        event_type,
+        severity,
+        confidence,
         geom,
+        status,
         observed_at
       )
       VALUES (
-        $1, 
-        $2, 
-        $3, 
-        'ACTIVE', 
-        $4, 
-        $5, 
-        ST_SetSRID(ST_MakePoint($6, $7), 4326),
-        now()
+        gen_random_uuid(),
+        1,
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        ST_SetSRID(ST_MakePoint($6, $7), 4326)::geography,
+        'ACTIVE',
+        $8
       )
       RETURNING event_id AS id
     `;
 
     const values = [
-      dto.type.toUpperCase(),
-      Math.floor(dto.weight * 5) + 1, // Map 0-1 weight to 1-5 severity
+      h3Parent,
+      h3IndexDb,
+      dto.type,
+      severity,
       dto.confidence ?? 1.0,
-      h3Index,
-      parent,
       dto.lng,
-      dto.lat
+      dto.lat,
+      observedAt,
     ];
 
     const result = await this.db.query(sql, values);

@@ -3,13 +3,17 @@ import * as h3 from 'h3-js';
 
 @Injectable()
 export class SpatialService {
+    private toBigIntString(h3Cell: string): string {
+        return BigInt(`0x${h3Cell}`).toString(10);
+    }
+
     /**
      * Derives the regional H3 Parent ID (Resolution 6) for a given point.
      * This serves as the partition key for national scaling.
      */
     getRegionId(lat: number, lng: number): string {
         const res9 = h3.latLngToCell(lat, lng, 9);
-        return h3.cellToParent(res9, 6);
+        return this.toBigIntString(h3.cellToParent(res9, 6));
     }
 
     /**
@@ -69,6 +73,6 @@ export class SpatialService {
 
         // Get res 6 cells covering the polygon
         const cells = h3.polygonToCells(polygon, 6);
-        return Array.from(new Set(cells));
+        return Array.from(new Set(cells.map((cell) => this.toBigIntString(cell))));
     }
 }

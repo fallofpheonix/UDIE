@@ -6,7 +6,9 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
-for file in "$(cd "$(dirname "$0")/.." && pwd)"/migrations/*.sql; do
+repo_root="$(cd "$(dirname "$0")/.." && pwd)"
+for file in "$repo_root"/migrations/*.sql; do
+  [[ -e "$file" ]] || continue
   echo "[MIGRATE] applying $(basename "$file")"
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$file"
 done

@@ -20,6 +20,7 @@ $$ LANGUAGE plpgsql;
 
 -- 2. Trigger on Log Insertion
 -- Law: Updates are triggered by immutable log entries.
+DROP TRIGGER IF EXISTS trg_risk_log_notify ON regional_events_log;
 CREATE TRIGGER trg_risk_log_notify
 AFTER INSERT ON regional_events_log
 FOR EACH ROW

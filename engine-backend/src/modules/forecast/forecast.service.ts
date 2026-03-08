@@ -10,9 +10,10 @@ export class ForecastService {
 
   async rebuildForecastCells(): Promise<number> {
     const alpha = await this.getAlpha();
+    const hasForecast15m = await this.hasForecast15mColumn();
 
-    const result = await this.db.query<QueryResultRow>(
-      `WITH recent AS (
+    const sql = hasForecast15m
+      ? `WITH recent AS (
          SELECT h3_index, snapshot_time, risk_weight
          FROM risk_snapshots
          WHERE snapshot_time >= now() - interval '6 hours'
@@ -55,18 +56,63 @@ export class ForecastService {
          forecast_60m = EXCLUDED.forecast_60m,
          source_points = EXCLUDED.source_points,
          updated_at = EXCLUDED.updated_at
-       RETURNING h3_index`,
-      [alpha],
-    );
+       RETURNING h3_index`
+      : `WITH recent AS (
+         SELECT h3_index, snapshot_time, risk_weight
+         FROM risk_snapshots
+         WHERE snapshot_time >= now() - interval '6 hours'
+       ),
+       ranked AS (
+         SELECT h3_index, snapshot_time, risk_weight,
+                ROW_NUMBER() OVER (PARTITION BY h3_index ORDER BY snapshot_time DESC) AS rn
+         FROM recent
+       ),
+       pairs AS (
+         SELECT
+           h3_index,
+           MAX(CASE WHEN rn = 1 THEN risk_weight END) AS w_now,
+           MAX(CASE WHEN rn = 2 THEN risk_weight END) AS w_prev,
+           COUNT(*)::int AS n
+         FROM ranked
+         WHERE rn <= 2
+         GROUP BY h3_index
+       ),
+       forecasts AS (
+         SELECT
+           h3_index,
+           (COALESCE(w_now, 0) * $1 + COALESCE(w_prev, COALESCE(w_now, 0)) * (1 - $1)) AS s,
+           n
+         FROM pairs
+       )
+       INSERT INTO forecast_cells (h3_index, forecast_30m, forecast_60m, source_points, updated_at)
+       SELECT
+         h3_index,
+         GREATEST(0, s * 1.10) AS forecast_30m,
+         GREATEST(0, s * 1.25) AS forecast_60m,
+         n,
+         now()
+       FROM forecasts
+       ON CONFLICT (h3_index)
+       DO UPDATE SET
+         forecast_30m = EXCLUDED.forecast_30m,
+         forecast_60m = EXCLUDED.forecast_60m,
+         source_points = EXCLUDED.source_points,
+         updated_at = EXCLUDED.updated_at
+       RETURNING h3_index`;
+
+    const result = await this.db.query<QueryResultRow>(sql, [alpha]);
 
     this.logger.log(`[FORECAST] rebuilt forecast_cells count=${result.rowCount ?? 0}`);
     return result.rowCount ?? 0;
   }
 
   async getForecast(h3Index: string) {
+    const hasForecast15m = await this.hasForecast15mColumn();
+    const selectForecast15m = hasForecast15m ? 'forecast_15m' : 'forecast_30m AS forecast_15m';
+
     const result = await this.db.query<QueryResultRow>(
       `SELECT (h3_index::h3index)::text AS h3_index,
-              forecast_15m,
+              ${selectForecast15m},
               forecast_30m,
               forecast_60m,
               source_points,
@@ -105,5 +151,17 @@ export class ForecastService {
     );
     const alpha = Number(result.rows[0]?.value ?? 0.35);
     return Number.isFinite(alpha) && alpha > 0 && alpha < 1 ? alpha : 0.35;
+  }
+
+  private async hasForecast15mColumn(): Promise<boolean> {
+    const result = await this.db.query<QueryResultRow>(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM information_schema.columns
+         WHERE table_name = 'forecast_cells'
+           AND column_name = 'forecast_15m'
+       ) AS present`,
+    );
+    return Boolean(result.rows[0]?.present);
   }
 }
