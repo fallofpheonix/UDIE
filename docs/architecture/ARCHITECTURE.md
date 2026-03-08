@@ -30,10 +30,13 @@ UDIE follows the **Spatial Event Sourcing** pattern. The `events_log` is the onl
 ```mermaid
 graph TD
     Signals[Signals] --> Ingestion[Ingestion Gateway]
-    Ingestion --> Bus{Event Bus}
+    Ingestion --> Bus{Branching Pipeline}
     Bus --> Log[(Events Log)]
-    Bus --> Engine[Risk Computation Engine]
-    Engine --> Cache[(Redis Spatial Cache)]
+    Bus --> Agg[Spatial Aggregation]
+    Bus --> Anomaly[Anomaly Detection]
+    Agg --> Cache[(Redis Spatial Cache)]
+    Anomaly --> Alerts[Alert Generator]
+    Alerts --> WS[Real-time Stream]
     Cache --> API[Evaluation API]
 ```
 

@@ -2,7 +2,7 @@
 -- Enables tracking persistent incidents over time.
 
 CREATE TABLE disruption_identities (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    id uuid DEFAULT gen_random_uuid(),
     event_type text NOT NULL,
     h3_index bigint NOT NULL,
     h3_parent bigint NOT NULL,
@@ -11,7 +11,8 @@ CREATE TABLE disruption_identities (
     cumulative_severity double precision DEFAULT 0,
     observation_count int DEFAULT 1,
     is_active boolean DEFAULT true,
-    metadata jsonb DEFAULT '{}'
+    metadata jsonb DEFAULT '{}',
+    PRIMARY KEY (id, h3_parent)
 ) PARTITION BY LIST (h3_parent);
 
 -- Index for spatial-temporal matching

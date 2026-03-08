@@ -94,12 +94,15 @@ The bridge between external noise and system ground-truth.
 4. **Normalization Logic** computes final score.
 5. **Response** sent back to mobile within **<100ms**.
 
-### Disruption Propagation (Real-time)
-1. **Signal** (e.g., Flood Tweet) detected.
-2. **IngestionService** publishes to **EventBus**.
-3. **RiskEngineWorker** updates the affected H3 cells in **Redis**.
-4. **EventsGateway** broadcasts to all subscribers in that spatial region.
-5. **Mobile UI** updates the map instantly.
+### Disruption Propagation (Parallel Pipeline)
+1. **Signal** (e.g., Flood Tweet) detected and normalized.
+2. **IngestionService** generates deterministic `event_id` and publishes to **Parallel Bus**.
+3. **Execution Branches**:
+    - **Persistence**: Event written to `events_log` (Cold Path).
+    - **Aggregation**: Spatial field updated in **Redis** (Hot Path).
+    - **Intelligence**: Anomaly detection logic triggers Alert if threshold > 2σ.
+4. **WebSocket Gateway** broadcasts delta updates every 1-2s (Batch-consolidated).
+5. **Mobile UI** updates Tactical Map without camera reset.
 
 ---
 
