@@ -6,10 +6,11 @@ This version (v2.0) reflects a **production-first** engineering philosophy: prio
 
 ---
 
-## 🎯 Phase 1: System Stabilization & Observability
-*Focus: Deterministic architecture, operational safety, and deep system visibility.*
+## 🎯 Phase 1: System Stabilization & Blueprint Alignment
+*Focus: Deterministic architecture, operational safety, and defining the production blueprint.*
 
-### Core Substrate
+### Core Substrate & Blueprint Alignment
+- [x] **UDIE System Blueprint (v1.0)**: Consolidated architecture requirements across 20 subsystems.
 - [x] **Risk Model v2**: Continuous spatial decay kernels and density amplification for stable $[0, 1)$ scoring.
 - [x] **Deterministic Rebuild**: Guaranteed state reconstruction from append-only `events_log`.
 - [x] **Constant-Time Evaluation**: $O(\text{route\_cells})$ complexity via memory-resident risk grids.
