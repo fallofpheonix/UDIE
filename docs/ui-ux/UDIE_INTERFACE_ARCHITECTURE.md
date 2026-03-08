@@ -4,6 +4,21 @@ This document defines the structural layout, navigation hierarchy, and operator 
 
 ---
 
+## 0. Operational Lifecycle & Boot (v1.1)
+
+To ensure immediate situational awareness, UDIE adheres to a strict "Immediate Visibility" boot sequence.
+
+### 0.1 Map-First Entry
+*   **Default State**: The application MUST initialize directly to the **Primary Tactical Map (L0-L6)**. 
+*   **Bypassing Dashboards**: Statistical dashboards are secondary overlays; the operator is never blocked by metrics before seeing the spatial field.
+
+### 0.2 Geolocation & Context Persistence
+*   **Initialization**: On boot, the viewport auto-centers on the operator's real-time GL-coordinates.
+*   **Resilience (Offline Mode)**: In the event of network loss or location service failure, the viewport persists at the **Last Seeked Area** stored in local cache.
+*   **Fallback**: Global center (0,0) or City-specific center (configured via `AOS_CONFIG`) is used ONLY if no local persistence or real-time signal exists.
+
+---
+
 ## 1. Application Layout & Surfaces
 
 UDIE follows a **Tactical Command Center** layout, optimized for high data density and low latency interaction.

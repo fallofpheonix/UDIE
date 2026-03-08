@@ -131,6 +131,13 @@ All margins and padding must adhere to the 4px grid tokens.
 49. Use whitespace intentionally.
 50. Visual design must support functionality, not replace it.
 
+### 11. Spatial Persistence and Context
+51. Application MUST launch directly into the Tactical Map view.
+52. Viewport must auto-center on current user location upon initialization.
+53. Disruption data for the **Last Seeked Area** must be cached for offline situational awareness.
+54. Viewport center and zoom level must persist across application restarts.
+55. Network loss should trigger a "Stability Mode" visual indicator without moving the camera.
+
 ---
 
 ## 8. Advanced UI/UX Engineering Rules (60 Principles)

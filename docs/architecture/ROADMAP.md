@@ -19,6 +19,11 @@ This version (v2.0) reflects a **production-first** engineering philosophy: prio
 - [ ] **Performance Sentinel**: Automated alerts for kernel drift, worker lag, and high-latency H3 lookups.
 - [ ] **Auditable Integrity**: Daily `ArchitectureAuditService` reports to verify spatial invariants.
 
+### Spatial UX & Persistence (NEW)
+- [ ] **Map-First Entry**: Guarantee application initializes directly to the Tactical Map view.
+- [ ] **Geolocation Initialization**: Auto-center map on real-time user coordinates upon boot.
+- [ ] **Viewport Persistence**: Implement local storage for "Last Seeked Area" to maintain context during network loss or restarts.
+
 ---
 
 ## 🏗️ Phase 2: Professional Data Pipeline

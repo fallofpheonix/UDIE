@@ -48,7 +48,8 @@ WHERE NOT EXISTS (
 
 CREATE TABLE IF NOT EXISTS system_state (
   key TEXT PRIMARY KEY,
-  value JSONB NOT NULL,
+  value JSONB NOT NULL DEFAULT '{}'::jsonb,
+  last_run TIMESTAMPTZ,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

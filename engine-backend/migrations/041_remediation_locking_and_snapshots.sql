@@ -1,13 +1,5 @@
 -- Migration 041: Fix locking schema and missed snapshots
--- Adds last_run column to system_state for worker heartbeat support
 -- Re-ensures risk_snapshots table exists
-
-DO $$ 
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='system_state' AND column_name='last_run') THEN
-        ALTER TABLE system_state ADD COLUMN last_run TIMESTAMPTZ;
-    END IF;
-END $$;
 
 CREATE TABLE IF NOT EXISTS risk_snapshots (
   snapshot_time TIMESTAMPTZ NOT NULL,
