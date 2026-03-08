@@ -17,13 +17,14 @@ export class DatabaseService implements OnModuleDestroy {
    * Primary query method (Master/Write) with retry logic for connection stability
    */
   async query<T extends QueryResultRow>(text: string, params: unknown[] = [], retries = 5) {
+    const retriableErrors = ['ECONNREFUSED', '57P03']; // 57P03: Cannot connect while starting up
     for (let i = 0; i < retries; i++) {
       try {
         return await this.pool.query<T>(text, params);
       } catch (err: any) {
-        if (err.code === 'ECONNREFUSED' && i < retries - 1) {
+        if (retriableErrors.includes(err.code) && i < retries - 1) {
           const delay = Math.pow(2, i) * 1000;
-          console.warn(`[DB] Connection refused. Retrying in ${delay}ms... (${i + 1}/${retries})`);
+          console.warn(`[DB] ${err.code} detected. Retrying in ${delay}ms... (${i + 1}/${retries})`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
