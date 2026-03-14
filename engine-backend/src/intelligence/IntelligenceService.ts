@@ -98,7 +98,7 @@ export class IntelligenceService {
   async listRecentInsights(query: IntelligenceQuery) {
     const limit = Math.min(Math.max(query.limit ?? 50, 1), 200);
     const result = await this.db.query<QueryResultRow>(`
-      SELECT h3_index::text AS h3_index, pattern_type as type, severity, metadata, created_at
+      SELECT h3_index::text AS h3_index, event_type as type, severity, metadata, created_at
       FROM intelligence_events
       WHERE ($2::text IS NULL OR h3_cell_to_parent(h3_index::h3index, 6)::text = $2)
       ORDER BY created_at DESC
@@ -182,7 +182,7 @@ export class IntelligenceService {
   ): Promise<void> {
     await this.db.query(
       `INSERT INTO intelligence_events (
-         h3_index, pattern_type, severity, score, threshold, window_minutes, event_count, metadata
+         h3_index, event_type, severity, score, threshold, description, event_count, metadata
        ) VALUES (($1::h3index)::bigint, $2, $3, $4, $5, $6, $7, $8::jsonb)`,
       [
         insight.h3Index,
@@ -190,9 +190,9 @@ export class IntelligenceService {
         insight.severity,
         metrics.score,
         metrics.threshold,
-        metrics.windowMinutes,
+        insight.description,
         metrics.eventCount,
-        JSON.stringify({ description: insight.description, ...metrics.metadata }),
+        JSON.stringify({ windowMinutes: metrics.windowMinutes, ...metrics.metadata }),
       ],
     );
   }

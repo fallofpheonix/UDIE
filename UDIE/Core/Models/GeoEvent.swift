@@ -54,6 +54,22 @@ enum EventType: String, Codable, CaseIterable {
     case protest
     case heavyTraffic = "heavy_traffic"
 
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        let normalized = rawValue
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        guard let value = EventType(rawValue: normalized) else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Unsupported event type: \(rawValue)"
+            )
+        }
+        self = value
+    }
+
     var displayName: String {
         switch self {
         case .accident: return "Accident"

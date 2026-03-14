@@ -42,9 +42,11 @@ export class MaterializationService {
                 }
 
                 // 3. Perform Field Materialization (Physics-aware v2)
-                await this.db.query(`SELECT set_config('udie.allow_derived_mutation', 'true', true)`);
-                await this.db.query('SELECT refresh_risk_surface_v2()');
-                await this.db.query(`SELECT set_config('udie.allow_derived_mutation', 'false', true)`);
+                await this.db.withTransaction(async (client) => {
+                    await client.query(`SELECT set_config('udie.allow_derived_mutation', 'true', true)`);
+                    await client.query('SELECT refresh_risk_surface_v2()');
+                    await client.query(`SELECT set_config('udie.allow_derived_mutation', 'false', true)`);
+                });
 
                 const duration = (performance.now() - start).toFixed(2);
                 await this.db.query(
@@ -81,11 +83,6 @@ export class MaterializationService {
                 this.logger.error(`[MATERIALIZE] Critical telemetry failure: ${innerError}`);
             }
             this.logger.error(`[MATERIALIZE] status=FAILED error=${message}`);
-            try {
-                await this.db.query(`SELECT set_config('udie.allow_derived_mutation', 'false', true)`);
-            } catch {
-                // best effort reset
-            }
         }
     }
 

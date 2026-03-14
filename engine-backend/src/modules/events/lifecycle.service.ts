@@ -40,9 +40,11 @@ export class LifecycleService implements OnModuleInit {
                 return;
             }
 
-            await this.db.query(`SELECT set_config('udie.allow_derived_mutation', 'true', true)`);
-            await this.db.query('SELECT run_lifecycle_maintenance();');
-            await this.db.query(`SELECT set_config('udie.allow_derived_mutation', 'false', true)`);
+            await this.db.withTransaction(async (client) => {
+                await client.query(`SELECT set_config('udie.allow_derived_mutation', 'true', true)`);
+                await client.query('SELECT run_lifecycle_maintenance();');
+                await client.query(`SELECT set_config('udie.allow_derived_mutation', 'false', true)`);
+            });
             const duration = (performance.now() - start).toFixed(2);
             await this.db.query(
                 `SELECT set_system_state($1, $2::jsonb)`,
@@ -70,11 +72,6 @@ export class LifecycleService implements OnModuleInit {
                 ],
             );
             this.logger.error(`[LIFECYCLE] status=FAILED error=${message}`);
-            try {
-                await this.db.query(`SELECT set_config('udie.allow_derived_mutation', 'false', true)`);
-            } catch {
-                // best effort reset
-            }
         } finally {
             // Heartbeat/lock handled by acquire_worker_lock in DB
         }

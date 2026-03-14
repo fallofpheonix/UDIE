@@ -33,12 +33,16 @@ export class SpatialDiffusionWorker {
             }
 
             const hasV2 = await this.hasRefreshRiskSurfaceV2();
-            if (hasV2) {
-                await this.db.query('SELECT refresh_risk_surface_v2();');
-            } else {
-                // Backward compatibility for databases missing migration 038/042.
-                await this.db.query('SELECT refresh_risk_surface();');
-            }
+            await this.db.withTransaction(async (client) => {
+                await client.query(`SELECT set_config('udie.allow_derived_mutation', 'true', true)`);
+                if (hasV2) {
+                    await client.query('SELECT refresh_risk_surface_v2();');
+                } else {
+                    // Backward compatibility for databases missing migration 038/042.
+                    await client.query('SELECT refresh_risk_surface();');
+                }
+                await client.query(`SELECT set_config('udie.allow_derived_mutation', 'false', true)`);
+            });
 
             const duration = (performance.now() - start).toFixed(2);
             this.logger.log(`[DIFFUSION] status=SUCCESS duration_ms=${duration}`);

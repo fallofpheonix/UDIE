@@ -1,26 +1,39 @@
 import Foundation
 
 // MARK: - City Dashboard
-struct CityDashboardResponse: Codable {
+struct CityDashboardResponse: Decodable {
     let heatmapSummary: HeatmapSummaryDTO
     let topHotspots: [HotspotDTO]
     let recentIncidents: [RecentIncidentDTO]
     let cityRiskTrend: [RiskTrendDTO]
 }
 
-struct HeatmapSummaryDTO: Codable {
+struct HeatmapSummaryDTO: Decodable {
     let cells: Int
     let avgRisk: Double
     let maxRisk: Double
-    
+
     enum CodingKeys: String, CodingKey {
         case cells
         case avgRisk = "avg_risk"
         case maxRisk = "max_risk"
+        case avgRiskCamel = "avgRisk"
+        case maxRiskCamel = "maxRisk"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        cells = try container.decode(Int.self, forKey: .cells)
+        avgRisk = try container.decodeIfPresent(Double.self, forKey: .avgRisk)
+            ?? container.decodeIfPresent(Double.self, forKey: .avgRiskCamel)
+            ?? 0
+        maxRisk = try container.decodeIfPresent(Double.self, forKey: .maxRisk)
+            ?? container.decodeIfPresent(Double.self, forKey: .maxRiskCamel)
+            ?? 0
     }
 }
 
-struct HotspotDTO: Codable {
+struct HotspotDTO: Decodable {
     let rank: Int
     let aggregatedRisk: Double
     let peakRisk: Double
@@ -28,7 +41,7 @@ struct HotspotDTO: Codable {
     let cells: [String]
 }
 
-struct RecentIncidentDTO: Codable {
+struct RecentIncidentDTO: Decodable {
     let eventType: String
     let severity: Double
     let confidence: Double
@@ -37,14 +50,14 @@ struct RecentIncidentDTO: Codable {
     let observedAt: String
 }
 
-struct RiskTrendDTO: Codable {
+struct RiskTrendDTO: Decodable {
     let snapshotTime: String
     let avgRisk: Double
     let maxRisk: Double
 }
 
 // MARK: - Cell Insight
-struct CellInsightResponse: Codable {
+struct CellInsightResponse: Decodable {
     let h3Index: String
     let riskScore: Double
     let dominantEventType: String
@@ -55,18 +68,33 @@ struct CellInsightResponse: Codable {
 }
 
 // MARK: - Risk Snapshots
-struct RiskSnapshotDTO: Codable {
+struct RiskSnapshotDTO: Decodable {
     let snapshotTime: String
     let h3Index: String
     let riskWeight: Double
 }
 
-struct RiskSnapshotsResponse: Codable {
+struct RiskSnapshotsResponse: Decodable {
     let snapshots: [RiskSnapshotDTO]
+
+    init(from decoder: Decoder) throws {
+        if let single = try? decoder.singleValueContainer(),
+           let directSnapshots = try? single.decode([RiskSnapshotDTO].self) {
+            snapshots = directSnapshots
+            return
+        }
+
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        snapshots = try container.decode([RiskSnapshotDTO].self, forKey: .snapshots)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case snapshots
+    }
 }
 
 // MARK: - Diagnostics
-struct ArchitectureAuditReport: Codable {
+struct ArchitectureAuditReport: Decodable {
     let status: String
     let checks: [String: [String: AnyCodable]]
     let generatedAt: String
