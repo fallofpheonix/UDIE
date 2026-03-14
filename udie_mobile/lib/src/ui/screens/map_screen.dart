@@ -6,6 +6,7 @@ import '../../models.dart';
 import '../../state/app_store.dart';
 import '../../theme.dart';
 import '../widgets/event_marker.dart';
+import '../widgets/ui_components.dart';
 
 const double _kHighSeverity = 0.7;
 const double _kMedSeverity = 0.35;
@@ -22,12 +23,20 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   static const int _maxMarkers = 180;
   final _timeFormat = DateFormat('dd MMM, HH:mm');
+  final _mapController = MapController();
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
 
   void _showEventDetail(DisruptionEvent event) {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (ctx) =>
           _EventDetailSheet(event: event, timeFormat: _timeFormat),
     );
@@ -36,14 +45,15 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final store = widget.store;
+    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
     final markers = store.events
         .take(_maxMarkers)
         .map(
           (event) => Marker(
             point: event.point,
-            width: 44,
-            height: 44,
+            width: 56,
+            height: 56,
             child: EventMarker(
               event: event,
               onTap: () => _showEventDetail(event),
@@ -56,10 +66,13 @@ class _MapScreenState extends State<MapScreen> {
 
     return Stack(
       children: [
-        // ── Map ────────────────────────────────────────────────────────────
+        // ── Map ─────────────────────────────────────────────────────────────
         FlutterMap(
+          mapController: _mapController,
           key: ValueKey(
-            '${store.area.center.latitude}-${store.area.center.longitude}-${store.area.radiusKm}',
+            '${store.area.center.latitude}-'
+            '${store.area.center.longitude}-'
+            '${store.area.radiusKm}',
           ),
           options: MapOptions(
             initialCenter: store.area.center,
@@ -79,9 +92,9 @@ class _MapScreenState extends State<MapScreen> {
                   point: store.area.center,
                   radius: store.area.radiusKm * 1000,
                   useRadiusInMeter: true,
-                  color: UdieTheme.accent.withValues(alpha: 0.08),
-                  borderColor: UdieTheme.accent.withValues(alpha: 0.6),
-                  borderStrokeWidth: 2,
+                  color: UdieTheme.accent.withValues(alpha: 0.07),
+                  borderColor: UdieTheme.accent.withValues(alpha: 0.5),
+                  borderStrokeWidth: 1.5,
                 ),
               ],
             ),
@@ -89,35 +102,175 @@ class _MapScreenState extends State<MapScreen> {
           ],
         ),
 
-        // ── Loading indicator ───────────────────────────────────────────────
+        // ── Loading bar ──────────────────────────────────────────────────────
         if (isLoading)
-          const Positioned(
+          Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: LinearProgressIndicator(minHeight: 3),
+            child: LinearProgressIndicator(
+              minHeight: 2,
+              backgroundColor: Colors.transparent,
+              valueColor: AlwaysStoppedAnimation<Color>(UdieTheme.accent),
+            ),
           ),
 
-        // ── Severity legend ─────────────────────────────────────────────────
-        const Positioned(
-          top: 12,
+        // ── Floating action buttons (right side) ─────────────────────────────
+        Positioned(
+          top: topPadding + 12,
           right: 12,
-          child: _MapLegend(),
+          child: _MapFABColumn(
+            onCenter: () => _mapController.move(
+              store.area.center,
+              _mapController.camera.zoom,
+            ),
+            onZoomIn: () => _mapController.move(
+              _mapController.camera.center,
+              _mapController.camera.zoom + 1,
+            ),
+            onZoomOut: () => _mapController.move(
+              _mapController.camera.center,
+              _mapController.camera.zoom - 1,
+            ),
+            onRefresh: store.refreshAll,
+          ),
         ),
 
-        // ── Bottom info panel ───────────────────────────────────────────────
+        // ── Severity legend ──────────────────────────────────────────────────
+        Positioned(
+          top: topPadding + 12,
+          left: 12,
+          child: const _MapLegend(),
+        ),
+
+        // ── Bottom info panel ────────────────────────────────────────────────
         Positioned(
           left: 12,
           right: 12,
-          bottom: 14,
-          child: _BottomPanel(store: store),
+          bottom: 12,
+          child: _BottomPanel(
+            store: store,
+            mapController: _mapController,
+          ),
         ),
       ],
     );
   }
 }
 
-// ── Legend ──────────────────────────────────────────────────────────────────
+// ── Floating action buttons ───────────────────────────────────────────────────
+
+class _MapFABColumn extends StatelessWidget {
+  const _MapFABColumn({
+    required this.onCenter,
+    required this.onZoomIn,
+    required this.onZoomOut,
+    required this.onRefresh,
+  });
+
+  final VoidCallback onCenter;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _MapFAB(icon: Icons.my_location_rounded, onTap: onCenter),
+        const SizedBox(height: 8),
+        _MapFAB(icon: Icons.add_rounded, onTap: onZoomIn),
+        const SizedBox(height: 4),
+        _MapFAB(icon: Icons.remove_rounded, onTap: onZoomOut),
+        const SizedBox(height: 8),
+        _MapFAB(
+          icon: Icons.refresh_rounded,
+          onTap: onRefresh,
+          color: UdieTheme.accent,
+        ),
+      ],
+    );
+  }
+}
+
+class _MapFAB extends StatefulWidget {
+  const _MapFAB({
+    required this.icon,
+    required this.onTap,
+    this.color,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  State<_MapFAB> createState() => _MapFABState();
+}
+
+class _MapFABState extends State<_MapFAB>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _press;
+
+  @override
+  void initState() {
+    super.initState();
+    _press = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+      lowerBound: 0.0,
+      upperBound: 0.12,
+    );
+  }
+
+  @override
+  void dispose() {
+    _press.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _press.forward(),
+      onTapUp: (_) {
+        _press.reverse();
+        widget.onTap();
+      },
+      onTapCancel: () => _press.reverse(),
+      child: AnimatedBuilder(
+        animation: _press,
+        builder: (context, child) => Transform.scale(
+          scale: 1.0 - _press.value,
+          child: child,
+        ),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: UdieTheme.surface1.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(UdieTheme.radiusMd),
+            border: Border.all(color: UdieTheme.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+            widget.icon,
+            size: 18,
+            color: widget.color ?? UdieTheme.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Legend ────────────────────────────────────────────────────────────────────
 
 class _MapLegend extends StatelessWidget {
   const _MapLegend();
@@ -126,19 +279,18 @@ class _MapLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0D1B2A).withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      decoration: UdieTheme.glassDecoration(
+        color: UdieTheme.surface0,
+        borderRadius: UdieTheme.radiusMd,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: const [
           _LegendRow(color: UdieTheme.danger, label: 'High'),
-          SizedBox(height: 4),
+          SizedBox(height: 5),
           _LegendRow(color: UdieTheme.caution, label: 'Med'),
-          SizedBox(height: 4),
+          SizedBox(height: 5),
           _LegendRow(color: UdieTheme.ok, label: 'Low'),
         ],
       ),
@@ -158,16 +310,23 @@ class _LegendRow extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 4),
+            ],
+          ),
         ),
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 11,
-            color: Colors.white.withValues(alpha: 0.9),
+            color: UdieTheme.textSecondary,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -175,12 +334,13 @@ class _LegendRow extends StatelessWidget {
   }
 }
 
-// ── Bottom panel ─────────────────────────────────────────────────────────────
+// ── Bottom panel ──────────────────────────────────────────────────────────────
 
 class _BottomPanel extends StatelessWidget {
-  const _BottomPanel({required this.store});
+  const _BottomPanel({required this.store, required this.mapController});
 
   final AppStore store;
+  final MapController mapController;
 
   @override
   Widget build(BuildContext context) {
@@ -189,132 +349,116 @@ class _BottomPanel extends StatelessWidget {
         .length;
     final med = store.events
         .where((e) =>
-            e.severity >= _kMedSeverity &&
-            e.severity < _kHighSeverity)
+            e.severity >= _kMedSeverity && e.severity < _kHighSeverity)
         .length;
     final low = store.events
         .where((e) => e.severity < _kMedSeverity)
         .length;
 
-    return Card(
-      elevation: 8,
-      shadowColor: Colors.black54,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        store.area.city,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${store.events.length} disruptions',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _SeverityBadge(count: high, color: UdieTheme.danger, label: 'H'),
-                const SizedBox(width: 4),
-                _SeverityBadge(count: med, color: UdieTheme.caution, label: 'M'),
-                const SizedBox(width: 4),
-                _SeverityBadge(count: low, color: UdieTheme.ok, label: 'L'),
-                const SizedBox(width: 8),
-                FilledButton.tonal(
-                  onPressed: store.refreshAll,
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(0, 36),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: const Text('Refresh', style: TextStyle(fontSize: 13)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  '${store.area.radiusKm.toStringAsFixed(0)} km',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                ),
-                Expanded(
-                  child: Slider(
-                    min: 1,
-                    max: 20,
-                    divisions: 19,
-                    value: store.area.radiusKm,
-                    onChanged: (v) {
-                      store.updateArea(
-                        city: store.area.city,
-                        lat: store.area.center.latitude,
-                        lng: store.area.center.longitude,
-                        radiusKm: v,
-                      );
-                    },
-                    onChangeEnd: (_) => store.refreshAll(),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SeverityBadge extends StatelessWidget {
-  const _SeverityBadge({
-    required this.count,
-    required this.color,
-    required this.label,
-  });
-
-  final int count;
-  final Color color;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.6)),
+      decoration: UdieTheme.glassDecoration(
+        color: UdieTheme.surface0,
+        borderRadius: UdieTheme.radiusXl,
       ),
-      child: Text(
-        '$label: $count',
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-        ),
+      padding: const EdgeInsets.fromLTRB(
+        UdieTheme.sp16,
+        UdieTheme.sp16,
+        UdieTheme.sp16,
+        UdieTheme.sp12,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // City + severity row
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      store.area.city,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 17,
+                        color: UdieTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${store.events.length} active disruptions',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: UdieTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: UdieTheme.sp12),
+              SeverityCountBadge(
+                count: high,
+                color: UdieTheme.danger,
+                label: 'HIGH',
+              ),
+              const SizedBox(width: UdieTheme.sp6),
+              SeverityCountBadge(
+                count: med,
+                color: UdieTheme.caution,
+                label: 'MED',
+              ),
+              const SizedBox(width: UdieTheme.sp6),
+              SeverityCountBadge(
+                count: low,
+                color: UdieTheme.ok,
+                label: 'LOW',
+              ),
+            ],
+          ),
+          const SizedBox(height: UdieTheme.sp12),
+          // Radius row
+          Row(
+            children: [
+              const Icon(
+                Icons.radio_button_checked_rounded,
+                size: 14,
+                color: UdieTheme.accent,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${store.area.radiusKm.toStringAsFixed(0)} km radius',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: UdieTheme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Expanded(
+                child: Slider(
+                  min: 1,
+                  max: 20,
+                  divisions: 19,
+                  value: store.area.radiusKm,
+                  onChanged: (v) {
+                    store.updateArea(
+                      city: store.area.city,
+                      lat: store.area.center.latitude,
+                      lng: store.area.center.longitude,
+                      radiusKm: v,
+                    );
+                  },
+                  onChangeEnd: (_) => store.refreshAll(),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-// ── Event detail bottom sheet ────────────────────────────────────────────────
+// ── Event detail bottom sheet ─────────────────────────────────────────────────
 
 class _EventDetailSheet extends StatelessWidget {
   const _EventDetailSheet({required this.event, required this.timeFormat});
@@ -326,46 +470,55 @@ class _EventDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = UdieTheme.categoryColor(event.category);
     final icon = UdieTheme.categoryIcon(event.category);
+    final riskColor = UdieTheme.riskColor(event.severity);
+    final riskLabel = UdieTheme.riskLabel(event.severity);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 24),
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B263B),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        color: UdieTheme.surface1,
+        borderRadius: BorderRadius.circular(UdieTheme.radiusXl),
+        border: Border.all(color: UdieTheme.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 32,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Drag handle
+          const DragHandle(),
           Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(2),
-              ),
+            padding: const EdgeInsets.fromLTRB(
+              UdieTheme.sp16,
+              0,
+              UdieTheme.sp16,
+              UdieTheme.sp20,
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header row
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(UdieTheme.radiusMd),
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.3),
+                        ),
                       ),
-                      child: Icon(icon, color: color, size: 20),
+                      child: Icon(icon, color: color, size: 22),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: UdieTheme.sp12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,45 +527,84 @@ class _EventDetailSheet extends StatelessWidget {
                             event.category.toUpperCase(),
                             style: TextStyle(
                               color: color,
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: FontWeight.w700,
-                              letterSpacing: 1.0,
+                              letterSpacing: 1.2,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           Text(
                             event.title,
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
+                              color: UdieTheme.textPrimary,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    _SeverityChip(severity: event.severity),
+                    const SizedBox(width: UdieTheme.sp8),
+                    // Severity badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: UdieTheme.sp8,
+                        vertical: UdieTheme.sp4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: riskColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(UdieTheme.radiusSm),
+                        border: Border.all(
+                          color: riskColor.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            (event.severity * 100).toStringAsFixed(0),
+                            style: TextStyle(
+                              color: riskColor,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                            ),
+                          ),
+                          Text(
+                            riskLabel,
+                            style: TextStyle(
+                              color: riskColor.withValues(alpha: 0.8),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                const Divider(height: 1),
-                const SizedBox(height: 12),
-                _InfoRow(
+                const SizedBox(height: UdieTheme.sp16),
+                Container(
+                  height: 1,
+                  color: UdieTheme.border,
+                ),
+                const SizedBox(height: UdieTheme.sp16),
+                InfoRow(
                   icon: Icons.source_outlined,
                   label: 'Source',
                   value: event.source,
                 ),
-                const SizedBox(height: 8),
-                _InfoRow(
+                const SizedBox(height: UdieTheme.sp12),
+                InfoRow(
                   icon: Icons.location_on_outlined,
-                  label: 'Location',
+                  label: 'Coordinates',
                   value:
                       '${event.lat.toStringAsFixed(4)}, ${event.lng.toStringAsFixed(4)}',
                 ),
-                const SizedBox(height: 8),
-                _InfoRow(
+                const SizedBox(height: UdieTheme.sp12),
+                InfoRow(
                   icon: Icons.schedule_outlined,
-                  label: 'Updated',
+                  label: 'Last Updated',
                   value: timeFormat.format(event.updatedAt.toLocal()),
                 ),
               ],
@@ -420,80 +612,6 @@ class _EventDetailSheet extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _SeverityChip extends StatelessWidget {
-  const _SeverityChip({required this.severity});
-
-  final double severity;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = severity >= _kHighSeverity
-        ? UdieTheme.danger
-        : severity >= _kMedSeverity
-            ? UdieTheme.caution
-            : UdieTheme.ok;
-    final label = severity >= _kHighSeverity
-        ? 'HIGH'
-        : severity >= _kMedSeverity
-            ? 'MED'
-            : 'LOW';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.6)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 15, color: Colors.white.withValues(alpha: 0.5)),
-        const SizedBox(width: 8),
-        Text(
-          '$label: ',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.white.withValues(alpha: 0.55),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-          ),
-        ),
-      ],
     );
   }
 }
