@@ -1,0 +1,196 @@
+from __future__ import annotations
+
+import asyncio
+import time
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from math import exp
+
+import httpx
+
+from app.config import settings
+from app.models import (
+    AreaNewsItem,
+    BoundingBox,
+    DisruptionEvent,
+    RiskResponse,
+    RoutePoint,
+    SourceStatus,
+    now_utc,
+)
+from app.sources.base import GovernmentSource, SourceResult
+from app.sources.india import NdmaLocationAlertSource, NdmaSachetAlertSource, NdmaStateDashboardSource
+from app.storage import store
+
+
+@dataclass
+class SourceCacheEntry:
+    ts: float
+    events: list[DisruptionEvent]
+    news: list[AreaNewsItem]
+    statuses: list[SourceStatus]
+
+
+class SourceRegistry:
+    def __init__(self) -> None:
+        self._sources: list[GovernmentSource] = [
+            NdmaSachetAlertSource(),
+            NdmaLocationAlertSource(),
+            NdmaStateDashboardSource(),
+        ]
+        self._cache: dict[str, SourceCacheEntry] = {}
+        self._lock = asyncio.Lock()
+
+    @property
+    def sources(self) -> list[GovernmentSource]:
+        return self._sources
+
+    async def collect(self, area: BoundingBox) -> tuple[list[DisruptionEvent], list[AreaNewsItem], list[SourceStatus]]:
+        key = self._cache_key(area)
+        async with self._lock:
+            existing = self._cache.get(key)
+            if existing and (time.time() - existing.ts) <= settings.source_cache_ttl_s:
+                return existing.events, existing.news, existing.statuses
+
+        headers = {"User-Agent": settings.user_agent, "Accept": "application/json"}
+        async with httpx.AsyncClient(timeout=settings.request_timeout_s, headers=headers) as client:
+            jobs = [self._fetch_with_retry(source, client, area) for source in self._sources]
+            results = await asyncio.gather(*jobs)
+
+        fetched_events: list[DisruptionEvent] = []
+        statuses: list[SourceStatus] = []
+        for source, result in zip(self._sources, results):
+            fetched_events.extend(result.events)
+            normalized_error = result.error.strip() if isinstance(result.error, str) else result.error
+            if normalized_error == "":
+                normalized_error = None
+            statuses.append(
+                SourceStatus(
+                    name=source.name,
+                    category=source.category,
+                    endpoint=source.endpoint,
+                    last_success=now_utc() if normalized_error is None else None,
+                    last_error=normalized_error,
+                    event_count=len(result.events),
+                    news_count=len(result.news),
+                )
+            )
+
+        new_observations = store.append_events_log(fetched_events)
+        store.project_lifecycle(new_observations)
+        events = store.get_active_events(area, limit=2000)
+        news = store.get_area_news(area, limit=2000)
+
+        # Deterministic ordering for stable UX (mixed timezone formats tolerated).
+        events.sort(key=lambda x: _dt_ts(x.updated_at), reverse=True)
+        news.sort(key=lambda x: _dt_ts(x.published_at), reverse=True)
+        events = _dedup(events, key_fn=lambda e: e.id)
+        news = _dedup(news, key_fn=lambda n: n.id)
+
+        entry = SourceCacheEntry(ts=time.time(), events=events, news=news, statuses=statuses)
+        async with self._lock:
+            self._cache[key] = entry
+
+        return events, news, statuses
+
+    async def _fetch_with_retry(
+        self,
+        source: GovernmentSource,
+        client: httpx.AsyncClient,
+        area: BoundingBox,
+    ) -> SourceResult:
+        retries = 2
+        backoff_s = 0.20
+        last_result = SourceResult(events=[], news=[], error="Unknown source error")
+        for attempt in range(retries + 1):
+            try:
+                result = await source.fetch(client, area)
+            except Exception as exc:  # noqa: BLE001
+                result = SourceResult(events=[], news=[], error=str(exc))
+
+            normalized_error = result.error.strip() if isinstance(result.error, str) else result.error
+            if not normalized_error:
+                return result
+
+            last_result = SourceResult(events=result.events, news=result.news, error=str(normalized_error))
+            if attempt < retries and _is_retryable_error(str(normalized_error)):
+                await asyncio.sleep(backoff_s * (attempt + 1))
+                continue
+            break
+
+        return last_result
+
+    @staticmethod
+    def _cache_key(area: BoundingBox) -> str:
+        return (
+            f"{round(area.min_lat, 3)}:{round(area.max_lat, 3)}:"
+            f"{round(area.min_lng, 3)}:{round(area.max_lng, 3)}:{area.city.lower().strip()}"
+        )
+
+
+registry = SourceRegistry()
+
+
+def risk_for_route(points: list[RoutePoint]) -> RiskResponse:
+    start = time.perf_counter()
+    cells_with_risk = store.get_route_cell_values(points)
+
+    if not cells_with_risk:
+        return RiskResponse(
+            riskScore=0.0,
+            classification="SAFE",
+            riskDensity=0.0,
+            contributingEvents=0,
+            evalLatencyMs=max(1, int((time.perf_counter() - start) * 1000)),
+            contributingCells=[],
+            scoreComponents={"cellCount": 0.0, "meanCellRisk": 0.0},
+        )
+
+    total_risk = sum(r for _, r in cells_with_risk)
+    density = total_risk / max(1, len(cells_with_risk))
+    score = 1.0 - exp(-4.0 * density)
+    classification = "SAFE"
+    if score >= 0.70:
+        classification = "DANGER"
+    elif score >= 0.35:
+        classification = "CAUTION"
+
+    contributing_cells = [cell.cell_id for cell, risk in cells_with_risk if risk > 0.0]
+    elapsed_ms = int((time.perf_counter() - start) * 1000)
+    return RiskResponse(
+        riskScore=min(1.0, max(0.0, score)),
+        classification=classification,
+        riskDensity=max(0.0, density),
+        contributingEvents=len(contributing_cells),
+        evalLatencyMs=max(1, elapsed_ms),
+        contributingCells=contributing_cells[:64],
+        scoreComponents={
+            "cellCount": float(len(cells_with_risk)),
+            "meanCellRisk": float(density),
+            "rawRiskSum": float(total_risk),
+        },
+    )
+
+
+def _dt_ts(value: datetime) -> float:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC).timestamp()
+    return value.astimezone(UTC).timestamp()
+
+
+def _dedup(items: list[object], key_fn):
+    out = []
+    seen: set[str] = set()
+    for item in items:
+        key = key_fn(item)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return out
+
+
+def _is_retryable_error(msg: str) -> bool:
+    m = msg.lower()
+    retryable_tokens = ["timeout", "temporar", "connection reset", "503", "502", "429", "rate limit"]
+    return any(token in m for token in retryable_tokens)

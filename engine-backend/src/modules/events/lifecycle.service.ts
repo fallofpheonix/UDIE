@@ -14,6 +14,8 @@ export class LifecycleService implements OnModuleInit {
 
     onModuleInit() {
         this.logger.log('LifecycleService initialized. Starting maintenance loop...');
+        // Prime worker heartbeat at startup to avoid stale readiness state.
+        void this.handleMaintenance();
     }
 
     /**
@@ -45,7 +47,7 @@ export class LifecycleService implements OnModuleInit {
             await this.db.query(
                 `SELECT set_system_state($1, $2::jsonb)`,
                 [
-                    'lifecycle',
+                    this.workerName,
                     JSON.stringify({
                         status: 'OK',
                         duration_ms: Number(duration),
@@ -59,7 +61,7 @@ export class LifecycleService implements OnModuleInit {
             await this.db.query(
                 `SELECT set_system_state($1, $2::jsonb)`,
                 [
-                    'lifecycle',
+                    this.workerName,
                     JSON.stringify({
                         status: 'FAILED',
                         last_failure_at: new Date().toISOString(),

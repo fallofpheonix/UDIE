@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BACKEND_DIR="$ROOT_DIR/backend"
+BACKEND_DIR="$ROOT_DIR/engine-backend"
 BENCH_SCRIPT="$BACKEND_DIR/scripts/benchmark_replay.sh"
 MIGRATE_SCRIPT="$BACKEND_DIR/scripts/migrate_all.sh"
 

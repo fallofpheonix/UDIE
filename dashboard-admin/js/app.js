@@ -328,7 +328,10 @@ class UDIEDashboard {
         try {
             const now = new Date();
             const past = new Date(now.getTime() - hours * 3600000);
-            const res = await fetch(`${this.baseUrl}/risk-snapshots?start_time=${past.toISOString()}&end_time=${new Date(past.getTime() + 300000).toISOString()}`);
+            const bounds = this.map.getBounds();
+            const res = await fetch(
+                `${this.baseUrl}/risk-snapshots?start_time=${past.toISOString()}&end_time=${new Date(past.getTime() + 300000).toISOString()}&minLat=${bounds.getSouth()}&maxLat=${bounds.getNorth()}&minLng=${bounds.getWest()}&maxLng=${bounds.getEast()}`
+            );
             const data = await res.json();
             this.renderRiskGrid(data.snapshots || []);
         } catch (err) {
@@ -402,12 +405,14 @@ class UDIEDashboard {
 
     async loadHotspots() {
         try {
-            const res = await fetch(`${this.baseUrl}/city-dashboard/hotspots?type=HOTSPOT`);
+            const bounds = this.map.getBounds();
+            const res = await fetch(`${this.baseUrl}/city-dashboard?minLat=${bounds.getSouth()}&maxLat=${bounds.getNorth()}&minLng=${bounds.getWest()}&maxLng=${bounds.getEast()}`);
             const data = await res.json();
-            // In MVP, we just update the City Risk Index based on count
+            const hotspots = data.topHotspots || [];
+            // In MVP, we just update the City Risk Index based on hotspot count
             const indexValue = document.querySelector('.stat-card .value.high');
             if (indexValue) {
-                const newValue = (0.5 + (data.length * 0.05)).toFixed(2);
+                const newValue = (0.5 + (hotspots.length * 0.05)).toFixed(2);
                 indexValue.textContent = newValue;
             }
         } catch (err) { }
@@ -430,7 +435,10 @@ class UDIEDashboard {
 
     async loadRecentEvents() {
         try {
-            const res = await fetch(`${this.baseUrl}/events?limit=10`);
+            const bounds = this.map.getBounds();
+            const res = await fetch(
+                `${this.baseUrl}/events?minLat=${bounds.getSouth()}&maxLat=${bounds.getNorth()}&minLng=${bounds.getWest()}&maxLng=${bounds.getEast()}&limit=10`
+            );
             const events = await res.json();
             this.renderFeed(events);
         } catch (err) { }
@@ -467,15 +475,19 @@ class UDIEDashboard {
             // CODEX Stream E provides /reliability endpoint
             const res = await fetch(`${this.baseUrl}/reliability`);
             const data = await res.json();
-            this.renderReliabilityGrid(data.cells || []);
+            const cells = Array.isArray(data) ? data : (data.cells || []);
+            this.renderReliabilityGrid(cells);
         } catch (err) { }
     }
 
     renderReliabilityGrid(cells) {
         this.reliabilityLayer.clearLayers();
         cells.forEach(cell => {
-            const vertices = h3.cellToBoundary(cell.h3_index);
-            const score = cell.reliability_score || cell.iri;
+            const h3Index = cell.h3_index || cell.h3Index;
+            if (!h3Index) return;
+            const score = cell.reliability_score ?? cell.reliability ?? cell.iri;
+            if (typeof score !== 'number') return;
+            const vertices = h3.cellToBoundary(h3Index);
             const color = score > 0.8 ? '#00F260' : (score > 0.5 ? '#F9D423' : '#FF4E50');
 
             L.polygon(vertices, {

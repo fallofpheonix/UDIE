@@ -84,7 +84,7 @@ export class ReliabilityService {
         disruption_count as count,
         avg_severity as severity
       FROM reliability_cells
-      WHERE h3_cell_to_parent(h3_index, 6)::text = $1
+      WHERE h3_cell_to_parent(h3_index::h3index, 6)::text = $1
     `, [regionId]);
 
         return result.rows.map(row => ({

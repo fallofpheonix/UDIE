@@ -3,7 +3,8 @@
 
 set -e
 
-DB_URL=${DATABASE_URL:-"postgresql://postgres:postgres@localhost:5432/udie"}
+# Default to the repository's docker-compose Postgres credentials.
+DB_URL=${DATABASE_URL:-"postgresql://udie:udie@localhost:5432/udie"}
 
 echo "🚀 Starting UDIE Benchmark Replay..."
 

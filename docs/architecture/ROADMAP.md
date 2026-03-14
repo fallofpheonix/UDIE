@@ -16,9 +16,8 @@ This version (v2.0) reflects a **production-first** engineering philosophy: prio
 - [x] **Constant-Time Evaluation**: $O(\text{route\_cells})$ complexity via memory-resident risk grids.
 
 ### Observability & Infrastructure (NEW)
-- [ ] **Unified Monitoring Stack**: Integration of Prometheus, OpenTelemetry, and Grafana for backend, worker, and database health.
-- [ ] **Performance Sentinel**: Automated alerts for kernel drift, worker lag, and high-latency H3 lookups.
-- [ ] **Auditable Integrity**: Daily `ArchitectureAuditService` reports to verify spatial invariants.
+- [ ] **Unified Monitoring Stack**: Integration of Prometheus, OpenTelemetry, and Grafana for backend, worker, and database health. (In-Progress)
+- [x] **Architecture Audit**: Automated `verify_architecture.sh` for spatial invariants.
 
 ### Spatial UX & Persistence (NEW)
 - [ ] **Map-First Entry**: Guarantee application initializes directly to the Tactical Map view.

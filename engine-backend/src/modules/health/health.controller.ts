@@ -8,6 +8,11 @@ type FreshnessRow = QueryResultRow & {
   max_stale_seconds: number;
 };
 
+type WorkerLagRow = QueryResultRow & {
+  key: string;
+  lag_seconds: number;
+};
+
 @Controller('health')
 export class HealthController {
   constructor(
@@ -25,11 +30,11 @@ export class HealthController {
     try {
       await this.databaseService.healthCheck();
 
-      const stats = await this.databaseService.query<QueryResultRow>(
+      const stats = await this.databaseService.query<WorkerLagRow>(
         `SELECT
            key,
-           updated_at AS last_run,
-           EXTRACT(EPOCH FROM (now() - updated_at))::DOUBLE PRECISION AS lag_seconds
+           COALESCE(last_run, updated_at) AS last_run,
+           EXTRACT(EPOCH FROM (now() - COALESCE(last_run, updated_at)))::DOUBLE PRECISION AS lag_seconds
          FROM system_state
          WHERE key IN ('materialization_worker', 'lifecycle_worker')`,
       );
@@ -47,8 +52,16 @@ export class HealthController {
       const row = freshness.rows[0];
       const surfaceStale = row.cell_freshness_seconds > row.max_stale_seconds;
 
-      const workerLagThreshold = 600; // 10 minutes
-      const laggingWorkers = stats.rows.filter(r => r.lag_seconds > workerLagThreshold);
+      const workerLagThresholds: Record<string, number> = {
+        // 1-minute cron cadence + jitter tolerance.
+        materialization_worker: 180,
+        // 15-minute interval loop + startup/scheduling jitter tolerance.
+        lifecycle_worker: 1200,
+      };
+      const defaultWorkerLagThreshold = 600;
+      const resolveThreshold = (worker: string) =>
+        workerLagThresholds[worker] ?? defaultWorkerLagThreshold;
+      const laggingWorkers = stats.rows.filter((r) => r.lag_seconds > resolveThreshold(r.key));
 
       const replication = await this.databaseService.query<QueryResultRow>(
         `SELECT 
@@ -85,8 +98,8 @@ export class HealthController {
           workers: stats.rows.map(r => ({
             name: r.key,
             lagSeconds: Number(r.lag_seconds.toFixed(2)),
-            status: r.lag_seconds > workerLagThreshold ? 'stale' : 'healthy',
-            heartbeat: r.lag_seconds < workerLagThreshold,
+            status: r.lag_seconds > resolveThreshold(r.key) ? 'stale' : 'healthy',
+            heartbeat: r.lag_seconds < resolveThreshold(r.key),
           })),
           platformReliability: {
             score: reliability,

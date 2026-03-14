@@ -17,63 +17,53 @@ The technical foundation is defined by the following authoritative documents:
 
 ⸻
 
-## 🏗️ Core Architecture (v2.1): The Event-Sourced Substrate
+## 🏗️ Core Architecture (v3.0): Regional Sharding & Scaling
 
-UDIE implements a **field-based architecture** inspired by atmospheric modeling. Disruption reports act as signals contributing to a continuously evolving spatial field.
+UDIE implements a **field-based architecture** inspired by atmospheric modeling. The planetary surface is partitioned into independent computational shards.
 
----
+### ⚡ 1. Spatial Sharding Axis (H3)
+UDIE scales horizontally by partitioning the world using the **H3 Hierarchical Index**.
+- **Primary Shard Key**: **H3 Resolution 6** (~20km diameter).
+- **Partitioning Model**: Database tables are declaratively partitioned (`PARTITION BY LIST`) using the Res 6 parent key.
+- **Independence**: Ingestion, Aggregation, and Evaluation workloads are decoupled at the shard boundary, ensuring a "Signal Storm" in Delhi does not impact latencies in New York.
 
-## 🔄 The Data Pipeline
-
-UDIE follows the **Spatial Event Sourcing** pattern. The `events_log` is the only source of truth; the `Redis Spatial Cache` is a performance projection.
+### 🔄 2. The Data Pipeline & Versioning
+UDIE follows the **Spatial Event Sourcing** pattern, hardened with **Append-Only Versioning** to prevent MVCC bloat.
 
 ```mermaid
 graph TD
     Signals[Signals] --> Ingestion[Ingestion Gateway]
-    Ingestion --> Bus{Branching Pipeline}
-    Bus --> Log[(Events Log)]
+    Ingestion --> Bus{H3 Shard Router}
+    Bus --> Log[(Regional Log)]
     Bus --> Agg[Spatial Aggregation]
-    Bus --> Anomaly[Anomaly Detection]
-    Agg --> Cache[(Redis Spatial Cache)]
-    Anomaly --> Alerts[Alert Generator]
-    Alerts --> WS[Real-time Stream]
+    Agg --> RiskGrid[(Versioned Risk surface)]
+    RiskGrid --> Cache[(Redis Spatial Cache)]
     Cache --> API[Evaluation API]
 ```
 
-### 🧠 1. Risk Computation Engine (The Transformer)
-This engine is the system's "Brain," responsible for:
-- **Spatial Weighting**: Applying KDE kernels to discrete signals.
-- **Temporal Management**: Enforcing decay pulses ($\tau$) across the grid.
-- **Atomic Materialization**: Projecting processed impact into the $O(1)$ lookup cache.
+### 🧠 3. Risk Computation Engine (The Transformer)
+- **KDE Weighting**: Applying kernels ($k=3$) to discrete signals at Resolution 9.
+- **Append-Only Persistence**: Instead of `UPDATE` calls on the risk grid, the engine `INSERT`s new versions. This maintains $O(1)$ write speed and enables deterministic historical playback.
+- **Temporal Management**: Enforcing decay pulses across versioned shards.
 
-### ⚖️ 2. Consistency & Concurrency Model
-- **Semantics**: Eventual Consistency. There is a sub-second propagation delay between ingestion and evaluability.
-- **Snapshot Isolation**: When rebuilding the grid, the engine snapshots the `events_log` to ensure a deterministic 1:1 state transition.
-- **Race Condition Guard**: The `h3_index` partitioning on the event bus prevents multiple workers from competing for the same spatial cell updates.
-
----
-
-## 🛡️ Stability & Backpressure Control
-
-To maintain stability under urban "Signal Storms," the substrate implements:
-- **Phase-Shift Ingestion**: The `Ingestion Gateway` buffers bursts and publishes to the `Event Bus`, shielding persistence from peak loads.
-- **Load Shedding**: Low-confidence or low-severity signals are dropped if the `Event Bus` backlog exceeds pre-defined safety limits (see `MONITORING.md`).
-- **Idempotency Fingerprinting**: Prevents duplicated risk weights from at-least-once delivery semantics.
+### ⚖️ 4. Consistency & Concurrency Model
+- **Semantics**: Eventual Consistency. Sub-second propagation delay.
+- **Snapshot Isolation**: Rebuilds use version-stamped snapshots of the `regional_events_log`.
+- **Read Isolation**: Primary handles Ingestion/Materialization; Read Replicas handle `/risk` evaluations.
 
 ---
 
-## ⚡ Scaling Axis: Sharding & Compute
+## 🛠️ Implementation Details
 
-UDIE scales horizontally by partitioning the planetary surface using the **H3 Hierarchical Index**.
-- **Primary Shard Key**: H3 Resolution 6.
-- **Compute Isolation**: Ingestion, Aggregation, and Evaluation workloads are decoupled, allowing independent scaling of "hot" geographic shards.
+### Persistence Layer
+- **Hot**: Redis (H3 scalar floats for sub-ms lookups). Key: `udie:risk:v1:<h3_index>`.
+- **Warm**: PostgreSQL/PostGIS. Partitioned by `h3_parent`.
+- **Query Resolution**: API requests resolve the `h3_parent` region first to utilize partition pruning.
 
----
-
-## 🛡️ Architectural Guarantees
-- **Deterministic Replay**: System state is $f(\text{events\_log})$.
+### Operational Guarantees
+- **Deterministic Replay**: State is exactly $f(\text{log}, \text{params})$.
 - **Bounded Evaluation**: Complexity is $O(\text{route\_cells})$.
-- **Operational Isolation**: Zero contention between query paths and write paths.
+- **Zero-Contention Path**: Read paths never block write paths.
 
 ---
 
