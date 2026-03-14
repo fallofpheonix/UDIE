@@ -5,7 +5,7 @@ import '../../theme.dart';
 
 /// A compact pill badge that shows the current sync state.
 ///
-/// When [state] is [SyncState.connecting] the badge pulses to signal activity.
+/// When [state] is [SyncState.connecting] the dot pulses to signal activity.
 class SyncBadge extends StatefulWidget {
   const SyncBadge({super.key, required this.state});
 
@@ -18,13 +18,17 @@ class SyncBadge extends StatefulWidget {
 class _SyncBadgeState extends State<SyncBadge>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse;
+  late final Animation<double> _scale;
 
   @override
   void initState() {
     super.initState();
     _pulse = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 900),
+    );
+    _scale = Tween<double>(begin: 0.7, end: 1.3).animate(
+      CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
     );
     _updateAnimation();
   }
@@ -58,50 +62,57 @@ class _SyncBadgeState extends State<SyncBadge>
     final (label, color) = switch (widget.state) {
       SyncState.disconnected => ('OFFLINE', UdieTheme.danger),
       SyncState.connecting => ('SYNCING', UdieTheme.caution),
-      SyncState.connectedUnsynced => ('PENDING', Colors.amber),
+      SyncState.connectedUnsynced => ('PENDING', UdieTheme.info),
       SyncState.synced => ('LIVE', UdieTheme.ok),
       SyncState.error => ('ERROR', UdieTheme.danger),
     };
 
-    return AnimatedBuilder(
-      animation: _pulse,
-      builder: (context, _) {
-        final bgAlpha = widget.state == SyncState.connecting
-            ? 0.10 + _pulse.value * 0.18
-            : 0.16;
-
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            color: color.withValues(alpha: bgAlpha),
-            border: Border.all(color: color.withValues(alpha: 0.7)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
+    return AnimatedContainer(
+      duration: UdieTheme.durationFast,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(UdieTheme.radiusFull),
+        color: color.withValues(alpha: 0.14),
+        border: Border.all(color: color.withValues(alpha: 0.55)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedBuilder(
+            animation: _scale,
+            builder: (context, _) => Transform.scale(
+              scale: widget.state == SyncState.connecting
+                  ? _scale.value
+                  : 1.0,
+              child: Container(
                 width: 6,
                 height: 6,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: color,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.6),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 5),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 11,
-                  letterSpacing: 0.4,
-                ),
-              ),
-            ],
+            ),
           ),
-        );
-      },
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

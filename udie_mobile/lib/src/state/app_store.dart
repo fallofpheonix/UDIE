@@ -201,6 +201,12 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearActiveCategories() {
+    activeNewsCategories.clear();
+    syncState = SyncState.connectedUnsynced;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _client.close();
