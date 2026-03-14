@@ -21,7 +21,7 @@ $$\text{evaluation\_cost} \propto \text{route\_cells}$$
 ## Development Workflow
 
 1. **Setup Substrate**: Follow [Setup & Onboarding](docs/operations/SETUP.md).
-2. **Develop Against Architecture**: Review [System Workflow](docs/architecture/system_workflow.md) and [Mathematical Appendix](docs/architecture/MATHEMATICAL_APPENDIX.md).
+2. **Develop Against Architecture**: Review [System Architecture](docs/architecture/SYSTEM_ARCHITECTURE.md) and [Spatial Intelligence Model](docs/theory/SPATIAL_INTELLIGENCE_MODEL.md).
 3. **Mandatory Local Validation**:
    ```bash
    # 1. Run full system integrity audit

@@ -47,20 +47,20 @@ UDIE is organized into decoupled layers for scalability and maintainable intelli
 ## 📖 Documentation Substrate
 
 ### 🏗️ 1. Architecture
-- [**System Workflow**](docs/architecture/system_workflow.md) — Request lifecycle and data propagation.
-- [**Mathematical Appendix**](docs/architecture/MATHEMATICAL_APPENDIX.md) — Formal derivations and stability proofs.
-- [**Roadmap**](docs/architecture/ROADMAP.md) — Our **8-Phase Strategic Evolution**.
-- [**Structure Spec**](docs/architecture/REPOSITORY_STRUCTURE.md) — Directory laws and ownership.
+- [**System Architecture**](docs/architecture/SYSTEM_ARCHITECTURE.md) — Canonical system philosophy, subsystems, lifecycle, and topology.
+- [**Architecture Decisions**](docs/architecture/ARCHITECTURE_DECISIONS.md) — Consolidated ADR record.
+- [**Spatial Intelligence Model**](docs/theory/SPATIAL_INTELLIGENCE_MODEL.md) — Mathematical and intelligence-model basis.
+- [**Roadmap**](docs/architecture/ROADMAP.md) — Strategic evolution plan.
 
 ### ⚙️ 2. Operations
 - [**API Spec**](docs/operations/API.md) — REST & WebSocket interface definitions.
-- [**Operational Playbook**](docs/operations/PLAYBOOK.md) — Recovery, scaling, and maintenance SOPs.
+- [**System Operations**](docs/operations/SYSTEM_OPERATIONS.md) — Unified operations, monitoring, troubleshooting, and saturation guidance.
 - [**Setup & Onboarding**](docs/operations/SETUP.md) — Bootstrapping the local environment.
-- [**Integrity Report**](docs/operations/INTEGRITY_REPORT.md) — 4-layer system verification status.
+- [**Engineering Playbook**](docs/guides/ENGINEERING_PLAYBOOK.md) — Runtime-first debugging and change discipline.
 
 ### 🤖 3. Agents & Governance
 - [**Agent Protocol**](docs/agents/AGENTS.md) — Mandatory procedures for AI/Autonomous contributors.
-- [**Diagnostic Workflow**](docs/agents/DIAGNOSTIC_PROTOCOL.md) — Layered troubleshooting strategy.
+- [**Diagnostic Workflow**](agent-mandatory/DIAGNOSTIC_PROTOCOL.md) — Canonical layered troubleshooting strategy.
 
 ---
 

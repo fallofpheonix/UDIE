@@ -39,8 +39,8 @@ If an issue is reported, execute in this exact order:
 
 ## 📂 4. Protocol Reference
 - `docs/agents/AGENT_OPERATING_SYSTEM.md`: **The Authoritative Agent OS Guide.**
-- `docs/agents/DIAGNOSTIC_PROTOCOL.md`: Step-by-step troubleshooting guide.
-- `docs/agents/TASK_BOOTSTRAP_CHECKLIST.md`: Verification required before starting work.
+- `agent-mandatory/DIAGNOSTIC_PROTOCOL.md`: Canonical troubleshooting guide.
+- `agent-mandatory/TASK_BOOTSTRAP_CHECKLIST.md`: Verification required before starting work.
 - `docs/agents/FAILURE_CLASSES.md`: Categorization of layered system failures.
 - `docs/agents/SYSTEM_ASSUMPTIONS.md`: Environment constraints and networking rules.
 
@@ -52,6 +52,6 @@ If an issue is reported, execute in this exact order:
 1. **No Unauthorized Mutations**: Agents must NOT alter ANY documentation files (`docs/`, `README.md`, `CONTRIBUTING.md`) unless explicitly commanded by the user.
 2. **Mandatory Documentation Sync**: Agents MUST update any related documentation whenever they work or make changes to ensure the code never drifts from the specifications.
 3. **Strict Adherence**: Agents must work strictly according to established documentation.
-4. **Engineering Excellence**: Agents are expected to adopt the habits defined in `docs/guides/SRE_HABITS.md` and follow the `DISTRIBUTED_DEBUGGING_WORKFLOW.md`.
+4. **Engineering Excellence**: Agents are expected to follow `docs/guides/ENGINEERING_PLAYBOOK.md`.
 5. **Structured Response**: Every concluding report must follow the [Agent Execution Protocol](file:///Users/fallofpheonix/Project/UDIE/docs/agents/AGENT_EXECUTION_PROTOCOL.md) and the format defined in `AGENT_OPERATING_SYSTEM.md`.
 6. **Evidence-Based Reasoning**: No decision or conclusion will be accepted without provided evidence (logs, code, CLI output).

@@ -11,7 +11,8 @@ else
   echo "[diagnose] ERROR: docker compose file not found under infra/ or engine-backend/"
   exit 1
 fi
-REPORT_FILE="${ROOT_DIR}/SYSTEM_DIAGNOSTIC_REPORT.md"
+REPORT_DIR="${ROOT_DIR}/reports"
+REPORT_FILE="${REPORT_DIR}/SYSTEM_DIAGNOSTIC_REPORT.md"
 
 API_HEALTH_URL_PRIMARY="${API_HEALTH_URL_PRIMARY:-http://localhost:3000/api/v1/health}"
 API_HEALTH_URL_FALLBACK="${API_HEALTH_URL_FALLBACK:-http://localhost:3000/api/health}"
@@ -80,6 +81,7 @@ log "UDIE SYSTEM DIAGNOSTIC START"
 log "root=${ROOT_DIR}"
 log "backend=${BACKEND_DIR}"
 log "compose=${COMPOSE_FILE}"
+mkdir -p "$REPORT_DIR"
 
 if [[ ! -d "$BACKEND_DIR" ]]; then
   log "ERROR: backend directory not found: $BACKEND_DIR"
