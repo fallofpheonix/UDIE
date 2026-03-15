@@ -5,17 +5,22 @@ import { RiskGridService } from './risk-grid.service';
 import { SpatialService } from '../common/spatial.service';
 import { resolveRouteRegion } from '../common/region-resolver.util';
 import { ObservabilityService } from '../common/observability.service';
+import { classifyRiskLevel } from './risk.algorithm';
+import { RiskSurfaceCacheService } from './risk-surface-cache.service';
 
 @Injectable()
 export class RiskService {
   private readonly logger = new Logger(RiskService.name);
   private readonly K_NORMALIZATION = 20.0; // Spec v2 Constant
   private readonly MAX_VERTICES = 1000;
+  private readonly INFLUENCE_RADIUS = 3;
+  private readonly MAX_SEGMENT_RISK = 0.999999;
 
   constructor(
     private readonly riskGrid: RiskGridService,
     private readonly spatial: SpatialService,
     private readonly observability: ObservabilityService,
+    private readonly riskSurfaceCache: RiskSurfaceCacheService,
   ) { }
 
   /**
@@ -37,60 +42,92 @@ export class RiskService {
       this.observability.observeRiskEvalLatency(elapsedSec);
       return {
         riskScore: 0,
+        riskLevel: 'LOW',
+        explanation: 'Route coverage is too small to intersect any H3 cells.',
+        contributingEvents: 0,
+        segments: [],
+        eventCount: 0,
+        classification: 'LOW',
+        score: 0,
+        level: 'LOW',
         riskDensity: 0,
         routeLengthKm: 0,
-        latencyMs: parseFloat((performance.now() - startTime).toFixed(2))
+        latencyMs: parseFloat((performance.now() - startTime).toFixed(2)),
+        evalLatencyMs: Math.round(performance.now() - startTime),
       };
     }
 
-    // 2. Expand coverage to include influence boundary (k=3)
-    const influenceSet = new Set<string>();
-    for (const cell of routeCells) {
-      influenceSet.add(cell);
-      const neighbors = this.spatial.getInfluenceNeighbors(cell, 3);
-      for (const neighbor of neighbors) {
-        influenceSet.add(neighbor);
-      }
-    }
+    const influenceCells = this.buildInfluenceCells(routeCells);
+    const cachedCells = await this.riskSurfaceCache.getCells(influenceCells);
 
-    // 3. Calculate raw integrated risk in single pass
     let rawRisk = 0;
     const pathDistance = this.calculatePathDistance(simplifiedCoordinates);
+    const routeCellSet = new Set(routeCells);
+    const segmentAccumulator = new Map<string, { h3Index: string; cellRisk: number; eventCount: number; hazardTypes: Set<string> }>();
+    const contributingHazards = new Map<string, number>();
+    let contributingEvents = 0;
 
-    for (const cell of influenceSet) {
-      const weight = this.riskGrid.getWeight(cell);
-      if (weight <= 0) continue;
+    for (const cell of influenceCells) {
+      const cached = cachedCells.get(cell);
+      const weight = cached?.weight ?? this.riskGrid.getWeight(cell);
+      if (weight <= 0) {
+        continue;
+      }
 
-      // Determine if it's a direct hit or influence
-      const isDirect = routeCells.includes(cell);
-      if (isDirect) {
-        rawRisk += weight;
-      } else {
-        // Calculate influence weight based on distance to nearest route cell
-        // For performance, we treat influence as a simplified average or nearest-neighbor
-        const nearestRouteCell = this.findNearestRouteCell(cell, routeCells);
-        const dist = this.spatial.getGridDistance(cell, nearestRouteCell);
-        rawRisk += weight * this.spatial.getInfluenceWeight(dist);
+      const nearestRouteCell = routeCellSet.has(cell) ? cell : this.findNearestRouteCell(cell, routeCells);
+      const dist = routeCellSet.has(cell) ? 0 : this.spatial.getGridDistance(cell, nearestRouteCell);
+      const spatialKernel = dist === 0 ? 1 : this.spatial.getInfluenceWeight(dist);
+      const contribution = weight * spatialKernel;
+      if (contribution <= 0) {
+        continue;
+      }
+
+      rawRisk += contribution;
+      const summary = cached?.summary ?? this.riskSurfaceCache.getSummary(cell);
+      if (summary) {
+        contributingEvents += summary.eventCount;
+        for (const hazard of summary.hazardTypes) {
+          contributingHazards.set(hazard, (contributingHazards.get(hazard) ?? 0) + contribution);
+        }
+
+        const segment = segmentAccumulator.get(nearestRouteCell) ?? {
+          h3Index: nearestRouteCell,
+          cellRisk: 0,
+          eventCount: 0,
+          hazardTypes: new Set<string>(),
+        };
+        segment.cellRisk += contribution;
+        segment.eventCount += summary.eventCount;
+        summary.hazardTypes.forEach((hazard) => segment.hazardTypes.add(hazard));
+        segmentAccumulator.set(nearestRouteCell, segment);
       }
     }
 
-    // 3. Length Normalization (Risk Density)
     const riskDensity = pathDistance > 0 ? rawRisk / pathDistance : rawRisk;
-
-    // 4. Exponential Saturation Normalization (Spec v2)
-    // Rnorm = 1 - exp(-R density / k)
     const normalizedScore = 1 - Math.exp(-riskDensity / this.K_NORMALIZATION);
+    const riskLevel = classifyRiskLevel(normalizedScore);
+    const segments = this.buildRouteSegments(segmentAccumulator);
+    const explanation = this.buildExplanation(riskLevel, pathDistance, contributingHazards, segments);
 
     const latencyMs = performance.now() - startTime;
     this.observability.observeRiskEvalLatency(latencyMs / 1000);
-    this.logger.debug(`[RISK] region=${regionId} risk=${normalizedScore.toFixed(4)} latency_ms=${latencyMs.toFixed(2)}`);
+    this.logger.debug(`[RISK] region=${regionId} risk=${normalizedScore.toFixed(4)} latency_ms=${latencyMs.toFixed(2)} cache=${this.riskSurfaceCache.isRedisReady() ? 'redis' : 'memory'}`);
 
     return {
       riskScore: parseFloat(normalizedScore.toFixed(4)),
+      riskLevel,
+      explanation,
+      contributingEvents,
+      segments,
+      eventCount: contributingEvents,
+      classification: riskLevel,
+      score: parseFloat(normalizedScore.toFixed(4)),
+      level: riskLevel,
       riskDensity: parseFloat(riskDensity.toFixed(4)),
       routeLengthKm: parseFloat(pathDistance.toFixed(2)),
       cellCount: routeCells.length,
       latencyMs: parseFloat(latencyMs.toFixed(2)),
+      evalLatencyMs: Math.round(latencyMs),
     };
   }
 
@@ -193,6 +230,56 @@ export class RiskService {
       coords.forEach(c => indices.add(h3.latLngToCell(c.lat, c.lng, 9)));
       return Array.from(indices);
     }
+  }
+
+  private buildInfluenceCells(routeCells: string[]): string[] {
+    const influenceSet = new Set<string>();
+    for (const cell of routeCells) {
+      for (const neighbor of this.spatial.getInfluenceNeighbors(cell, this.INFLUENCE_RADIUS)) {
+        influenceSet.add(neighbor);
+      }
+    }
+    return Array.from(influenceSet);
+  }
+  private buildRouteSegments(segmentAccumulator: Map<string, { h3Index: string; cellRisk: number; eventCount: number; hazardTypes: Set<string> }>) {
+    return Array.from(segmentAccumulator.values())
+      .filter((segment) => segment.cellRisk > 0 && segment.eventCount > 0)
+      .sort((a, b) => b.cellRisk - a.cellRisk)
+      .slice(0, 5)
+      .map((segment) => ({
+        h3Index: segment.h3Index,
+        cellRisk: parseFloat(
+          Math.min(this.MAX_SEGMENT_RISK, 1 - Math.exp(-segment.cellRisk)).toFixed(4),
+        ),
+        eventCount: segment.eventCount,
+        hazardTypes: Array.from(segment.hazardTypes),
+      }));
+  }
+
+  private buildExplanation(
+    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH',
+    routeLengthKm: number,
+    contributingHazards: Map<string, number>,
+    segments: Array<{ h3Index: string; cellRisk: number; eventCount: number; hazardTypes: string[] }>,
+  ): string {
+    if (contributingHazards.size === 0) {
+      if (riskLevel === 'LOW') {
+        return `LOW risk. No active hazards were found within the ${this.INFLUENCE_RADIUS}-ring influence band around the route.`;
+      }
+      return `${riskLevel} risk from the precomputed spatial risk surface across ${routeLengthKm.toFixed(1)} km. Derived-state intensity is elevated even though no per-cell hazard summary is cached for this segment.`;
+    }
+
+    const dominantHazards = Array.from(contributingHazards.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([type]) => type.toLowerCase().replace(/_/g, ' '));
+
+    const hottestSegment = segments[0];
+    const hottestText = hottestSegment
+      ? ` Highest-risk segment intersects ${hottestSegment.eventCount} hazard(s) in cell ${hottestSegment.h3Index}.`
+      : '';
+
+    return `${riskLevel} risk across ${routeLengthKm.toFixed(1)} km. Dominant hazards: ${dominantHazards.join(', ')}.${hottestText}`;
   }
 
   /**

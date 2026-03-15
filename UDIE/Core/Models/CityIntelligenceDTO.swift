@@ -72,6 +72,36 @@ struct RiskSnapshotDTO: Decodable {
     let snapshotTime: String
     let h3Index: String
     let riskWeight: Double
+    let eventCount: Int
+    let dominantHazard: String?
+    let boundary: [CoordinateDTO]?
+
+    enum CodingKeys: String, CodingKey {
+        case snapshotTime
+        case snapshotTimeSnake = "snapshot_time"
+        case h3Index
+        case h3IndexSnake = "h3_index"
+        case riskWeight
+        case riskWeightSnake = "risk_weight"
+        case eventCount
+        case dominantHazard
+        case boundary
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        snapshotTime = try container.decodeIfPresent(String.self, forKey: .snapshotTime)
+            ?? container.decodeIfPresent(String.self, forKey: .snapshotTimeSnake)
+            ?? ""
+        h3Index = try container.decodeIfPresent(String.self, forKey: .h3Index)
+            ?? container.decode(String.self, forKey: .h3IndexSnake)
+        riskWeight = try container.decodeIfPresent(Double.self, forKey: .riskWeight)
+            ?? container.decodeIfPresent(Double.self, forKey: .riskWeightSnake)
+            ?? 0
+        eventCount = try container.decodeIfPresent(Int.self, forKey: .eventCount) ?? 0
+        dominantHazard = try container.decodeIfPresent(String.self, forKey: .dominantHazard)
+        boundary = try container.decodeIfPresent([CoordinateDTO].self, forKey: .boundary)
+    }
 }
 
 struct RiskSnapshotsResponse: Decodable {

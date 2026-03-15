@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ReliabilityService, ReliabilityInsight } from './reliability.service';
 
-@Controller(['reliability', 'api/reliability'])
+@Controller('reliability')
 export class ReliabilityController {
     constructor(private readonly reliabilityService: ReliabilityService) { }
 

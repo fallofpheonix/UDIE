@@ -125,8 +125,7 @@ struct MapOperationsView: View {
     }
 
     var body: some View {
-        AnyView(
-            ZStack(alignment: .topLeading) {
+        ZStack(alignment: .topLeading) {
             MapSurfaceView(
                 region: $region,
                 events: uiState.annotations,
@@ -253,8 +252,7 @@ struct MapOperationsView: View {
                     }
                 }
             }
-            }
-        )
+        }
         .onChange(of: selectedRoute) { _, newRoute in
             guard let newRoute else {
                 viewModel.clearRisk()
@@ -310,6 +308,7 @@ struct MapOperationsView: View {
         }
         .onDisappear {
             viewModel.clearRisk()
+            viewModel.stopRealtimeUpdates()
         }
         .animation(.easeInOut(duration: 0.20), value: viewModel.isLoading)
         .animation(.easeInOut(duration: 0.20), value: viewModel.isRiskLoading)

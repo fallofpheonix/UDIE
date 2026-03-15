@@ -7,6 +7,11 @@ scrape_configs:
       - targets: ["udie-backend:3000"]
     metrics_path: "/api/v1/metrics"
 
+  - job_name: "udie-spatial-py"
+    static_configs:
+      - targets: ["udie-spatial-py:8000"]
+    metrics_path: "/metrics"
+
   - job_name: "postgres"
     static_configs:
       - targets: ["postgres-exporter:9187"]

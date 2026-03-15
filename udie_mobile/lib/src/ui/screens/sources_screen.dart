@@ -120,7 +120,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
               const SizedBox(height: UdieTheme.sp12),
               // City picker
               DropdownButtonFormField<String>(
-                value: _selectedCity,
+                initialValue: _selectedCity,
                 dropdownColor: UdieTheme.surface2,
                 style: const TextStyle(
                   color: UdieTheme.textPrimary,

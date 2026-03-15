@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
+import { PartitionManagementService } from '../database/partition-management.service';
 
 export interface DisruptionIdentity {
     id: string;
@@ -15,8 +16,12 @@ export interface DisruptionIdentity {
 @Injectable()
 export class DisruptionIdentityService implements OnModuleInit {
     private readonly logger = new Logger(DisruptionIdentityService.name);
+    private readonly initializedPartitions = new Set<string>();
 
-    constructor(private readonly db: DatabaseService) { }
+    constructor(
+      private readonly db: DatabaseService,
+      private readonly partitionManager: PartitionManagementService,
+    ) { }
 
     async onModuleInit() {
         await this.ensureIdentitySchema();
@@ -59,6 +64,9 @@ export class DisruptionIdentityService implements OnModuleInit {
         eventType: string,
         severity: number
     ): Promise<string> {
+        await this.partitionManager.ensurePartition(h3Parent);
+        await this.ensureIdentityPartition(h3Parent);
+
         // 1. Check for existing active identity in the same cell
         // Law: Identity is spatially anchored to its primary hex.
         const existing = await this.db.query(`
@@ -118,5 +126,18 @@ export class DisruptionIdentityService implements OnModuleInit {
       WHERE is_active = true 
         AND last_observed_at < now() - interval '24 hours'
     `);
+    }
+
+    private async ensureIdentityPartition(h3Parent: string): Promise<void> {
+        if (this.initializedPartitions.has(h3Parent)) {
+            return;
+        }
+
+        await this.db.query(
+          `CREATE TABLE IF NOT EXISTS disruption_identities_reg_${h3Parent}
+             PARTITION OF disruption_identities
+             FOR VALUES IN (${h3Parent})`
+        );
+        this.initializedPartitions.add(h3Parent);
     }
 }

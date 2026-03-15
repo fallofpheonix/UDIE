@@ -197,7 +197,6 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).padding.bottom;
     return Container(
       decoration: BoxDecoration(
         color: UdieTheme.surface0,

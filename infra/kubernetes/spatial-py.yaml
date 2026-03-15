@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: udie-spatial-py
+spec:
+  selector:
+    app: udie-spatial-py
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: udie-spatial-py
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: udie-spatial-py
+  template:
+    metadata:
+      labels:
+        app: udie-spatial-py
+    spec:
+      containers:
+        - name: udie-spatial-py
+          image: udie-spatial-py:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: CORS_ALLOWED_ORIGINS
+              value: http://udie-backend:3000
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health/ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20

@@ -82,6 +82,30 @@ final class APIClient {
         return URLSession(configuration: config)
     }()
 
+    private struct WebSocketEnvelope<Payload: Codable>: Codable {
+        let event: String
+        let data: Payload
+    }
+
+    private struct RiskSurfaceSubscriptionRequest: Codable {
+        let minLat: Double
+        let maxLat: Double
+        let minLng: Double
+        let maxLng: Double
+        let limit: Int
+    }
+
+    private struct RiskSurfaceStreamEnvelope: Decodable {
+        let event: String
+        let data: RiskSurfaceStreamPayload?
+    }
+
+    struct RiskSurfaceStreamPayload: Decodable {
+        let updatedAt: String
+        let cellCount: Int
+        let cells: [RiskSnapshotDTO]
+    }
+
     func getBaseURL() -> String {
         warnIfDeviceUsingLocalhost()
         return baseURL.absoluteString
@@ -318,6 +342,88 @@ final class APIClient {
         return try JSONDecoder().decode(ArchitectureAuditReport.self, from: data)
     }
 
+    @discardableResult
+    func streamRiskSurface(
+        bounds: BoundingBox,
+        limit: Int = 256,
+        onPayload: @escaping @MainActor (RiskSurfaceStreamPayload) -> Void,
+        onFailure: @escaping @MainActor (String) -> Void
+    ) -> Task<Void, Never> {
+        Task {
+            let socket: URLSessionWebSocketTask
+            do {
+                let prefix = try await resolveAPIPrefix()
+                let url = try makeWebSocketURL(prefix: prefix, endpoint: "risk/ws")
+                socket = session.webSocketTask(with: url)
+                socket.resume()
+
+                let subscribe = WebSocketEnvelope(
+                    event: "risk.surface.subscribe",
+                    data: RiskSurfaceSubscriptionRequest(
+                        minLat: bounds.minLat,
+                        maxLat: bounds.maxLat,
+                        minLng: bounds.minLng,
+                        maxLng: bounds.maxLng,
+                        limit: limit
+                    )
+                )
+                let body = try JSONEncoder().encode(subscribe)
+                try await socket.send(.data(body))
+
+                defer {
+                    socket.cancel(with: .goingAway, reason: nil)
+                }
+
+                let decoder = JSONDecoder()
+                while !Task.isCancelled {
+                    let message = try await socket.receive()
+                    let payloadData: Data
+                    switch message {
+                    case .data(let data):
+                        payloadData = data
+                    case .string(let string):
+                        payloadData = Data(string.utf8)
+                    @unknown default:
+                        continue
+                    }
+
+                    guard let envelope = try? decoder.decode(RiskSurfaceStreamEnvelope.self, from: payloadData) else {
+                        continue
+                    }
+
+                    switch envelope.event {
+                    case "risk.surface.sync", "risk.surface.update":
+                        if let payload = envelope.data {
+                            await MainActor.run {
+                                onPayload(payload)
+                            }
+                        }
+                    case "risk.surface.error":
+                        await MainActor.run {
+                            onFailure("Risk surface stream rejected the subscription.")
+                        }
+                    default:
+                        break
+                    }
+                }
+            } catch is CancellationError {
+                return
+            } catch let error as APIClientError {
+                await MainActor.run {
+                    onFailure(error.localizedDescription)
+                }
+            } catch let error as URLError {
+                await MainActor.run {
+                    onFailure(APIClientError.connectivity(baseURL: baseURL.absoluteString, underlying: error).localizedDescription)
+                }
+            } catch {
+                await MainActor.run {
+                    onFailure(error.localizedDescription)
+                }
+            }
+        }
+    }
+
     private func validateResponse(_ response: URLResponse, data: Data) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
@@ -367,6 +473,17 @@ final class APIClient {
             throw APIClientError.connectivity(baseURL: baseURL.absoluteString, underlying: connectivityError)
         }
         throw APIClientError.invalidResponse(statusCode: 404, body: "No supported API prefix found at /api/v1 or /api")
+    }
+
+    private func makeWebSocketURL(prefix: String, endpoint: String) throws -> URL {
+        guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
+            throw URLError(.badURL)
+        }
+        components.scheme = baseURL.scheme == "https" ? "wss" : "ws"
+        guard let rootURL = components.url else {
+            throw URLError(.badURL)
+        }
+        return rootURL.appendingPathComponent(prefix).appendingPathComponent(endpoint)
     }
 
     private func performDataRequest(url: URL) async throws -> (Data, URLResponse) {

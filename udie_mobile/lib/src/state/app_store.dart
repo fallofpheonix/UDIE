@@ -47,6 +47,10 @@ class AppStore extends ChangeNotifier {
       _client = ApiClient(baseUrl: _defaultBaseUrl());
 
   static String _defaultBaseUrl() {
+    const configured = String.fromEnvironment('UDIE_BASE_URL', defaultValue: '');
+    if (configured != '') {
+      return configured;
+    }
     if (kIsWeb) {
       return 'http://127.0.0.1:8000';
     }

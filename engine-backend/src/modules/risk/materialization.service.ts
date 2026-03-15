@@ -1,13 +1,23 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { QueryResultRow } from 'pg';
 import { DatabaseService } from '../../database/database.service';
+import { SpatialRiskFieldService } from './spatial-risk-field.service';
+import { RiskStreamService } from './risk-stream.service';
 
 @Injectable()
-export class MaterializationService {
+export class MaterializationService implements OnModuleInit {
     private readonly logger = new Logger(MaterializationService.name);
+    private readonly workerLockTimeoutSeconds = 45;
 
-    constructor(private readonly db: DatabaseService) { }
+    constructor(
+      private readonly db: DatabaseService,
+      private readonly spatialRiskField: SpatialRiskFieldService,
+      private readonly riskStreamService: RiskStreamService,
+    ) { }
+
+    onModuleInit() {
+      void this.handleRiskSurfaceRefresh();
+    }
 
     @Cron(CronExpression.EVERY_MINUTE)
     async handleRiskSurfaceRefresh() {
@@ -33,7 +43,7 @@ export class MaterializationService {
                 // 2. Acquire soft lock with 5-minute timeout for telemetry
                 const lockResult = await this.db.query<{ acquire_worker_lock: boolean }>(
                     'SELECT acquire_worker_lock($1, $2)',
-                    [workerName, 300]
+                    [workerName, this.workerLockTimeoutSeconds]
                 );
 
                 if (!lockResult.rows[0]?.acquire_worker_lock) {
@@ -41,12 +51,8 @@ export class MaterializationService {
                     return;
                 }
 
-                // 3. Perform Field Materialization (Physics-aware v2)
-                await this.db.withTransaction(async (client) => {
-                    await client.query(`SELECT set_config('udie.allow_derived_mutation', 'true', true)`);
-                    await client.query('SELECT refresh_risk_surface_v2()');
-                    await client.query(`SELECT set_config('udie.allow_derived_mutation', 'false', true)`);
-                });
+                const stats = await this.spatialRiskField.refreshRiskField();
+                await this.riskStreamService.broadcastSurfaceRefresh();
 
                 const duration = (performance.now() - start).toFixed(2);
                 await this.db.query(
@@ -56,6 +62,8 @@ export class MaterializationService {
                         JSON.stringify({
                             status: 'OK',
                             duration_ms: Number(duration),
+                            event_count: stats.eventCount,
+                            cell_count: stats.cellCount,
                             last_success_at: new Date().toISOString(),
                         }),
                     ],

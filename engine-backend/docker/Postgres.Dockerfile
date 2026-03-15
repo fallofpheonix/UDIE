@@ -13,3 +13,5 @@ RUN git clone https://github.com/zachasme/h3-pg.git /tmp/h3-pg \
     && cmake .. \
     && make && make install \
     && rm -rf /tmp/h3-pg
+
+COPY migrations /migrations

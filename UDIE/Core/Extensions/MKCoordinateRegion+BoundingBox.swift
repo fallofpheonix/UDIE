@@ -7,13 +7,6 @@
 
 import MapKit
 
-struct BoundingBox {
-    let minLat: Double
-    let maxLat: Double
-    let minLng: Double
-    let maxLng: Double
-}
-
 extension MKCoordinateRegion {
 
     var boundingBox: BoundingBox {

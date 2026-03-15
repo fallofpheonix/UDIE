@@ -7,6 +7,7 @@ import { SpatialService } from '../common/spatial.service';
 export class AggregationWorker implements OnModuleInit {
     private readonly logger = new Logger(AggregationWorker.name);
     private readonly reconnectDelayMs = 5_000;
+    private sequenceEnsured = false;
 
     constructor(
         private readonly db: DatabaseService,
@@ -15,6 +16,7 @@ export class AggregationWorker implements OnModuleInit {
     ) { }
 
     async onModuleInit() {
+        await this.ensureRiskVersionSequence();
         void this.setupListener();
     }
 
@@ -57,21 +59,26 @@ export class AggregationWorker implements OnModuleInit {
             // 1. Fetch the simplified event data
             const result = await this.db.query(`
         SELECT 
-          (payload->>'h3_index')::bigint as h3_index,
-          (payload->>'severity_hint')::double precision as severity
+          CASE
+            WHEN payload ? 'h3_cell' THEN payload->>'h3_cell'
+            WHEN payload->>'h3_index' ~ '^[0-9]+$' THEN (((payload->>'h3_index')::bigint)::h3index)::text
+            ELSE ((payload->>'h3_index')::h3index)::text
+          END AS h3_cell,
+          (payload->>'severity_hint')::double precision as severity,
+          COALESCE((payload->>'confidence_hint')::double precision, (payload->>'reliability_score')::double precision, 1.0) AS confidence
         FROM regional_events_log
         WHERE id = $1 AND h3_parent = $2::bigint
       `, [logId, h3Parent]);
 
             if (result.rows.length === 0) return;
 
-            const { h3_index, severity } = result.rows[0];
-            const h3CellStr = h3_index.toString();
+            const { h3_cell, severity, confidence } = result.rows[0];
+            const h3CellStr = h3_cell.toString();
 
             // 2. Incremental Update: Center Cell
             // Using log-reinforcement: weight += severity * log(1 + count)
             // For streaming, we approximate delta. Defaulting to linear for v1.
-            const delta = severity;
+            const delta = Number(severity) * Number(confidence);
 
             await this.applyRiskDelta(h3CellStr, h3Parent, delta);
 
@@ -94,14 +101,23 @@ export class AggregationWorker implements OnModuleInit {
      * Applies a weight delta to both In-Memory and Persistent state.
      */
     private async applyRiskDelta(h3Index: string, h3Parent: string, delta: number) {
+        await this.ensureRiskVersionSequence();
         // A. Update In-Memory Grid (Evaluate Hot-Path)
         this.riskGrid.updateWeight(h3Index, delta);
 
         // B. Update Persistent Partitioned Grid (Audit Trail / Rebuildable State)
         await this.db.query(`
       INSERT INTO regional_risk_grid_v (h3_index, h3_parent, version, weight)
-      VALUES ($1::bigint, $2::bigint, nextval('risk_version_seq'), $3)
+      VALUES (($1::h3index)::bigint, $2::bigint, nextval('risk_version_seq'), $3)
       ON CONFLICT (h3_index, version, h3_parent) DO NOTHING
     `, [h3Index, h3Parent, delta]);
+    }
+
+    private async ensureRiskVersionSequence() {
+        if (this.sequenceEnsured) {
+            return;
+        }
+        await this.db.query(`CREATE SEQUENCE IF NOT EXISTS risk_version_seq`);
+        this.sequenceEnsured = true;
     }
 }

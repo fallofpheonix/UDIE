@@ -6,9 +6,10 @@ import { DatabaseModule } from '../../database/database.module';
 import { SpatialModule } from '../common/spatial.module';
 import { AIResolverService } from './ai-resolver.service';
 import { SpatialDiffusionWorker } from './spatial-diffusion.worker';
+import { RiskModule } from '../risk/risk.module';
 
 @Module({
-    imports: [DatabaseModule, SpatialModule],
+    imports: [DatabaseModule, SpatialModule, RiskModule],
     providers: [ReliabilityService, ErrorLogService, AIResolverService, SpatialDiffusionWorker],
     controllers: [ReliabilityController],
     exports: [ReliabilityService, ErrorLogService],

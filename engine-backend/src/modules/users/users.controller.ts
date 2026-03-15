@@ -15,12 +15,7 @@ export class UsersController {
 
     @Post()
     async create(@Body() createUserDto: CreateUserDto): Promise<UserEntity> {
-        // In a real app, we would hash the password here.
-        // For this context, we'll store it as provided or mock hash.
-        return this.usersService.create({
-            ...createUserDto,
-            password_hash: `mock_hash_${createUserDto.password}`,
-        });
+        return this.usersService.create(createUserDto);
     }
 
     @Patch(':id/role')

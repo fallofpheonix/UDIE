@@ -12,7 +12,7 @@ class UDIEDashboard {
         this.activeView = 'dashboard';
         this.playbackMode = 'LIVE';
         this.trendChart = null;
-        this.baseUrl = window.location.origin.includes('localhost') ? 'http://localhost:3000/api/v1' : '/api/v1';
+        this.baseUrl = this.resolveBaseUrl();
         this.routePoints = { origin: null, destination: null };
         this.routePolylines = [];
 
@@ -26,6 +26,19 @@ class UDIEDashboard {
         this.startDataLoops();
 
         console.log('UDIE: Spatial Engine Initialized');
+    }
+
+    resolveBaseUrl() {
+        if (typeof window.UDIE_API_BASE_URL === 'string' && window.UDIE_API_BASE_URL.trim()) {
+            return window.UDIE_API_BASE_URL.trim().replace(/\/$/, '');
+        }
+
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return 'http://localhost:3000/api/v1';
+        }
+
+        return '/api/v1';
     }
 
     initMap() {
@@ -173,10 +186,13 @@ class UDIEDashboard {
                     destination: { lat: this.routePoints.destination.lat, lng: this.routePoints.destination.lng }
                 })
             });
+            if (!res.ok) {
+                throw new Error(`Route Calculation Failed: ${res.status}`);
+            }
             const data = await res.json();
             this.renderRoutes(data.options);
         } catch (err) {
-            console.error('Route Calculation Failed');
+            console.error(err);
         }
     }
 
@@ -204,19 +220,39 @@ class UDIEDashboard {
             const item = document.createElement('div');
             item.className = 'route-item';
             item.style.borderLeft = `4px solid ${colors[idx]}`;
-            item.innerHTML = `
-                <div class="route-header">
-                    <span class="rank">#${opt.rank} ${idx === 0 ? 'Best Utility' : ''}</span>
-                    <span class="utility">${opt.utility.toFixed(1)}</span>
-                </div>
-                <div class="route-details">
-                    <span>${opt.travelTimeMin.toFixed(1)} min</span>
-                    <span>${opt.distanceKm.toFixed(1)} km</span>
-                    <span class="risk-badge" style="background: ${this.getRiskColor(opt.riskScore * 10)}">
-                        Risk: ${opt.riskScore.toFixed(2)}
-                    </span>
-                </div>
-            `;
+
+            const header = document.createElement('div');
+            header.className = 'route-header';
+
+            const rank = document.createElement('span');
+            rank.className = 'rank';
+            rank.textContent = `#${opt.rank} ${idx === 0 ? 'Best Utility' : ''}`.trim();
+
+            const utility = document.createElement('span');
+            utility.className = 'utility';
+            utility.textContent = Number(opt.utility).toFixed(1);
+
+            const details = document.createElement('div');
+            details.className = 'route-details';
+
+            const time = document.createElement('span');
+            time.textContent = `${Number(opt.travelTimeMin).toFixed(1)} min`;
+
+            const distance = document.createElement('span');
+            distance.textContent = `${Number(opt.distanceKm).toFixed(1)} km`;
+
+            const risk = document.createElement('span');
+            risk.className = 'risk-badge';
+            risk.style.background = this.getRiskColor(opt.riskScore * 10);
+            risk.textContent = `Risk: ${Number(opt.riskScore).toFixed(2)}`;
+
+            header.appendChild(rank);
+            header.appendChild(utility);
+            details.appendChild(time);
+            details.appendChild(distance);
+            details.appendChild(risk);
+            item.appendChild(header);
+            item.appendChild(details);
             container.appendChild(item);
         });
 

@@ -1,9 +1,9 @@
 import { Transform } from 'class-transformer';
-import { IsEnum, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class CreateEventDto {
     @Transform(({ value }) => typeof value === 'string' ? value.toUpperCase().trim() : value)
-    @IsEnum(['TRAFFIC', 'WEATHER', 'CONVERSION', 'CRIME', 'INFRASTRUCTURE', 'TEST'])
+    @IsString()
     type!: string;
 
     @IsNumber()

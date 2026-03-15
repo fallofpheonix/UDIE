@@ -28,7 +28,7 @@ struct StatusBadgeView: View {
                 .font(.caption)
                 .fontWeight(.semibold)
 
-            if state != .connecting && state != .disconnected {
+            if state != .connecting {
                 Text("• \(eventCount) events")
                     .font(.caption2)
                     .foregroundStyle(ColorTokens.textSecondary)
@@ -52,21 +52,17 @@ struct StatusBadgeView: View {
 
     private var isError: Bool {
         if case .error = state { return true }
-        return state == .disconnected
+        return false
     }
 
     private var titleText: String {
         switch state {
-        case .disconnected:
-            return "Disconnected"
         case .connecting:
             return "Connecting..."
-        case .connected:
-            return "Connected"
         case .syncing:
-            return "Syncing..."
+            return "Syncing live map..."
         case .synced:
-            return "Synced"
+            return "Live map synced"
         case .error(let message):
             return "Sync Error: \(message.prefix(20))..."
         }
@@ -74,12 +70,10 @@ struct StatusBadgeView: View {
 
     private var iconName: String {
         switch state {
-        case .error, .disconnected:
+        case .error:
             return "exclamationmark.triangle.fill"
         case .connecting, .syncing:
             return "arrow.trianglehead.2.clockwise"
-        case .connected:
-            return "dot.radiowaves.left.and.right"
         case .synced:
             return "checkmark.circle.fill"
         }
@@ -87,11 +81,11 @@ struct StatusBadgeView: View {
 
     private var iconColor: Color {
         switch state {
-        case .error, .disconnected:
+        case .error:
             return ColorTokens.highRisk
         case .connecting, .syncing:
             return ColorTokens.mediumRisk
-        case .connected, .synced:
+        case .synced:
             return ColorTokens.neutralAccent
         }
     }

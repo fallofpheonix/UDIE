@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { QueryResultRow } from 'pg';
 import { DatabaseService } from '../../database/database.service';
 import { ObservabilityService } from '../common/observability.service';
+import { RiskSurfaceCacheService } from './risk-surface-cache.service';
 
 type RiskGridRow = QueryResultRow & { h3_index: string; weight: number };
 
@@ -17,6 +18,7 @@ export class RiskGridService implements OnModuleInit {
     constructor(
       private readonly db: DatabaseService,
       private readonly observability: ObservabilityService,
+      private readonly riskSurfaceCache: RiskSurfaceCacheService,
     ) { }
 
     async onModuleInit() {
@@ -42,6 +44,7 @@ export class RiskGridService implements OnModuleInit {
                 this.riskGrid.set(row.h3_index, Number(row.weight));
             });
 
+            await this.riskSurfaceCache.seedWeights(this.riskGrid);
             this.observability.setRiskGridSize(this.riskGrid.size);
             this.observability.observeRiskGridRefreshTime((Date.now() - startedAt) / 1000);
             this.logger.log(`[IN-MEM] Hydration complete. Managed cells: ${this.riskGrid.size}`);
@@ -69,6 +72,11 @@ export class RiskGridService implements OnModuleInit {
 
     setWeight(h3Index: string, weight: number) {
         this.riskGrid.set(h3Index, Math.max(0, weight));
+        this.observability.setRiskGridSize(this.riskGrid.size);
+    }
+
+    replaceAll(weights: Map<string, number>) {
+        this.riskGrid = new Map(weights);
         this.observability.setRiskGridSize(this.riskGrid.size);
     }
 

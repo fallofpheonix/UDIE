@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from math import cos, radians
+import os
 from typing import Annotated
 
 from fastapi import APIRouter, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
 
 from app.models import (
     AreaNewsItem,
@@ -19,10 +21,27 @@ from app.models import (
 from app.services import registry, risk_for_route
 from app.storage import store
 
+def _allowed_origins() -> list[str]:
+    configured = [
+        origin.strip()
+        for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+        if origin.strip()
+    ]
+    defaults = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+    ]
+    return list(dict.fromkeys([*defaults, *configured]))
+
+
 app = FastAPI(title="UDIE Open Data Backend", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins(),
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -52,6 +71,17 @@ async def health_ready(request: Request) -> dict[str, object]:
     namespace = "/api/v1" if request.url.path.startswith("/api/v1") else "/api"
     readiness = store.readiness()
     return {"status": "ok" if readiness.get("db") == "ok" else "degraded", "namespace": namespace, **readiness}
+
+
+@router.get("/metrics", response_class=PlainTextResponse)
+async def metrics() -> str:
+    readiness = store.readiness()
+    return "\n".join([
+        "# TYPE udie_spatial_py_db_ready gauge",
+        f"udie_spatial_py_db_ready {1 if readiness.get('db') == 'ok' else 0}",
+        "# TYPE udie_spatial_py_risk_cells gauge",
+        f"udie_spatial_py_risk_cells {int(readiness.get('riskCells', 0))}",
+    ]) + "\n"
 
 
 @router.get("/sources")

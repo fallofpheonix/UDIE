@@ -6,7 +6,6 @@ import '../../models.dart';
 import '../../state/app_store.dart';
 import '../../theme.dart';
 import '../widgets/skeleton_loader.dart';
-import '../widgets/ui_components.dart';
 
 class NewsScreen extends StatelessWidget {
   const NewsScreen({super.key, required this.store});
@@ -314,7 +313,7 @@ class _LoadingSkeleton extends StatelessWidget {
         UdieTheme.sp24,
       ),
       itemCount: 5,
-      itemBuilder: (_, __) => Container(
+      itemBuilder: (_, index) => Container(
         margin: const EdgeInsets.only(bottom: UdieTheme.sp10),
         padding: const EdgeInsets.all(UdieTheme.sp14),
         decoration: BoxDecoration(
@@ -385,4 +384,3 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
-

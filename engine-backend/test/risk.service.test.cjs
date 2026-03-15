@@ -25,7 +25,33 @@ function createService(weightMap = new Map()) {
     observeRiskEvalLatency() {},
   };
 
-  return new RiskService(inMemRisk, spatial, observability);
+  const cache = {
+    async getCells(cells) {
+      const result = new Map();
+      for (const cell of cells) {
+        const weight = weightMap.get(cell);
+        if (weight) {
+          result.set(cell, {
+            weight,
+            summary: {
+              eventCount: 1,
+              hazardTypes: ['ACCIDENT'],
+              dominantHazard: 'ACCIDENT',
+            },
+          });
+        }
+      }
+      return result;
+    },
+    getSummary() {
+      return null;
+    },
+    isRedisReady() {
+      return false;
+    },
+  };
+
+  return new RiskService(inMemRisk, spatial, observability, cache);
 }
 
 test('returns zeroed response for insufficient route coverage', async () => {
@@ -35,6 +61,8 @@ test('returns zeroed response for insufficient route coverage', async () => {
   });
 
   assert.equal(result.riskScore, 0);
+  assert.equal(result.riskLevel, 'LOW');
+  assert.match(result.explanation, /too small|No active hazards/i);
   assert.equal(result.riskDensity, 0);
   assert.equal(result.routeLengthKm, 0);
 });
@@ -57,6 +85,9 @@ test('returns positive risk score when weighted cells are present', async () => 
   });
 
   assert.ok(result.riskScore > 0);
+  assert.ok(['LOW', 'MEDIUM', 'HIGH'].includes(result.riskLevel));
   assert.ok(result.cellCount >= 1);
   assert.ok(result.latencyMs >= 0);
+  assert.equal(result.score, result.riskScore);
+  assert.equal(result.level, result.riskLevel);
 });

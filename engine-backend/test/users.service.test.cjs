@@ -31,10 +31,12 @@ test('UsersService.create calls repository.create', async () => {
             return { id: '1', ...user };
         }
     });
-    const payload = { email: 'new@example.com', role: 'ADMIN' };
+    const payload = { email: 'new@example.com', password: 'password123', role: 'ADMIN' };
     await service.create(payload);
     assert.equal(createdUser.email, payload.email);
     assert.equal(createdUser.role, payload.role);
+    assert.equal(typeof createdUser.password_hash, 'string');
+    assert.ok(createdUser.password_hash.startsWith('scrypt:'));
 });
 
 test('UsersService.delete calls repository.delete', async () => {

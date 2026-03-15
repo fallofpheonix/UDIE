@@ -87,7 +87,14 @@ struct ClusteredMapView: UIViewRepresentable {
             mapView.removeOverlays(activePolygons)
 
             let polygons = snapshots.compactMap { snapshot -> MKPolygon? in
-                guard let vertices = H3CoordinateHelper.getVertices(for: snapshot.h3Index) else { return nil }
+                let vertices: [CLLocationCoordinate2D]
+                if let boundary = snapshot.boundary, !boundary.isEmpty {
+                    vertices = boundary.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
+                } else if let fallback = H3CoordinateHelper.getVertices(for: snapshot.h3Index) {
+                    vertices = fallback
+                } else {
+                    return nil
+                }
                 let polygon = MKPolygon(coordinates: vertices, count: vertices.count)
                 polygon.title = "risk_cell|\(snapshot.riskWeight)"
                 return polygon

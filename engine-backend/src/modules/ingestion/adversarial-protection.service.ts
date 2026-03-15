@@ -1,11 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class AdversarialProtectionService {
-    private readonly logger = new Logger(AdversarialProtectionService.name);
     private readonly BURST_THRESHOLD = 10; // Max events per 10s window
-    private readonly WINDOW_SECONDS = 10;
 
     constructor(private readonly db: DatabaseService) { }
 
@@ -17,9 +15,10 @@ export class AdversarialProtectionService {
         // 1. Check Source Burst
         const sourceBurst = await this.db.query<{ count: number }>(
             `SELECT COUNT(*)::int as count 
-       FROM regional_events_log 
-       WHERE source_ref = $1 
-         AND created_at > now() - interval '10 seconds'`,
+       FROM events_log 
+       WHERE log_type = 'INGESTED'
+         AND source_ref = $1 
+         AND ingested_at > now() - interval '10 seconds'`,
             [sourceId]
         );
 
@@ -30,9 +29,10 @@ export class AdversarialProtectionService {
         // 2. Check Spatial Burst (H3 Res 9)
         const spatialBurst = await this.db.query<{ count: number }>(
             `SELECT COUNT(*)::int as count 
-        FROM regional_events_log 
-        WHERE h3_index = $1::bigint
-          AND created_at > now() - interval '10 seconds'`,
+        FROM events_log 
+        WHERE log_type = 'INGESTED'
+          AND payload->>'h3_cell' = $1
+          AND ingested_at > now() - interval '10 seconds'`,
             [h3Index]
         );
 

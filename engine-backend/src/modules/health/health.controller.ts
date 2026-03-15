@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { QueryResultRow } from 'pg';
 import { DatabaseService } from '../../database/database.service';
 import { ReliabilityService } from '../reliability/reliability.service';
@@ -84,7 +84,7 @@ export class HealthController {
 
       const status = (surfaceStale || laggingWorkers.length > 0 || replicaLag > 60 || maxWait > 10 || reliability < 0.8) ? 'degraded' : 'ok';
 
-      return {
+      const payload = {
         status,
         checks: {
           database: 'up',
@@ -108,11 +108,19 @@ export class HealthController {
           },
         },
       };
+
+      if (status !== 'ok') {
+        throw new ServiceUnavailableException(payload);
+      }
+      return payload;
     } catch (error) {
-      return {
+      if (error instanceof ServiceUnavailableException) {
+        throw error;
+      }
+      throw new ServiceUnavailableException({
         status: 'down',
         error: error instanceof Error ? error.message : 'Unknown error',
-      };
+      });
     }
   }
 

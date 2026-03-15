@@ -1,14 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { QueryResultRow } from 'pg';
 import { DatabaseService } from '../../database/database.service';
+import { SpatialRiskFieldService } from '../risk/spatial-risk-field.service';
 
 @Injectable()
 export class SpatialDiffusionWorker {
     private readonly logger = new Logger(SpatialDiffusionWorker.name);
     private readonly workerName = 'spatial_diffusion_worker';
+    private readonly materializationLockId = 777123; // UDIE_MATERIALIZATION_LOCK
 
-    constructor(private readonly db: DatabaseService) { }
+    constructor(
+      private readonly db: DatabaseService,
+      private readonly spatialRiskField: SpatialRiskFieldService,
+    ) { }
 
     /**
      * Law 5: Physical Spatial Diffusion
@@ -21,45 +25,42 @@ export class SpatialDiffusionWorker {
         const start = performance.now();
 
         try {
-            // Use existing worker lock mechanism
-            const lockResult = await this.db.query(
-                'SELECT acquire_worker_lock($1, $2) AS locked',
-                [this.workerName, 300] // 5 minute timeout
+            const advisoryLock = await this.db.query<{ pg_try_advisory_lock: boolean }>(
+                'SELECT pg_try_advisory_lock($1)',
+                [this.materializationLockId],
             );
 
-            if (!lockResult.rows[0]?.locked) {
-                this.logger.debug('[DIFFUSION] skipped: lock held');
+            if (!advisoryLock.rows[0]?.pg_try_advisory_lock) {
+                this.logger.debug('[DIFFUSION] skipped: materialization lock held');
                 return;
             }
 
-            const hasV2 = await this.hasRefreshRiskSurfaceV2();
-            await this.db.withTransaction(async (client) => {
-                await client.query(`SELECT set_config('udie.allow_derived_mutation', 'true', true)`);
-                if (hasV2) {
-                    await client.query('SELECT refresh_risk_surface_v2();');
-                } else {
-                    // Backward compatibility for databases missing migration 038/042.
-                    await client.query('SELECT refresh_risk_surface();');
+            // Use existing worker lock mechanism
+            try {
+                const lockResult = await this.db.query(
+                    'SELECT acquire_worker_lock($1, $2) AS locked',
+                    [this.workerName, 300] // 5 minute timeout
+                );
+
+                if (!lockResult.rows[0]?.locked) {
+                    this.logger.debug('[DIFFUSION] skipped: lock held');
+                    return;
                 }
-                await client.query(`SELECT set_config('udie.allow_derived_mutation', 'false', true)`);
-            });
 
-            const duration = (performance.now() - start).toFixed(2);
-            this.logger.log(`[DIFFUSION] status=SUCCESS duration_ms=${duration}`);
+                const stats = await this.spatialRiskField.refreshRiskField();
 
-            await this.db.query(
-                'SELECT set_system_state($1, $2::jsonb)',
-                ['spatial_diffusion', JSON.stringify({ status: 'OK', last_run: new Date(), duration_ms: Number(duration) })]
-            );
+                const duration = (performance.now() - start).toFixed(2);
+                this.logger.log(`[DIFFUSION] status=SUCCESS duration_ms=${duration} cells=${stats.cellCount}`);
+
+                await this.db.query(
+                    'SELECT set_system_state($1, $2::jsonb)',
+                    ['spatial_diffusion', JSON.stringify({ status: 'OK', last_run: new Date(), duration_ms: Number(duration), cell_count: stats.cellCount })]
+                );
+            } finally {
+                await this.db.query('SELECT pg_advisory_unlock($1)', [this.materializationLockId]);
+            }
         } catch (error: any) {
             this.logger.error(`[DIFFUSION] status=FAILED error=${error.message}`);
         }
-    }
-
-    private async hasRefreshRiskSurfaceV2(): Promise<boolean> {
-        const result = await this.db.query<QueryResultRow>(
-            `SELECT to_regprocedure('public.refresh_risk_surface_v2()') IS NOT NULL AS present`,
-        );
-        return Boolean(result.rows[0]?.present);
     }
 }

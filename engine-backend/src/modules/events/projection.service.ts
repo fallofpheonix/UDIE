@@ -55,11 +55,10 @@ export class ProjectionService implements OnModuleInit {
             const locked = await this.db.query('SELECT pg_try_advisory_lock($1) AS ok', [lockKey]);
             if (!locked.rows[0]?.ok) return;
 
-            // Fetch batch with Source Credibility
+            // Fetch batch projected from the authoritative events_log append stream.
             const logs = await this.db.query(
-                `SELECT l.id, l.payload, l.source_type, COALESCE(s.base_weight, 1.0) as credibility
+                `SELECT l.id, l.payload, l.source_type, COALESCE(l.reliability_score, 0.7) AS reliability_score
          FROM regional_events_log l
-         LEFT JOIN source_definitions s ON l.source_type = s.source_type
          WHERE l.h3_parent = $1 AND l.log_type = 'INGESTED' 
          LIMIT $2`,
                 [h3Parent, this.batchSize]
@@ -67,10 +66,11 @@ export class ProjectionService implements OnModuleInit {
 
             for (const log of logs.rows) {
                 const event = JSON.parse(JSON.stringify(log.payload));
-                const h3Index = this.spatial.getH3Index(event.lat, event.lng);
-                const credibility = Number(log.credibility || 1.0);
-                const rawSeverity = event.severity_hint || 5;
-                const weightedSeverity = rawSeverity * credibility;
+                const h3Cell = this.spatial.getH3Index(event.lat, event.lng);
+                const h3Index = this.spatial.toDbIndex(h3Cell);
+                const reliabilityScore = Math.max(0.05, Math.min(1, Number(log.reliability_score ?? event.reliability_score ?? event.confidence_hint ?? 0.7)));
+                const rawSeverity = Math.max(1, Math.min(5, Number(event.severity_hint ?? 5)));
+                const weightedSeverity = rawSeverity * reliabilityScore;
 
                 // Law 11: Persistent Disruption Identities
                 await this.identityService.linkLogToIdentity(
@@ -84,22 +84,22 @@ export class ProjectionService implements OnModuleInit {
                 // Law 5: Immutable Versioning
                 await this.db.query(`
           INSERT INTO regional_geo_events_v(event_id, version, h3_parent, h3_index, event_type, severity, confidence, geom, observed_at)
-VALUES($1, (SELECT COALESCE(MAX(version), 0) + 1 FROM regional_geo_events_v WHERE event_id = $1) + 1, $2, $3, $4, $5, $6, ST_SetSRID(ST_MakePoint($7, $8), 4326)::geography, $9)
+VALUES($1, (SELECT COALESCE(MAX(version), 0) + 1 FROM regional_geo_events_v WHERE event_id = $1) + 1, $2::bigint, $3::bigint, $4, $5, $6, ST_SetSRID(ST_MakePoint($7, $8), 4326)::geography, $9)
 `, [
                     log.id, h3Parent, h3Index, event.event_type,
-                    weightedSeverity, 0.9, event.lng, event.lat,
+                    rawSeverity, reliabilityScore, event.lng, event.lat,
                     event.observed_at || new Date().toISOString()
                 ]);
 
                 // Streaming Aggregation Update
-                this.inMemRisk.updateWeight(h3Index, weightedSeverity * 0.1);
+                this.inMemRisk.updateWeight(h3Cell, weightedSeverity * 0.1);
 
                 // Law 9: Causal Inference (Event Correlation)
                 const correlations = this.correlationService.getPotentialEffects(event.event_type);
                 for (const potential of correlations) {
                     // If we detect a cause (e.g. CONSTRUCTION), we boost the expectation of the effect (e.g. TRAFFIC)
                     // This implements Phase 9: Qualitative Signal Integrity
-                    this.inMemRisk.updateWeight(h3Index, weightedSeverity * potential.boostWeight * 0.05);
+                    this.inMemRisk.updateWeight(h3Cell, weightedSeverity * potential.boostWeight * 0.05);
                 }
 
                 // Mark as PROCESSED

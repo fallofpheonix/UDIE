@@ -8,10 +8,11 @@ import { DisruptionIdentityService } from './disruption-identity.service';
 import { EventCorrelationService } from './event-correlation.service';
 import { DatabaseModule } from '../../database/database.module';
 import { SpatialModule } from '../common/spatial.module';
+import { IngestionModule } from '../ingestion/ingestion.module';
 import { RiskModule } from '../risk/risk.module';
 
 @Module({
-  imports: [DatabaseModule, SpatialModule, RiskModule],
+  imports: [DatabaseModule, SpatialModule, RiskModule, IngestionModule],
   controllers: [EventsController],
   providers: [EventsService, EventsRepository, LifecycleService, ProjectionService, DisruptionIdentityService, EventCorrelationService],
   exports: [EventsService, EventsRepository, LifecycleService, ProjectionService, DisruptionIdentityService],

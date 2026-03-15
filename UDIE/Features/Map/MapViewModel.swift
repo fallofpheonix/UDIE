@@ -13,9 +13,7 @@ import SwiftUI
 @MainActor
 final class MapViewModel: ObservableObject {
     enum BackendSyncState: Equatable {
-        case disconnected
         case connecting
-        case connected
         case syncing
         case synced
         case error(String)
@@ -34,11 +32,10 @@ final class MapViewModel: ObservableObject {
     @Published var selectedH3Index: String?
     @Published var cityCode = "AUTO"
     @Published var userLocation: CLLocationCoordinate2D?
-    @Published var backendSyncState: BackendSyncState = .disconnected
+    @Published var backendSyncState: BackendSyncState = .connecting
     
     private let locationManager = LocationManager()
     
-    private let gridService = RiskGridService.shared
     private var cancellables = Set<AnyCancellable>()
 
     init() {
@@ -63,7 +60,12 @@ final class MapViewModel: ObservableObject {
     private var riskTask: Task<Void, Never>?
     private var currentFetchRequestID: UUID?
     private var currentRiskRequestID: UUID?
+    private var currentSurfaceStreamID: UUID?
     private var lastBoundingBox: BoundingBox?
+    private var lastStreamBoundingBox: BoundingBox?
+    private var surfaceStreamTask: Task<Void, Never>?
+    private var lastSuccessfulConnectivityCheck: Date?
+    private let connectivityProbeTTL: TimeInterval = 15
 
     func setCity(_ code: String) {
         let normalized = code.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
@@ -108,13 +110,10 @@ final class MapViewModel: ObservableObject {
                 print("🔍 Attempting sync with baseURL: \(APIClient.shared.getBaseURL())")
                 #endif
 
-                try await APIClient.shared.healthCheck()
-                
-                guard !Task.isCancelled, currentFetchRequestID == requestID else { return }
-                backendSyncState = .connected
-
-                // Small delay to show "Connected" before "Syncing"
-                try? await Task.sleep(nanoseconds: 200_000_000)
+                if shouldProbeConnectivity() {
+                    try await APIClient.shared.healthCheck()
+                    lastSuccessfulConnectivityCheck = Date()
+                }
                 
                 guard !Task.isCancelled, currentFetchRequestID == requestID else { return }
                 backendSyncState = .syncing
@@ -132,9 +131,8 @@ final class MapViewModel: ObservableObject {
                 }
                 
                 events = fetchedEvents
-                lastUpdated = Date()
                 errorMessage = nil
-                backendSyncState = .synced
+                connectRiskSurfaceStream(for: newBoundingBox)
             } catch {
                 guard !Task.isCancelled, currentFetchRequestID == requestID else {
                     return
@@ -147,6 +145,7 @@ final class MapViewModel: ObservableObject {
                 let desc = error.localizedDescription
                 errorMessage = "Sync Error: \(desc)"
                 backendSyncState = .error(desc)
+                lastSuccessfulConnectivityCheck = nil
             }
             isLoading = false
         }
@@ -233,6 +232,20 @@ final class MapViewModel: ObservableObject {
                zoomShift > zoomThreshold
     }
 
+    private func shouldProbeConnectivity(now: Date = Date()) -> Bool {
+        switch backendSyncState {
+        case .error:
+            return true
+        default:
+            break
+        }
+
+        guard let lastSuccessfulConnectivityCheck else {
+            return true
+        }
+        return now.timeIntervalSince(lastSuccessfulConnectivityCheck) > connectivityProbeTTL
+    }
+
     private func boundingBox(for region: MKCoordinateRegion) -> BoundingBox {
         let minLat = region.center.latitude - region.span.latitudeDelta / 2
         let maxLat = region.center.latitude + region.span.latitudeDelta / 2
@@ -242,25 +255,7 @@ final class MapViewModel: ObservableObject {
     }
 
     func fetchSnapshots(for region: MKCoordinateRegion) {
-        let bbox = boundingBox(for: region)
-        let now = Date()
-        let start = now.addingTimeInterval(-12 * 3600)
-        
-        Task {
-            do {
-                let response = try await APIClient.shared.fetchRiskSnapshots(
-                    start: start,
-                    end: now,
-                    minLat: bbox.minLat,
-                    maxLat: bbox.maxLat,
-                    minLng: bbox.minLng,
-                    maxLng: bbox.maxLng
-                )
-                snapshots = response.snapshots
-            } catch {
-                print("Failed to fetch snapshots: \(error)")
-            }
-        }
+        connectRiskSurfaceStream(for: boundingBox(for: region), force: true)
     }
 
     func selectCell(h3Index: String, coordinate: CLLocationCoordinate2D) {
@@ -268,17 +263,41 @@ final class MapViewModel: ObservableObject {
         selectedCoordinate = CoordinateDTO(lat: coordinate.latitude, lng: coordinate.longitude)
     }
 
-    /// Evaluates route risk using the in-memory spatial field (O(route_cells) complexity).
-    func evaluateRouteLocally(route: MKRoute) -> Double {
-        let cellCount = 50 
-        var totalScore = 0.0
-        
-        for i in 0..<cellCount {
-            let mockH3 = "8928308280f\(i % 10)ff"
-            totalScore += gridService.getRiskWeight(for: mockH3)
+    func stopRealtimeUpdates() {
+        surfaceStreamTask?.cancel()
+        surfaceStreamTask = nil
+        currentSurfaceStreamID = nil
+    }
+
+    private func connectRiskSurfaceStream(for bounds: BoundingBox, force: Bool = false) {
+        if !force,
+           let currentBounds = lastStreamBoundingBox,
+           !isSignificantChange(from: currentBounds, to: bounds),
+           surfaceStreamTask != nil {
+            return
         }
-        
-        return totalScore / Double(cellCount)
+
+        backendSyncState = .syncing
+        surfaceStreamTask?.cancel()
+        lastStreamBoundingBox = bounds
+
+        let streamID = UUID()
+        currentSurfaceStreamID = streamID
+        surfaceStreamTask = APIClient.shared.streamRiskSurface(
+            bounds: bounds,
+            onPayload: { [weak self] payload in
+                guard let self, self.currentSurfaceStreamID == streamID else { return }
+                self.snapshots = payload.cells
+                self.lastUpdated = ISO8601DateFormatter().date(from: payload.updatedAt) ?? Date()
+                self.backendSyncState = .synced
+                self.errorMessage = nil
+            },
+            onFailure: { [weak self] message in
+                guard let self, self.currentSurfaceStreamID == streamID else { return }
+                self.backendSyncState = .error(message)
+                self.errorMessage = "Live map sync unavailable: \(message)"
+            }
+        )
     }
 }
 

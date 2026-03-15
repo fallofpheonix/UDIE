@@ -10,9 +10,10 @@ import { SystemSelfDiagnosisWorker } from './system-self-diagnosis.worker';
 import { PerformanceSentinel } from './performance-sentinel.service';
 import { PerformanceSentinelWorker } from './performance-sentinel.worker';
 import { SpatialModule } from '../common/spatial.module';
+import { RiskModule } from '../risk/risk.module';
 
 @Module({
-  imports: [DatabaseModule, SpatialModule],
+  imports: [DatabaseModule, SpatialModule, RiskModule],
   controllers: [DiagnosticsController],
   providers: [
     ArchitectureAuditService,
