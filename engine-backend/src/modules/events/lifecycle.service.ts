@@ -1,9 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DatabaseService } from '../../database/database.service';
 import { Interval } from '@nestjs/schedule';
-import { QueryResultRow } from 'pg';
 
-type LockRow = QueryResultRow & { locked: boolean };
 
 @Injectable()
 export class LifecycleService implements OnModuleInit {

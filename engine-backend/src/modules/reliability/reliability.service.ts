@@ -63,8 +63,8 @@ export class ReliabilityService {
             }
 
             this.logger.log('[IRI] Aggregation complete.');
-        } catch (error: any) {
-            this.logger.error(`[IRI] Aggregation failed: ${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[IRI] Aggregation failed: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
@@ -140,7 +140,7 @@ export class ReliabilityService {
     /**
      * Retrieves recent AI-driven insights from system errors.
      */
-    async getAIInsights(): Promise<any[]> {
+    async getAIInsights(): Promise<Record<string, unknown>[]> {
         await this.ensureSystemErrorsTable();
         const result = await this.db.query(`
             SELECT service, component, error_message, ai_suggestion, timestamp

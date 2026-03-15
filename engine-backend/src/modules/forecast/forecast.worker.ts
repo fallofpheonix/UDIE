@@ -27,8 +27,8 @@ export class ForecastingWorker {
                 }),
             ]);
             this.logger.log(`[FORECASTER] Forecast rebuild complete. cells=${count}`);
-        } catch (error: any) {
-            this.logger.error(`[FORECASTER] Batch rebuild failed: ${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[FORECASTER] Batch rebuild failed: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }

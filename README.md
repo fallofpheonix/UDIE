@@ -4,11 +4,11 @@ UDIE is a spatial intelligence system designed to convert volatile, multi-source
 
 ## 🚀 Quick Links
 
-- [PROJECT_OVERVIEW.md](file:///Users/fallofpheonix/Project/UDIE/PROJECT_OVERVIEW.md) - Goals, use cases, and requirements.
-- [ARCHITECTURE.md](file:///Users/fallofpheonix/Project/UDIE/ARCHITECTURE.md) - System philosophy and core subsystems.
-- [INSTALLATION.md](file:///Users/fallofpheonix/Project/UDIE/INSTALLATION.md) - Setup guides for backend, mobile, and dashboard.
-- [DEVELOPER_GUIDE.md](file:///Users/fallofpheonix/Project/UDIE/DEVELOPER_GUIDE.md) - Engineering playbook and diagnostic protocols.
-- [API_REFERENCE.md](file:///Users/fallofpheonix/Project/UDIE/API_REFERENCE.md) - Backend HTTP contract.
+- [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md) - Goals, use cases, and requirements.
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - System philosophy and core subsystems.
+- [INSTALLATION.md](./INSTALLATION.md) - Setup guides for backend, mobile, and dashboard.
+- [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) - Engineering playbook and diagnostic protocols.
+- [API_REFERENCE.md](./API_REFERENCE.md) - Backend HTTP contract.
 
 ## 🌲 Core Subsystems
 

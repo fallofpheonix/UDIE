@@ -11,7 +11,7 @@ export class AIResolverService {
      * Analyzes a system error using AI to provide a probable fix.
      * In a production environment, this would call an LLM API (e.g., Gemini).
      */
-    async analyzeError(errorMessage: string, component: string, type: string): Promise<string> {
+    async analyzeError(errorMessage: string, component: string, _type: string): Promise<string> {
         this.logger.log(`[AI] Analyzing error in ${component}: ${errorMessage}`);
 
         // Simulate AI analysis delay

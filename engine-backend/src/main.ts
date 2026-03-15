@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { WsAdapter } from '@nestjs/platform-ws';
+import * as compression from 'compression';
 import { AppModule } from './app.module';
 
 function buildAllowedOrigins(): Set<string> {
@@ -22,6 +23,7 @@ function buildAllowedOrigins(): Set<string> {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useWebSocketAdapter(new WsAdapter(app));
+  app.use(compression());
   app.setGlobalPrefix('api/v1');
   const allowedOrigins = buildAllowedOrigins();
   app.enableCors({

@@ -27,7 +27,7 @@ export class RiskSnapshotsController {
 
         // 1. Spatial bounding logic
         let filterClause = '';
-        const params: any[] = [startTime, endTime];
+        const params: unknown[] = [startTime, endTime];
 
         if (lat && lng) {
             const centerCell = this.spatial.getH3Index(lat, lng);

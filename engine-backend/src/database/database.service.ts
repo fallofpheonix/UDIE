@@ -21,10 +21,11 @@ export class DatabaseService implements OnModuleDestroy {
     for (let i = 0; i < retries; i++) {
       try {
         return await this.pool.query<T>(text, params);
-      } catch (err: any) {
-        if (retriableErrors.includes(err.code) && i < retries - 1) {
+      } catch (err: unknown) {
+        const code = err instanceof Error && 'code' in err ? (err as NodeJS.ErrnoException).code : undefined;
+        if (code && retriableErrors.includes(code) && i < retries - 1) {
           const delay = Math.pow(2, i) * 1000;
-          console.warn(`[DB] ${err.code} detected. Retrying in ${delay}ms... (${i + 1}/${retries})`);
+          console.warn(`[DB] ${code} detected. Retrying in ${delay}ms... (${i + 1}/${retries})`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }

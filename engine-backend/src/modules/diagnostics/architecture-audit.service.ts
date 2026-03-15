@@ -116,7 +116,7 @@ export class ArchitectureAuditService {
       `);
       const gradients = Number(result.rows[0]?.gradient_count ?? 0);
       return { ok: gradients >= 0, gradients };
-    } catch (err) {
+    } catch {
       return { ok: false, error: 'Gradient function failed' };
     }
   }
@@ -180,11 +180,11 @@ export class ArchitectureAuditService {
         'SELECT set_system_state($1, $2::jsonb)',
         ['rebuild_drill', JSON.stringify({ status: 'OK', duration_ms: Number(duration), last_run: new Date() })]
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.logger.error('[DRILL] Rebuild failed!', err);
       await this.db.query(
         'SELECT set_system_state($1, $2::jsonb)',
-        ['rebuild_drill', JSON.stringify({ status: 'FAILED', error: err.message || String(err), last_run: new Date() })]
+        ['rebuild_drill', JSON.stringify({ status: 'FAILED', error: err instanceof Error ? err.message : String(err), last_run: new Date() })]
       );
     }
   }

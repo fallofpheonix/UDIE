@@ -3,7 +3,6 @@ import {
   ArrayMaxSize,
   IsArray,
   IsNumber,
-  IsObject,
   IsOptional,
   Max,
   Min,

@@ -276,7 +276,7 @@ export class ScenarioSimulationService {
       run_id: run.run_id,
       scenario_id: run.scenario_id,
       risk_surface: riskSurface,
-      risk_predictions: horizonOutputs.map((entry: any) => ({
+      risk_predictions: horizonOutputs.map((entry: { horizonMinutes: number; risk_map: unknown }) => ({
         horizonMinutes: entry.horizonMinutes,
         risk_map: entry.risk_map,
       })),

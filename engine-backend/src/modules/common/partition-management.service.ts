@@ -18,10 +18,10 @@ export class PartitionManagementService implements OnModuleInit {
     async syncKnownPartitions() {
         try {
             const result = await this.db.query('SELECT h3_parent::text FROM spatial_regions');
-            result.rows.forEach((row: any) => this.knownPartitions.add(row.h3_parent));
+            result.rows.forEach((row) => this.knownPartitions.add((row as { h3_parent: string }).h3_parent));
             this.logger.log(`[PARTITION] Synced ${this.knownPartitions.size} existing regions.`);
-        } catch (error: any) {
-            this.logger.error(`[PARTITION] Sync failed: ${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[PARTITION] Sync failed: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
@@ -37,8 +37,8 @@ export class PartitionManagementService implements OnModuleInit {
             // Function defined in Migration 024
             await this.db.query('SELECT create_spatial_partition($1::bigint)', [h3Parent]);
             this.knownPartitions.add(h3Parent);
-        } catch (error: any) {
-            this.logger.error(`[PARTITION] Failed to create partition ${h3Parent}: ${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[PARTITION] Failed to create partition ${h3Parent}: ${error instanceof Error ? error.message : String(error)}`);
             throw error;
         }
     }
@@ -68,10 +68,10 @@ export class PartitionManagementService implements OnModuleInit {
             [limit],
         );
 
-        return result.rows.map((row: any) => ({
-            regionId: String(row.region_id),
-            eventsLastHour: Number(row.events_last_hour),
-        }));
+        return result.rows.map((row) => {
+            const r = row as { region_id: string | number; events_last_hour: string | number };
+            return { regionId: String(r.region_id), eventsLastHour: Number(r.events_last_hour) };
+        });
     }
 
     async detectHotRegion(thresholdPerHour: number): Promise<string[]> {
@@ -84,7 +84,7 @@ export class PartitionManagementService implements OnModuleInit {
             [thresholdPerHour],
         );
 
-        return result.rows.map((row: any) => String(row.region_id));
+        return result.rows.map((row) => String((row as { region_id: string | number }).region_id));
     }
 
     async splitRegionPartition(regionId: string): Promise<void> {

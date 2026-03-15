@@ -28,8 +28,8 @@ export class SnapshotWorker {
 
             const duration = (performance.now() - start).toFixed(2);
             this.logger.log(`[SNAPSHOT] Captured ${result.rowCount} cells in ${duration}ms`);
-        } catch (error: any) {
-            this.logger.error(`[SNAPSHOT] Capture failed: ${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[SNAPSHOT] Capture failed: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }

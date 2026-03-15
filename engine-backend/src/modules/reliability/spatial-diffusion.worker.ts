@@ -59,8 +59,8 @@ export class SpatialDiffusionWorker {
             } finally {
                 await this.db.query('SELECT pg_advisory_unlock($1)', [this.materializationLockId]);
             }
-        } catch (error: any) {
-            this.logger.error(`[DIFFUSION] status=FAILED error=${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[DIFFUSION] status=FAILED error=${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }
