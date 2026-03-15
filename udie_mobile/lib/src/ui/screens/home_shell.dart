@@ -166,7 +166,7 @@ class _BlurAppBar extends StatelessWidget implements PreferredSizeWidget {
                     tooltip: 'Sync now',
                     onPressed: store.refreshAll,
                     icon: AnimatedRotation(
-                      turns: store.syncState == SyncState.connecting ? 1 : 0,
+                      turns: store.syncState == SyncState.connecting || store.syncState == SyncState.syncing ? 1 : 0,
                       duration: const Duration(milliseconds: 600),
                       child: const Icon(
                         Icons.sync_rounded,

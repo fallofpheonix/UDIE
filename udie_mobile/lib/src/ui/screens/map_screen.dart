@@ -65,7 +65,7 @@ class _MapScreenState extends State<MapScreen> {
             )
             .toList(growable: false);
 
-        final isLoading = store.syncState == SyncState.connecting;
+        final isLoading = store.syncState == SyncState.connecting || store.syncState == SyncState.syncing;
 
         return Stack(
           children: [
@@ -620,4 +620,3 @@ class _EventDetailSheet extends StatelessWidget {
     );
   }
 }
-

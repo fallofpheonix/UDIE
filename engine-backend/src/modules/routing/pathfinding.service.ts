@@ -281,7 +281,12 @@ export class PathfindingService {
           const filteredEdges = edges.filter(e => !blockedEdges.has(e.id));
           if (filteredEdges.length > 0) modifiedAdj.set(nodeId, filteredEdges);
         }
-        const modifiedGraph: GraphAdjacency = { adjacencyList: modifiedAdj, nodes: graph.nodes };
+        const modifiedGraph: GraphAdjacency = {
+          adjacencyList: modifiedAdj,
+          nodes: graph.nodes,
+          nodesByPartition: graph.nodesByPartition,
+          edgeIndex: graph.edgeIndex,
+        };
 
         const spurPath = this.aStar(modifiedGraph, spurNode.id, destinationId, weights);
         if (!spurPath) continue;

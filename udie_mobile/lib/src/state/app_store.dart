@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
@@ -21,21 +23,33 @@ class AppStore extends ChangeNotifier {
     if (configured != '') {
       return configured;
     }
+    const deviceBaseUrl = String.fromEnvironment(
+      'UDIE_DEVICE_BASE_URL',
+      defaultValue: 'http://172.25.246.165:8002',
+    );
+    const useAndroidEmulator = bool.fromEnvironment(
+      'UDIE_USE_ANDROID_EMULATOR',
+      defaultValue: false,
+    );
     if (kIsWeb) {
       return 'http://127.0.0.1:8000';
     }
-    return Platform.isAndroid
-        ? 'http://10.0.2.2:8000'
-        : 'http://127.0.0.1:8000';
+    if (Platform.isAndroid && useAndroidEmulator) {
+      return 'http://10.0.2.2:8000';
+    }
+    return deviceBaseUrl;
   }
 
   final GeoArea area;
   final ApiClient _client;
 
   String _baseUrl;
-  SyncState syncState = SyncState.disconnected;
+  SyncState syncState = SyncState.connecting;
   String? lastError;
   DateTime? lastSyncedAt;
+  Timer? _reconnectTimer;
+  int _reconnectAttempts = 0;
+  bool _disposed = false;
 
   List<DisruptionEvent> events = const [];
   List<AreaNewsItem> news = const [];
@@ -54,58 +68,70 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> refreshAll() async {
-    syncState = SyncState.connecting;
-    lastError = null;
-    notifyListeners();
+    _transition(SyncState.connecting, clearError: true);
 
     try {
       _client.baseUrl = _baseUrl;
       await _client.detectNamespace();
-      syncState = SyncState.connectedUnsynced;
-      notifyListeners();
-
-      final eventsData = await _client.fetchEvents(area);
-      final newsData = await _client.fetchNews(
-        area,
-        categories: activeNewsCategories,
-      );
-      final sourcesData = await _client.fetchSources(area);
-
-      events = eventsData;
-      news = newsData;
-      sources = sourcesData;
-      lastSyncedAt = DateTime.now();
-      syncState = SyncState.synced;
-      notifyListeners();
     } on SocketException catch (e) {
-      syncState = SyncState.disconnected;
-      lastError = e.message;
-      notifyListeners();
+      _fail('Transport failure: ${e.message}', scheduleReconnect: true);
+      return;
     } on HttpException catch (e) {
-      syncState = SyncState.error;
-      lastError = e.message;
-      notifyListeners();
+      _fail('API contract failure: ${e.message}');
+      return;
+    } on FormatException catch (e) {
+      _fail('API contract failure: ${e.message}');
+      return;
     } on Exception catch (e) {
-      syncState = SyncState.error;
-      lastError = e.toString();
-      notifyListeners();
+      _fail('Transport failure: $e', scheduleReconnect: true);
+      return;
+    }
+
+    _transition(SyncState.syncing);
+
+    try {
+      final results = await Future.wait([
+        _client.fetchEvents(area),
+        _client.fetchNews(area, categories: activeNewsCategories),
+        _client.fetchSources(area),
+      ]);
+
+      events = results[0] as List<DisruptionEvent>;
+      news = results[1] as List<AreaNewsItem>;
+      sources = results[2] as List<SourceStatus>;
+      lastSyncedAt = DateTime.now();
+      _reconnectAttempts = 0;
+      _cancelReconnect();
+      _transition(SyncState.synced, clearError: true);
+    } on SocketException catch (e) {
+      _fail('Transport failure: ${e.message}', scheduleReconnect: true);
+    } on HttpException catch (e) {
+      _fail('Data-plane failure: ${e.message}');
+    } on FormatException catch (e) {
+      _fail('API contract failure: ${e.message}');
+    } on Exception catch (e) {
+      _fail('Data-plane failure: $e');
     }
   }
 
   Future<void> refreshNewsOnly() async {
+    _transition(SyncState.syncing, clearError: true);
+
     try {
-      final newsData = await _client.fetchNews(
+      news = await _client.fetchNews(
         area,
         categories: activeNewsCategories,
       );
-      news = newsData;
       lastSyncedAt = DateTime.now();
-      syncState = SyncState.synced;
-      notifyListeners();
+      _transition(SyncState.synced, clearError: true);
+    } on SocketException catch (e) {
+      _fail('Transport failure: ${e.message}', scheduleReconnect: true);
+    } on HttpException catch (e) {
+      _fail('Data-plane failure: ${e.message}');
+    } on FormatException catch (e) {
+      _fail('API contract failure: ${e.message}');
     } on Exception catch (e) {
-      syncState = SyncState.error;
-      lastError = e.toString();
-      notifyListeners();
+      _fail('Data-plane failure: $e');
     }
   }
 
@@ -113,8 +139,7 @@ class AppStore extends ChangeNotifier {
     required LatLng start,
     required LatLng end,
   }) async {
-    syncState = SyncState.connecting;
-    notifyListeners();
+    _transition(SyncState.syncing, clearError: true);
 
     final route = <LatLngCoordinate>[
       LatLngCoordinate(start.latitude, start.longitude),
@@ -126,15 +151,17 @@ class AppStore extends ChangeNotifier {
     ];
 
     try {
-      final result = await _client.calculateRisk(route);
-      lastRisk = result;
-      syncState = SyncState.synced;
+      lastRisk = await _client.calculateRisk(route);
       lastSyncedAt = DateTime.now();
-      notifyListeners();
+      _transition(SyncState.synced, clearError: true);
+    } on SocketException catch (e) {
+      _fail('Transport failure: ${e.message}', scheduleReconnect: true);
+    } on HttpException catch (e) {
+      _fail('Data-plane failure: ${e.message}');
+    } on FormatException catch (e) {
+      _fail('API contract failure: ${e.message}');
     } on Exception catch (e) {
-      syncState = SyncState.error;
-      lastError = e.toString();
-      notifyListeners();
+      _fail('Data-plane failure: $e');
     }
   }
 
@@ -148,22 +175,18 @@ class AppStore extends ChangeNotifier {
     final isSupported = kCityCoordinates.keys
         .any((k) => k.toLowerCase() == normalized);
     if (!isSupported) {
-      syncState = SyncState.error;
-      lastError = 'Only supported Indian cities are allowed';
-      notifyListeners();
+      _fail('Data-plane failure: only supported Indian cities are allowed');
       return;
     }
 
     area.city = city;
     area.center = LatLng(lat, lng);
     area.radiusKm = radiusKm;
-    syncState = SyncState.connectedUnsynced;
     notifyListeners();
   }
 
   void updateBaseUrl(String value) {
     _baseUrl = value.trim();
-    syncState = SyncState.connectedUnsynced;
     notifyListeners();
   }
 
@@ -173,18 +196,59 @@ class AppStore extends ChangeNotifier {
     } else {
       activeNewsCategories.add(category);
     }
-    syncState = SyncState.connectedUnsynced;
     notifyListeners();
   }
 
   void clearActiveCategories() {
     activeNewsCategories.clear();
-    syncState = SyncState.connectedUnsynced;
     notifyListeners();
+  }
+
+  void _transition(SyncState nextState, {bool clearError = false}) {
+    syncState = nextState;
+    if (clearError) {
+      lastError = null;
+    }
+    if (!_disposed) {
+      notifyListeners();
+    }
+  }
+
+  void _fail(String message, {bool scheduleReconnect = false}) {
+    syncState = SyncState.error;
+    lastError = message;
+    if (!_disposed) {
+      notifyListeners();
+    }
+    if (scheduleReconnect) {
+      _scheduleReconnect();
+    }
+  }
+
+  void _scheduleReconnect() {
+    if (_disposed || _reconnectTimer != null) {
+      return;
+    }
+    final delaySeconds = math.min(30, 1 << math.min(_reconnectAttempts, 4));
+    _reconnectAttempts += 1;
+    _reconnectTimer = Timer(Duration(seconds: delaySeconds), () async {
+      _reconnectTimer = null;
+      if (_disposed) {
+        return;
+      }
+      await refreshAll();
+    });
+  }
+
+  void _cancelReconnect() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
   }
 
   @override
   void dispose() {
+    _disposed = true;
+    _cancelReconnect();
     _client.close();
     super.dispose();
   }

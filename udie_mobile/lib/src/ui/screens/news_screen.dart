@@ -78,7 +78,7 @@ class _NewsScreenState extends State<NewsScreen> {
             ),
             // ── News list ──────────────────────────────────────────────────────
             Expanded(
-              child: store.syncState == SyncState.connecting && store.news.isEmpty
+              child: (store.syncState == SyncState.connecting || store.syncState == SyncState.syncing) && store.news.isEmpty
                   ? const _LoadingSkeleton()
                   : store.news.isEmpty
                       ? const _EmptyState()

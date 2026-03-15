@@ -1,6 +1,6 @@
 import 'package:latlong2/latlong.dart';
 
-enum SyncState { disconnected, connecting, connectedUnsynced, synced, error }
+enum SyncState { connecting, syncing, synced, error }
 
 /// Canonical map from display city name → [latitude, longitude] for all
 /// supported Indian cities.  This is the single source of truth used by

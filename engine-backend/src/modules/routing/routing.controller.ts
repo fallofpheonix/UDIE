@@ -46,11 +46,17 @@ export class RoutingController {
   async computeRoute(@Body() dto: RouteRequestDto) {
     const graph = dto.mode === 'highway' ? this.roadGraph.getHighwayGraph() : this.roadGraph.getGraph();
 
-    // City-level route cache (Prompt 21)
     const originH3 = h3.latLngToCell(dto.origin.lat, dto.origin.lng, 6);
     const destH3 = h3.latLngToCell(dto.destination.lat, dto.destination.lng, 6);
     const hour = new Date().getUTCHours();
-    const cacheKey = `${originH3}:${destH3}:${hour}`;
+    const weights = this.pathfinding.resolveWeights(
+      dto.mode,
+      dto.timeWeight,
+      dto.distanceWeight,
+      dto.riskWeight,
+    );
+    const k = Math.min(dto.candidates ?? 1, 5);
+    const cacheKey = this.buildRouteCacheKey(dto, weights, k, originH3, destH3, hour);
 
     const cached = routeCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
@@ -64,15 +70,6 @@ export class RoutingController {
     if (!originNode || !destNode) {
       return this.fallbackRoute(dto);
     }
-
-    const weights = this.pathfinding.resolveWeights(
-      dto.mode,
-      dto.timeWeight,
-      dto.distanceWeight,
-      dto.riskWeight,
-    );
-
-    const k = Math.min(dto.candidates ?? 1, 5);
 
     // Multi-route candidate generation (Prompt 19)
     const candidates = this.pathfinding.kShortestPaths(graph, originNode.id, destNode.id, k, weights);
@@ -135,11 +132,9 @@ export class RoutingController {
   async reroute(@Body() dto: RerouteRequestDto) {
     this.logger.log(`[REROUTE] reason=${dto.reason ?? 'unspecified'}`);
 
-    // Invalidate cache for origin cell
-    const originH3 = h3.latLngToCell(dto.currentPosition.lat, dto.currentPosition.lng, 6);
-    const destH3 = h3.latLngToCell(dto.destination.lat, dto.destination.lng, 6);
-    const hour = new Date().getUTCHours();
-    routeCache.delete(`${originH3}:${destH3}:${hour}`);
+    // Reroute requests are triggered by live substrate changes; clear the
+    // in-memory route cache rather than risk serving a stale candidate set.
+    routeCache.clear();
 
     // Resolve reroute using current traffic state
     return this.computeRoute({
@@ -155,21 +150,33 @@ export class RoutingController {
    * Return current traffic state and active incidents (Prompt 9, 12).
    */
   @Get('traffic')
-  async getTraffic(@Query('h3Index') h3Index?: string) {
+  async getTraffic(
+    @Query('h3Index') h3Index?: string,
+    @Query('minLat') minLat?: string,
+    @Query('maxLat') maxLat?: string,
+    @Query('minLng') minLng?: string,
+    @Query('maxLng') maxLng?: string,
+    @Query('limit') limit?: string,
+  ) {
     const [congestion, incidents, hazards] = await Promise.all([
       this.traffic.getCongestionSummary(),
       this.traffic.getActiveIncidents(),
       this.traffic.getActiveHazards(),
     ]);
 
-    const filteredIncidents = h3Index
-      ? incidents.filter(i => i.h3Index === h3Index)
-      : incidents;
+    const maxResults = Math.min(Math.max(Number(limit ?? 50) || 50, 1), 200);
+    const bounds = this.parseBounds(minLat, maxLat, minLng, maxLng);
+    const filteredIncidents = incidents.filter((incident) =>
+      this.matchesSpatialQuery(incident.h3Index, h3Index, bounds),
+    );
+    const filteredHazards = hazards.filter((hazard) =>
+      this.matchesSpatialQuery(hazard.h3Index, h3Index, bounds),
+    );
 
     return {
       congestion,
-      incidents: filteredIncidents.slice(0, 50),
-      hazards: hazards.slice(0, 50),
+      incidents: filteredIncidents.slice(0, maxResults),
+      hazards: filteredHazards.slice(0, maxResults),
       timestamp: new Date().toISOString(),
     };
   }
@@ -259,5 +266,65 @@ export class RoutingController {
       cached: false,
       fallback: true,
     };
+  }
+
+  private buildRouteCacheKey(
+    dto: RouteRequestDto,
+    weights: { timeWeight: number; distanceWeight: number; riskWeight: number },
+    candidates: number,
+    originH3: string,
+    destH3: string,
+    hour: number,
+  ) {
+    const signature = JSON.stringify({
+      originH3,
+      destH3,
+      hour,
+      mode: dto.mode ?? 'balanced',
+      weights,
+      candidates,
+      graphLoadedAt: this.roadGraph.graphLoadedAt,
+    });
+    return Buffer.from(signature).toString('base64url');
+  }
+
+  private parseBounds(
+    minLat?: string,
+    maxLat?: string,
+    minLng?: string,
+    maxLng?: string,
+  ) {
+    if (!minLat || !maxLat || !minLng || !maxLng) {
+      return null;
+    }
+
+    const parsed = {
+      minLat: Number(minLat),
+      maxLat: Number(maxLat),
+      minLng: Number(minLng),
+      maxLng: Number(maxLng),
+    };
+    if (Object.values(parsed).some((value) => Number.isNaN(value))) {
+      return null;
+    }
+    return parsed;
+  }
+
+  private matchesSpatialQuery(
+    cellId: string,
+    h3Index?: string,
+    bounds?: { minLat: number; maxLat: number; minLng: number; maxLng: number } | null,
+  ) {
+    if (h3Index) {
+      return cellId === h3Index;
+    }
+    if (!bounds) {
+      return true;
+    }
+    const [lat, lng] = h3.cellToLatLng(cellId);
+    return lat >= bounds.minLat &&
+      lat <= bounds.maxLat &&
+      lng >= bounds.minLng &&
+      lng <= bounds.maxLng;
   }
 }

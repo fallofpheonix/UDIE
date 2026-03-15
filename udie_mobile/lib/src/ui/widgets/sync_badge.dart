@@ -5,7 +5,7 @@ import '../../theme.dart';
 
 /// A compact pill badge that shows the current sync state.
 ///
-/// When [state] is [SyncState.connecting] the dot pulses to signal activity.
+/// When [state] is connecting or syncing the dot pulses to signal activity.
 class SyncBadge extends StatefulWidget {
   const SyncBadge({super.key, required this.state});
 
@@ -42,7 +42,7 @@ class _SyncBadgeState extends State<SyncBadge>
   }
 
   void _updateAnimation() {
-    if (widget.state == SyncState.connecting) {
+    if (widget.state == SyncState.connecting || widget.state == SyncState.syncing) {
       _pulse.repeat(reverse: true);
     } else {
       _pulse
@@ -60,9 +60,8 @@ class _SyncBadgeState extends State<SyncBadge>
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (widget.state) {
-      SyncState.disconnected => ('OFFLINE', UdieTheme.danger),
-      SyncState.connecting => ('SYNCING', UdieTheme.caution),
-      SyncState.connectedUnsynced => ('PENDING', UdieTheme.info),
+      SyncState.connecting => ('CONNECTING', UdieTheme.info),
+      SyncState.syncing => ('SYNCING', UdieTheme.caution),
       SyncState.synced => ('LIVE', UdieTheme.ok),
       SyncState.error => ('ERROR', UdieTheme.danger),
     };
@@ -81,7 +80,7 @@ class _SyncBadgeState extends State<SyncBadge>
           AnimatedBuilder(
             animation: _scale,
             builder: (context, _) => Transform.scale(
-              scale: widget.state == SyncState.connecting
+              scale: widget.state == SyncState.connecting || widget.state == SyncState.syncing
                   ? _scale.value
                   : 1.0,
               child: Container(
@@ -116,4 +115,3 @@ class _SyncBadgeState extends State<SyncBadge>
     );
   }
 }
-

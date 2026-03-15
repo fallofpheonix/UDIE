@@ -95,3 +95,35 @@ jobs:
 
       - name: Test
         run: flutter test
+
+      - name: Build Android Debug APK
+        run: flutter build apk --debug
+
+  mobile-ios:
+    name: Mobile (iOS)
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: udie_mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: "stable"
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Build iOS Simulator App
+        run: flutter build ios --debug --simulator --no-codesign

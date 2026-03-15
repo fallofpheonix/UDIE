@@ -36,6 +36,8 @@ export interface GraphAdjacency {
   /** source_node -> array of edges */
   adjacencyList: Map<number, RoadEdge[]>;
   nodes: Map<number, RoadNode>;
+  nodesByPartition: Map<string, RoadNode[]>;
+  edgeIndex: Map<number, RoadEdge[]>;
 }
 
 /** H3 resolution for road network partitioning (aligns with GRAPH_PARTITION_RESOLUTION param) */
@@ -49,12 +51,16 @@ export class RoadGraphService implements OnModuleInit {
   private graph: GraphAdjacency = {
     adjacencyList: new Map(),
     nodes: new Map(),
+    nodesByPartition: new Map(),
+    edgeIndex: new Map(),
   };
 
   /** Highway-only sub-graph for long-distance routing (Prompt 23) */
   private highwayGraph: GraphAdjacency = {
     adjacencyList: new Map(),
     nodes: new Map(),
+    nodesByPartition: new Map(),
+    edgeIndex: new Map(),
   };
 
   private lastGraphLoad = 0;
@@ -115,6 +121,19 @@ export class RoadGraphService implements OnModuleInit {
 
     const adjacencyList = new Map<number, RoadEdge[]>();
     const hwAdjacencyList = new Map<number, RoadEdge[]>();
+    const nodesByPartition = new Map<string, RoadNode[]>();
+    const highwayNodesByPartition = new Map<string, RoadNode[]>();
+    const edgeIndex = new Map<number, RoadEdge[]>();
+    const highwayEdgeIndex = new Map<number, RoadEdge[]>();
+
+    for (const node of nodes.values()) {
+      if (!nodesByPartition.has(node.h3Partition)) nodesByPartition.set(node.h3Partition, []);
+      nodesByPartition.get(node.h3Partition)!.push(node);
+      if (node.isHighway) {
+        if (!highwayNodesByPartition.has(node.h3Partition)) highwayNodesByPartition.set(node.h3Partition, []);
+        highwayNodesByPartition.get(node.h3Partition)!.push(node);
+      }
+    }
 
     for (const row of edgesResult.rows) {
       const edge: RoadEdge = {
@@ -139,24 +158,37 @@ export class RoadGraphService implements OnModuleInit {
 
       if (!adjacencyList.has(edge.sourceNode)) adjacencyList.set(edge.sourceNode, []);
       adjacencyList.get(edge.sourceNode)!.push(edge);
+      if (!edgeIndex.has(edge.id)) edgeIndex.set(edge.id, []);
+      edgeIndex.get(edge.id)!.push(edge);
 
       if (!edge.isOneWay) {
         if (!adjacencyList.has(edge.targetNode)) adjacencyList.set(edge.targetNode, []);
-        adjacencyList.get(edge.targetNode)!.push({ ...edge, sourceNode: edge.targetNode, targetNode: edge.sourceNode });
+        const reverseEdge = { ...edge, sourceNode: edge.targetNode, targetNode: edge.sourceNode };
+        adjacencyList.get(edge.targetNode)!.push(reverseEdge);
+        edgeIndex.get(edge.id)!.push(reverseEdge);
       }
 
       if (edge.isHighway) {
         if (!hwAdjacencyList.has(edge.sourceNode)) hwAdjacencyList.set(edge.sourceNode, []);
         hwAdjacencyList.get(edge.sourceNode)!.push(edge);
+        if (!highwayEdgeIndex.has(edge.id)) highwayEdgeIndex.set(edge.id, []);
+        highwayEdgeIndex.get(edge.id)!.push(edge);
         if (!edge.isOneWay) {
           if (!hwAdjacencyList.has(edge.targetNode)) hwAdjacencyList.set(edge.targetNode, []);
-          hwAdjacencyList.get(edge.targetNode)!.push({ ...edge, sourceNode: edge.targetNode, targetNode: edge.sourceNode });
+          const reverseEdge = { ...edge, sourceNode: edge.targetNode, targetNode: edge.sourceNode };
+          hwAdjacencyList.get(edge.targetNode)!.push(reverseEdge);
+          highwayEdgeIndex.get(edge.id)!.push(reverseEdge);
         }
       }
     }
 
-    this.graph = { adjacencyList, nodes };
-    this.highwayGraph = { adjacencyList: hwAdjacencyList, nodes };
+    this.graph = { adjacencyList, nodes, nodesByPartition, edgeIndex };
+    this.highwayGraph = {
+      adjacencyList: hwAdjacencyList,
+      nodes,
+      nodesByPartition: highwayNodesByPartition,
+      edgeIndex: highwayEdgeIndex,
+    };
     this.lastGraphLoad = Date.now();
 
     this.logger.log(
@@ -170,11 +202,13 @@ export class RoadGraphService implements OnModuleInit {
   findNearestNode(lat: number, lng: number, graph?: GraphAdjacency): RoadNode | null {
     const g = graph ?? this.graph;
     if (g.nodes.size === 0) return null;
+    const partition = h3.latLngToCell(lat, lng, GRAPH_PARTITION_RESOLUTION);
+    const candidates = this.collectNearestNodeCandidates(g, partition);
 
     let nearest: RoadNode | null = null;
     let minDistSq = Infinity;
 
-    for (const node of g.nodes.values()) {
+    for (const node of candidates) {
       const dLat = node.lat - lat;
       const dLng = node.lng - lng;
       const distSq = dLat * dLat + dLng * dLng;
@@ -188,14 +222,17 @@ export class RoadGraphService implements OnModuleInit {
 
   /** Update edge weights in-memory after background traffic refresh */
   updateEdgeWeight(edgeId: number, effectiveWeight: number, vehicleDensity: number, currentSpeedKmh: number | null): void {
-    for (const edges of this.graph.adjacencyList.values()) {
-      for (const edge of edges) {
-        if (edge.id === edgeId) {
-          edge.effectiveWeight = effectiveWeight;
-          edge.vehicleDensity = vehicleDensity;
-          edge.currentSpeedKmh = currentSpeedKmh;
-        }
-      }
+    const graphEdges = this.graph.edgeIndex.get(edgeId) ?? [];
+    for (const edge of graphEdges) {
+      edge.effectiveWeight = effectiveWeight;
+      edge.vehicleDensity = vehicleDensity;
+      edge.currentSpeedKmh = currentSpeedKmh;
+    }
+    const highwayEdges = this.highwayGraph.edgeIndex.get(edgeId) ?? [];
+    for (const edge of highwayEdges) {
+      edge.effectiveWeight = effectiveWeight;
+      edge.vehicleDensity = vehicleDensity;
+      edge.currentSpeedKmh = currentSpeedKmh;
     }
   }
 
@@ -340,5 +377,26 @@ export class RoadGraphService implements OnModuleInit {
 
   get graphLoadedAt(): number {
     return this.lastGraphLoad;
+  }
+
+  private collectNearestNodeCandidates(graph: GraphAdjacency, partition: string): RoadNode[] {
+    const local = graph.nodesByPartition.get(partition);
+    if (local && local.length > 0) {
+      return local;
+    }
+
+    const nearby = new Map<number, RoadNode>();
+    for (const candidatePartition of h3.gridDisk(partition, 2)) {
+      const nodes = graph.nodesByPartition.get(candidatePartition);
+      if (!nodes) continue;
+      for (const node of nodes) {
+        nearby.set(node.id, node);
+      }
+    }
+    if (nearby.size > 0) {
+      return [...nearby.values()];
+    }
+
+    return [...graph.nodes.values()];
   }
 }
