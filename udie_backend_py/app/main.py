@@ -13,10 +13,14 @@ from app.models import (
     HealthResponse,
     RiskResponse,
     RouteRiskRequest,
+    RouteNavigationRequest,
+    RouteNavigationResponse,
+    TrafficForecastRequest,
+    TrafficForecastResponse,
     TrafficReasonItem,
     TrafficReasonResponse,
 )
-from app.services import registry, risk_for_route
+from app.services import registry, risk_for_route, traffic_forecast_for_point
 from app.storage import store
 
 app = FastAPI(title="UDIE Open Data Backend", version="1.0.0")
@@ -171,6 +175,22 @@ async def cell_insight(cell_id: str):
 async def admin_rebuild():
     result = store.rebuild_from_log()
     return {"status": "ok", **result}
+
+
+@router.post("/traffic/forecast", response_model=TrafficForecastResponse)
+async def traffic_forecast(body: TrafficForecastRequest):
+    """Short-term traffic forecast for a geographic point (Prompt 18)."""
+    return traffic_forecast_for_point(body.lat, body.lng, body.horizon_minutes)
+
+
+@router.post("/route", response_model=RouteNavigationResponse)
+async def compute_route(body: RouteNavigationRequest):
+    """
+    Compute a route between two points.
+    Returns polyline, navigation steps, ETA and risk score (Prompt 30).
+    """
+    from app.services import compute_navigation_route
+    return compute_navigation_route(body.origin, body.destination, body.mode)
 
 
 app.include_router(router, prefix="/api", tags=["api"])
