@@ -168,7 +168,7 @@ void main() {
     test('produces correct query map keys', () {
       final area = GeoArea(
         city: 'Mumbai',
-        center: const LatLngCoordinate(19.076, 72.8777).toLatLng(),
+        center: LatLng(19.076, 72.8777),
         radiusKm: 10,
       );
       final query = area.toQuery();
