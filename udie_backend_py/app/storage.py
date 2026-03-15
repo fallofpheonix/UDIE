@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from app.config import settings
-from app.models import AreaNewsItem, BoundingBox, DisruptionEvent, RoutePoint, now_utc
+from app.models import AreaNewsItem, BoundingBox, DisruptionEvent, RoutePoint, _haversine_km, now_utc
 
 
 def _resolve_db_path(raw: str) -> Path:
@@ -526,15 +526,6 @@ def _route_to_cells(points: list[RoutePoint]) -> list[RouteCell]:
         seen.add(cid)
         cells.append(RouteCell(cell_id=cid, lat=slat, lng=slng))
     return cells
-
-
-def _haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-    r = 6371.0
-    d_lat = math.radians(lat2 - lat1)
-    d_lng = math.radians(lng2 - lng1)
-    a = math.sin(d_lat / 2.0) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(d_lng / 2.0) ** 2
-    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
-    return r * c
 
 
 store = UdieStore()

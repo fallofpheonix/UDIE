@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { haversineKm } from '../common/geo.util';
 import { GraphAdjacency, RoadEdge, RoadNode } from './road-graph.service';
 
 export interface RouteCostWeights {
@@ -216,7 +217,7 @@ export class PathfindingService {
    * A* heuristic: straight-line distance converted to approximate cost (Prompt 6).
    */
   private heuristic(from: RoadNode, to: RoadNode, weights: RouteCostWeights): number {
-    const distKm = this.haversineKm(from.lat, from.lng, to.lat, to.lng);
+    const distKm = haversineKm(from.lat, from.lng, to.lat, to.lng);
     const estimatedTimeS = (distKm / 50) * 3600; // assume 50 km/h
     return weights.timeWeight * estimatedTimeS;
   }
@@ -385,18 +386,5 @@ export class PathfindingService {
 
   private pathKey(path: PathResult): string {
     return path.nodes.map(n => n.id).join(',');
-  }
-
-  private haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLng = ((lng2 - lng1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 }

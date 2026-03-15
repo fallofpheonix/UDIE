@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { performance } from 'perf_hooks';
 import { QueryResultRow } from 'pg';
 import { DatabaseService } from '../../database/database.service';
+import { haversineKm } from '../common/geo.util';
 import { SpatialService } from '../common/spatial.service';
 import {
   EtaQueryDto,
@@ -357,7 +358,7 @@ export class RouteOptionsService {
       };
     }
 
-    const distanceKm = this.haversineKm(dto.origin, dto.destination);
+    const distanceKm = haversineKm(dto.origin.lat, dto.origin.lng, dto.destination.lat, dto.destination.lng);
     const startNode = await this.findNearestNode(dto.origin, dto.city_id);
     const endNode = await this.findNearestNode(dto.destination, dto.city_id);
     if (!startNode || !endNode) {
@@ -460,7 +461,7 @@ export class RouteOptionsService {
   }
 
   private async loadGraph(origin: LatLngDto, destination: LatLngDto, cityId?: string): Promise<Graph> {
-    const distanceKm = this.haversineKm(origin, destination);
+    const distanceKm = haversineKm(origin.lat, origin.lng, destination.lat, destination.lng);
     const margin = Math.max(0.05, distanceKm / 80);
     const minLat = Math.min(origin.lat, destination.lat) - margin;
     const maxLat = Math.max(origin.lat, destination.lat) + margin;
@@ -698,10 +699,7 @@ export class RouteOptionsService {
     if (!node) {
       return 0;
     }
-    const distanceKm = this.haversineKm(
-      { lat: node.lat, lng: node.lng },
-      { lat: end.lat, lng: end.lng },
-    );
+    const distanceKm = haversineKm(node.lat, node.lng, end.lat, end.lng);
     return (distanceKm * weights.distance) + ((distanceKm / 70) * 3600 * weights.travelTime);
   }
 
@@ -930,19 +928,6 @@ export class RouteOptionsService {
   private parseEdgeId(edgeId: string) {
     const [from, to] = edgeId.split('->');
     return { from, to };
-  }
-
-  private haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
-    const R = 6371;
-    const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-    const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-    const aa =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos((a.lat * Math.PI) / 180) *
-        Math.cos((b.lat * Math.PI) / 180) *
-        Math.sin(dLng / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1 - aa));
-    return R * c;
   }
 
   private bearing(a: GraphNode, b: GraphNode) {

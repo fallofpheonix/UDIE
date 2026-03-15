@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import * as h3 from 'h3-js';
 import { DatabaseService } from '../../database/database.service';
+import { haversineKm } from '../common/geo.util';
 import { RoadGraphService } from './road-graph.service';
 import { PathfindingService } from './pathfinding.service';
 import { TrafficService } from './traffic.service';
@@ -118,7 +119,9 @@ export class RoutingController {
          hit_count  = route_cache.hit_count + 1,
          expires_at = EXCLUDED.expires_at`,
       [originH3, destH3, hour, JSON.stringify(result)],
-    ).catch(() => { /* non-critical */ });
+    ).catch((err: unknown) => {
+      this.logger.warn(`[ROUTE_CACHE] DB write failed (non-critical): ${err instanceof Error ? err.message : String(err)}`);
+    });
 
     return result;
   }
@@ -197,7 +200,7 @@ export class RoutingController {
 
     if (!originNode || !destNode) {
       // Fallback: simple haversine estimate
-      const distKm = this.haversineKm(olat, olng, dlat, dlng);
+      const distKm = haversineKm(olat, olng, dlat, dlng);
       const travelTimeS = (distKm / 40) * 3600;
       return {
         travelTimeS: Math.round(travelTimeS),
@@ -230,7 +233,7 @@ export class RoutingController {
 
   // Fallback route when graph is empty or disconnected
   private fallbackRoute(dto: RouteRequestDto) {
-    const distKm = this.haversineKm(
+    const distKm = haversineKm(
       dto.origin.lat, dto.origin.lng,
       dto.destination.lat, dto.destination.lng,
     );
@@ -256,16 +259,5 @@ export class RoutingController {
       cached: false,
       fallback: true,
     };
-  }
-
-  private haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLng = ((lng2 - lng1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 }

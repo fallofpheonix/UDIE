@@ -7,6 +7,7 @@ import { resolveRouteRegion } from '../common/region-resolver.util';
 import { ObservabilityService } from '../common/observability.service';
 import { classifyRiskLevel } from './risk.algorithm';
 import { RiskSurfaceCacheService } from './risk-surface-cache.service';
+import { haversineKm } from '../common/geo.util';
 
 @Injectable()
 export class RiskService {
@@ -287,7 +288,7 @@ export class RiskService {
   private calculatePathDistance(coords: { lat: number, lng: number }[]): number {
     let dist = 0;
     for (let i = 0; i < coords.length - 1; i++) {
-      dist += this.haversine(coords[i], coords[i + 1]);
+      dist += haversineKm(coords[i].lat, coords[i].lng, coords[i + 1].lat, coords[i + 1].lng);
     }
     return dist;
   }
@@ -305,16 +306,5 @@ export class RiskService {
       if (minDistance === 0) break;
     }
     return nearest;
-  }
-
-  private haversine(c1: { lat: number, lng: number }, c2: { lat: number, lng: number }): number {
-    const R = 6371; // km
-    const dLat = (c2.lat - c1.lat) * Math.PI / 180;
-    const dLng = (c2.lng - c1.lng) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) *
-      Math.sin(dLng / 2) * Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
   }
 }

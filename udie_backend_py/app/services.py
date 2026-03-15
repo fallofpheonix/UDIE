@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from math import exp
 
 import httpx
@@ -19,6 +19,7 @@ from app.models import (
     RoutePoint,
     SourceStatus,
     TrafficForecastResponse,
+    _haversine_km,
     now_utc,
 )
 from app.sources.base import GovernmentSource, SourceResult
@@ -204,8 +205,6 @@ def traffic_forecast_for_point(lat: float, lng: float, horizon_minutes: int = 15
     Short-term traffic forecast using exponential smoothing over stored risk cells (Prompt 18).
     Uses the in-memory risk store as a proxy for congestion intensity.
     """
-    from math import exp
-
     risk_cells = store.get_area_risk_cells(lat=lat, lng=lng, radius_km=1.0)
     avg_risk = sum(r for _, r in risk_cells) / max(1, len(risk_cells)) if risk_cells else 0.0
 
@@ -249,16 +248,7 @@ def compute_navigation_route(
     Compute a simple navigation route with risk scoring (Prompt 30).
     Uses straight-line polyline with risk-aware ETA.
     """
-    from math import atan2, cos, radians, sin, sqrt
-
-    def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-        r = 6371.0
-        d_lat = radians(lat2 - lat1)
-        d_lng = radians(lng2 - lng1)
-        a = sin(d_lat / 2.0) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(d_lng / 2.0) ** 2
-        return r * 2.0 * atan2(sqrt(a), sqrt(1.0 - a))
-
-    dist_km = haversine_km(origin.lat, origin.lng, destination.lat, destination.lng)
+    dist_km = _haversine_km(origin.lat, origin.lng, destination.lat, destination.lng)
 
     # Speed by mode
     speed_map = {"fastest": 60.0, "shortest": 40.0, "safest": 35.0, "balanced": 45.0}
@@ -270,8 +260,6 @@ def compute_navigation_route(
     # Risk increases effective travel time
     risk_penalty = 1.0 + risk_score * 0.5
     travel_time_s = (dist_km / speed_kmh) * 3600.0 * risk_penalty
-
-    from datetime import timedelta
 
     arrival = now_utc() + timedelta(seconds=travel_time_s)
     polyline = [[origin.lng, origin.lat], [destination.lng, destination.lat]]
