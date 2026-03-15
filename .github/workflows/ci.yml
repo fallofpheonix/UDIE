@@ -13,6 +13,8 @@ jobs:
   backend-node:
     name: Backend (Node.js)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: engine-backend
@@ -42,6 +44,8 @@ jobs:
   backend-python:
     name: Backend (Python)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: udie_backend_py
@@ -68,6 +72,8 @@ jobs:
   mobile-flutter:
     name: Mobile (Flutter)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: udie_mobile
