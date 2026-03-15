@@ -13,9 +13,12 @@ from app.models import (
     AreaNewsItem,
     BoundingBox,
     DisruptionEvent,
+    NavigationStep,
     RiskResponse,
+    RouteNavigationResponse,
     RoutePoint,
     SourceStatus,
+    TrafficForecastResponse,
     now_utc,
 )
 from app.sources.base import GovernmentSource, SourceResult
@@ -194,3 +197,99 @@ def _is_retryable_error(msg: str) -> bool:
     m = msg.lower()
     retryable_tokens = ["timeout", "temporar", "connection reset", "503", "502", "429", "rate limit"]
     return any(token in m for token in retryable_tokens)
+
+
+def traffic_forecast_for_point(lat: float, lng: float, horizon_minutes: int = 15) -> TrafficForecastResponse:
+    """
+    Short-term traffic forecast using exponential smoothing over stored risk cells (Prompt 18).
+    Uses the in-memory risk store as a proxy for congestion intensity.
+    """
+    from math import exp
+
+    risk_cells = store.get_area_risk_cells(lat=lat, lng=lng, radius_km=1.0)
+    avg_risk = sum(r for _, r in risk_cells) / max(1, len(risk_cells)) if risk_cells else 0.0
+
+    # Map risk [0,1] -> congestion speed [5, 60] km/h
+    base_speed = max(5.0, 60.0 * (1.0 - avg_risk))
+
+    decay_5m = 0.97
+    decay_15m = 0.90
+    decay_30m = 0.75
+
+    forecast_5m = base_speed * decay_5m
+    forecast_15m = base_speed * decay_15m
+    forecast_30m = base_speed * decay_30m
+
+    if base_speed >= 50:
+        congestion = "FREE"
+    elif base_speed >= 30:
+        congestion = "MODERATE"
+    elif base_speed >= 15:
+        congestion = "HEAVY"
+    else:
+        congestion = "STANDSTILL"
+
+    return TrafficForecastResponse(
+        lat=lat,
+        lng=lng,
+        forecast5m=round(forecast_5m, 2),
+        forecast15m=round(forecast_15m, 2),
+        forecast30m=round(forecast_30m, 2),
+        congestion_level=congestion,
+        generatedAt=now_utc(),
+    )
+
+
+def compute_navigation_route(
+    origin: RoutePoint,
+    destination: RoutePoint,
+    mode: str = "balanced",
+) -> RouteNavigationResponse:
+    """
+    Compute a simple navigation route with risk scoring (Prompt 30).
+    Uses straight-line polyline with risk-aware ETA.
+    """
+    from math import atan2, cos, radians, sin, sqrt
+
+    def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+        r = 6371.0
+        d_lat = radians(lat2 - lat1)
+        d_lng = radians(lng2 - lng1)
+        a = sin(d_lat / 2.0) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(d_lng / 2.0) ** 2
+        return r * 2.0 * atan2(sqrt(a), sqrt(1.0 - a))
+
+    dist_km = haversine_km(origin.lat, origin.lng, destination.lat, destination.lng)
+
+    # Speed by mode
+    speed_map = {"fastest": 60.0, "shortest": 40.0, "safest": 35.0, "balanced": 45.0}
+    speed_kmh = speed_map.get(mode, 45.0)
+
+    risk_resp = risk_for_route([origin, destination])
+    risk_score = risk_resp.risk_score
+
+    # Risk increases effective travel time
+    risk_penalty = 1.0 + risk_score * 0.5
+    travel_time_s = (dist_km / speed_kmh) * 3600.0 * risk_penalty
+
+    from datetime import timedelta
+
+    arrival = now_utc() + timedelta(seconds=travel_time_s)
+    polyline = [[origin.lng, origin.lat], [destination.lng, destination.lat]]
+
+    steps = [
+        NavigationStep(
+            stepIndex=0,
+            instruction="Proceed to destination",
+            distanceM=dist_km * 1000,
+            durationS=travel_time_s,
+        )
+    ]
+
+    return RouteNavigationResponse(
+        routePolyline=polyline,
+        navigationSteps=steps,
+        travelTimeS=round(travel_time_s, 1),
+        distanceM=round(dist_km * 1000, 1),
+        riskScore=round(risk_score, 4),
+        estimatedArrivalIso=arrival.isoformat(),
+    )

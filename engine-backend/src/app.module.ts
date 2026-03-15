@@ -15,6 +15,7 @@ import { RiskSnapshotsModule } from './modules/risk-snapshots/risk-snapshots.mod
 import { CityDashboardModule } from './modules/city-dashboard/city-dashboard.module';
 import { CellInsightModule } from './modules/cell-insight/cell-insight.module';
 import { RouteOptionsModule } from './modules/route-options/route-options.module';
+import { RoutingModule } from './modules/routing/routing.module';
 import { DiagnosticsModule } from './modules/diagnostics/diagnostics.module';
 import { SimulationModule } from './modules/simulation/simulation.module';
 import { MetricsModule } from './metrics/metrics.module';
@@ -39,6 +40,7 @@ const materializationModules = [RiskModule, SimulationModule, DiagnosticsModule,
 const evaluationModules = [
   EventsModule,
   RouteOptionsModule,
+  RoutingModule,
   CityDashboardModule,
   CellInsightModule,
   IntelligenceModule,

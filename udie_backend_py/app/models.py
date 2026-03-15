@@ -127,5 +127,43 @@ def _route_length_km(points: list[RoutePoint]) -> float:
     return total
 
 
+class TrafficForecastRequest(BaseModel):
+    lat: float = Field(ge=-90.0, le=90.0)
+    lng: float = Field(ge=-180.0, le=180.0)
+    horizon_minutes: int = Field(default=15, ge=5, le=60)
+
+
+class TrafficForecastResponse(BaseModel):
+    lat: float
+    lng: float
+    forecast_5m: float = Field(alias="forecast5m", ge=0.0)
+    forecast_15m: float = Field(alias="forecast15m", ge=0.0)
+    forecast_30m: float = Field(alias="forecast30m", ge=0.0)
+    congestion_level: Literal["FREE", "MODERATE", "HEAVY", "STANDSTILL"]
+    generated_at: datetime = Field(alias="generatedAt")
+
+
+class RouteNavigationRequest(BaseModel):
+    origin: RoutePoint
+    destination: RoutePoint
+    mode: Literal["fastest", "shortest", "safest", "balanced"] = "balanced"
+
+
+class NavigationStep(BaseModel):
+    step_index: int = Field(alias="stepIndex", ge=0)
+    instruction: str
+    distance_m: float = Field(alias="distanceM", ge=0.0)
+    duration_s: float = Field(alias="durationS", ge=0.0)
+
+
+class RouteNavigationResponse(BaseModel):
+    route_polyline: list[list[float]] = Field(alias="routePolyline")
+    navigation_steps: list[NavigationStep] = Field(alias="navigationSteps")
+    travel_time_s: float = Field(alias="travelTimeS", ge=0.0)
+    distance_m: float = Field(alias="distanceM", ge=0.0)
+    risk_score: float = Field(alias="riskScore", ge=0.0, le=1.0)
+    estimated_arrival_iso: str = Field(alias="estimatedArrivalIso")
+
+
 def now_utc() -> datetime:
     return datetime.now(timezone.utc)

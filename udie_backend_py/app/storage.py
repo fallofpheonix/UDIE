@@ -332,6 +332,21 @@ class UdieStore:
         lookup = {str(r["cell_id"]): float(r["risk"]) for r in rows}
         return [(cell, lookup.get(cell.cell_id, 0.0)) for cell in route_cells]
 
+    def get_area_risk_cells(self, lat: float, lng: float, radius_km: float = 1.0) -> list[tuple[object, float]]:
+        """Return risk cells within radius_km of the given point."""
+        d_lat = radius_km / 111.0
+        d_lng = radius_km / max(1.0, 111.0 * math.cos(math.radians(lat)))
+        with self._lock:
+            cur = self._conn.cursor()
+            rows = cur.execute(
+                """
+                SELECT cell_id, lat, lng, risk FROM risk_cells
+                WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?
+                """,
+                (lat - d_lat, lat + d_lat, lng - d_lng, lng + d_lng),
+            ).fetchall()
+        return [(RouteCell(cell_id=str(r["cell_id"]), lat=float(r["lat"]), lng=float(r["lng"])), float(r["risk"])) for r in rows]
+
     def count_risk_cells(self) -> int:
         with self._lock:
             cur = self._conn.cursor()
