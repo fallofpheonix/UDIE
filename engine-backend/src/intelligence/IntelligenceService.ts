@@ -7,7 +7,6 @@ import {
   IntelligenceInsight,
   IntelligenceQuery,
   IntelligenceRuleConfig,
-  RiskCell,
 } from './IntelligenceTypes';
 import { hotspotInsight, recurringInsight, spikeInsight } from './IntelligenceRules';
 

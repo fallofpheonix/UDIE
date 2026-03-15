@@ -70,8 +70,8 @@ export class CellIntelligenceController {
                     timestamp: now.toISOString()
                 }
             };
-        } catch (error: any) {
-            this.logger.error(`[CELL_INTEL] Failed to inspect cell ${h3Index}: ${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[CELL_INTEL] Failed to inspect cell ${h3Index}: ${error instanceof Error ? error.message : String(error)}`);
             throw error;
         }
     }

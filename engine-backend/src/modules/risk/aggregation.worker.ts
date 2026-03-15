@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { PoolClient } from 'pg';
 import { DatabaseService } from '../../database/database.service';
 import { RiskGridService } from '../risk/risk-grid.service';
 import { SpatialService } from '../common/spatial.service';
@@ -25,27 +26,27 @@ export class AggregationWorker implements OnModuleInit {
      * Law: Updates are triggered by immutable logs in real-time.
      */
     private async setupListener() {
-        let client: any;
+        let client: PoolClient | undefined;
 
         try {
             client = await this.db.getPool().connect();
             await client.query('LISTEN risk_update');
             this.logger.log('[AGGREGATOR] Listening for risk_update notifications...');
 
-            client.on('notification', async (msg: any) => {
+            client.on('notification', async (msg: { channel: string; payload?: string }) => {
                 if (msg.channel === 'risk_update' && msg.payload) {
                     const payload = JSON.parse(msg.payload);
                     await this.processLogEntry(payload.id, payload.h3_parent);
                 }
             });
 
-            client.on('error', (error: any) => {
+            client.on('error', (error: Error) => {
                 this.logger.error(`[AGGREGATOR] Listener connection error: ${error.message}`);
-                try { client.release(); } catch { }
+                try { client?.release(); } catch { }
                 setTimeout(() => void this.setupListener(), this.reconnectDelayMs);
             });
-        } catch (error: any) {
-            this.logger.error(`[AGGREGATOR] Listener failed: ${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[AGGREGATOR] Listener failed: ${error instanceof Error ? error.message : String(error)}`);
             try { client?.release(); } catch { }
             setTimeout(() => void this.setupListener(), this.reconnectDelayMs);
         }
@@ -92,8 +93,8 @@ export class AggregationWorker implements OnModuleInit {
             }
 
             this.logger.debug(`[AGGREGATOR] log=${logId} cell=${h3CellStr} neighbors=${neighbors.length} status=PROCESSED`);
-        } catch (error: any) {
-            this.logger.error(`[AGGREGATOR] Failed to process log ${logId}: ${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[AGGREGATOR] Failed to process log ${logId}: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 

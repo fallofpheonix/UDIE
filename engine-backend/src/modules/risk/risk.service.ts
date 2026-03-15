@@ -224,8 +224,7 @@ export class RiskService {
         path.forEach(cell => indices.add(cell));
       }
       return Array.from(indices);
-    } catch (error) {
-      // Fallback to point sampling if path fails
+    } catch {
       const indices = new Set<string>();
       coords.forEach(c => indices.add(h3.latLngToCell(c.lat, c.lng, 9)));
       return Array.from(indices);

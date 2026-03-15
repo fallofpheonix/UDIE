@@ -8,10 +8,37 @@ DerivedData/
 *.xcuserstate
 *.xcworkspace/xcuserdata/
 
-# Backend
-backend/node_modules/
-backend/dist/
-backend/.env
+# Node.js / NestJS backend
+engine-backend/node_modules/
+engine-backend/dist/
+engine-backend/.env
+node_modules/
+dist/
+
+# Python backend
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+venv/
+udie_backend_py/udie_state.db
+udie_backend_py/.env
+
+# Flutter / Dart
+udie_mobile/.dart_tool/
+udie_mobile/build/
+udie_mobile/.flutter-plugins
+udie_mobile/.flutter-plugins-dependencies
+*.g.dart
+
+# Environment files
+.env
+.env.local
+.env.*.local
 
 # Misc
 *.log

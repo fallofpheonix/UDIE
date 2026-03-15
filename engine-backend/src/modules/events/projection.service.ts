@@ -42,8 +42,8 @@ export class ProjectionService implements OnModuleInit {
 
             // Housekeeping
             await this.identityService.deactivateStaleIdentities();
-        } catch (error: any) {
-            this.logger.error(`[PROJECTION] Global loop failed: ${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[PROJECTION] Global loop failed: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 
@@ -115,8 +115,8 @@ VALUES($1, (SELECT COALESCE(MAX(version), 0) + 1 FROM regional_geo_events_v WHER
             }
 
             await this.db.query('SELECT pg_advisory_unlock($1)', [lockKey]);
-        } catch (error: any) {
-            this.logger.error(`[PROJECTION] Region ${h3Parent} failed: ${error.message}`);
+        } catch (error: unknown) {
+            this.logger.error(`[PROJECTION] Region ${h3Parent} failed: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }

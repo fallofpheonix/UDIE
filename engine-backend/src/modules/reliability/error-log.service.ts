@@ -9,7 +9,7 @@ export interface ErrorContext {
     type: string;
     message: string;
     severity: number;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 @Injectable()
