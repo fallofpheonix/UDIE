@@ -64,7 +64,6 @@ class _RouteScreenState extends State<RouteScreen> {
   @override
   Widget build(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
-    final risk = widget.store.lastRisk;
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
@@ -189,23 +188,29 @@ class _RouteScreenState extends State<RouteScreen> {
         const SizedBox(height: UdieTheme.sp20),
 
         // ── Risk result card (animated) ──────────────────────────────────────
-        AnimatedSwitcher(
-          duration: UdieTheme.durationMedium,
-          switchInCurve: UdieTheme.curveDefault,
-          switchOutCurve: Curves.easeIn,
-          transitionBuilder: (child, animation) => FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.15),
-                end: Offset.zero,
-              ).animate(animation),
-              child: child,
-            ),
-          ),
-          child: risk != null
-              ? _RiskResultCard(key: ValueKey(risk.riskScore), risk: risk)
-              : const SizedBox.shrink(),
+        ListenableBuilder(
+          listenable: widget.store,
+          builder: (context, _) {
+            final risk = widget.store.lastRisk;
+            return AnimatedSwitcher(
+              duration: UdieTheme.durationMedium,
+              switchInCurve: UdieTheme.curveDefault,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.15),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: risk != null
+                  ? _RiskResultCard(key: ValueKey(risk.riskScore), risk: risk)
+                  : const SizedBox.shrink(),
+            );
+          },
         ),
       ],
     );

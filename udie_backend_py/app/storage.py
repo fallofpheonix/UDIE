@@ -47,6 +47,8 @@ class UdieStore:
     def _init_schema(self) -> None:
         with self._lock:
             cur = self._conn.cursor()
+            # Enable WAL mode for better concurrent read throughput.
+            cur.execute("PRAGMA journal_mode=WAL")
             cur.execute(
                 """
                 CREATE TABLE IF NOT EXISTS events_log (
@@ -103,6 +105,23 @@ class UdieStore:
                     updated_at TEXT NOT NULL
                 )
                 """
+            )
+            # Indexes to speed up bounding-box range queries on lat/lng columns.
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS idx_events_active_lat_lng "
+                "ON events_active (lat, lng)"
+            )
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS idx_events_active_city "
+                "ON events_active (city)"
+            )
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS idx_risk_cells_lat_lng "
+                "ON risk_cells (lat, lng)"
+            )
+            cur.execute(
+                "CREATE INDEX IF NOT EXISTS idx_events_log_lat_lng "
+                "ON events_log (lat, lng)"
             )
             self._conn.commit()
 
@@ -365,11 +384,13 @@ class UdieStore:
                 r["key"]: r["value"]
                 for r in cur.execute("SELECT key, value FROM system_state").fetchall()
             }
+            row = cur.execute("SELECT COUNT(*) AS c FROM risk_cells").fetchone()
+            risk_cell_count = int(row["c"] if row else 0)
         return {
             "db": "ok" if db_ok else "error",
             "lastProjectionStatus": state.get("last_projection_status", "unknown"),
             "lastProjectionAt": state.get("last_projection_at", "never"),
-            "riskCells": self.count_risk_cells(),
+            "riskCells": risk_cell_count,
         }
 
     def _find_active_match(self, active: list[dict[str, object]], event: DisruptionEvent) -> dict[str, object] | None:

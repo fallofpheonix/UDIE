@@ -7,36 +7,6 @@ import '../api_client.dart';
 import '../models.dart';
 
 class AppStore extends ChangeNotifier {
-  static const Set<String> _supportedIndianCities = {
-    'new delhi',
-    'delhi',
-    'mumbai',
-    'bengaluru',
-    'bangalore',
-    'chennai',
-    'hyderabad',
-    'kolkata',
-    'pune',
-    'ahmedabad',
-    'jaipur',
-    'lucknow',
-    'bhopal',
-    'patna',
-    'guwahati',
-    'chandigarh',
-    'srinagar',
-    'kochi',
-    'thiruvananthapuram',
-    'nagpur',
-    'indore',
-    'surat',
-    'kanpur',
-    'varanasi',
-    'visakhapatnam',
-    'coimbatore',
-    'madurai',
-  };
-
   AppStore()
     : area = GeoArea(
         city: 'Delhi',
@@ -175,7 +145,9 @@ class AppStore extends ChangeNotifier {
     required double radiusKm,
   }) {
     final normalized = city.trim().toLowerCase();
-    if (!_supportedIndianCities.contains(normalized)) {
+    final isSupported = kCityCoordinates.keys
+        .any((k) => k.toLowerCase() == normalized);
+    if (!isSupported) {
       syncState = SyncState.error;
       lastError = 'Only supported Indian cities are allowed';
       notifyListeners();

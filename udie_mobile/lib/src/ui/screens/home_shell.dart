@@ -22,6 +22,7 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
+  late final List<Widget> _pages;
 
   static const _destinations = [
     (
@@ -47,37 +48,39 @@ class _HomeShellState extends State<HomeShell> {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: widget.store,
-      builder: (context, _) {
-        final pages = [
-          MapScreen(store: widget.store),
-          NewsScreen(store: widget.store),
-          RouteScreen(store: widget.store),
-          SourcesScreen(store: widget.store),
-        ];
+  void initState() {
+    super.initState();
+    // Pages are created once and reused.  Each screen subscribes to the
+    // store via its own ListenableBuilder, so they update independently
+    // without causing the entire shell to rebuild.
+    _pages = [
+      MapScreen(store: widget.store),
+      NewsScreen(store: widget.store),
+      RouteScreen(store: widget.store),
+      SourcesScreen(store: widget.store),
+    ];
+  }
 
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: UdieTheme.bgGradient,
-          ),
-          child: Scaffold(
-            backgroundColor: Colors.transparent,
-            extendBodyBehindAppBar: true,
-            appBar: _BlurAppBar(store: widget.store),
-            body: IndexedStack(
-              index: _index,
-              children: pages,
-            ),
-            bottomNavigationBar: _BottomNav(
-              selectedIndex: _index,
-              onChanged: (v) => setState(() => _index = v),
-              destinations: _destinations,
-            ),
-          ),
-        );
-      },
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: UdieTheme.bgGradient,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: _BlurAppBar(store: widget.store),
+        body: IndexedStack(
+          index: _index,
+          children: _pages,
+        ),
+        bottomNavigationBar: _BottomNav(
+          selectedIndex: _index,
+          onChanged: (v) => setState(() => _index = v),
+          destinations: _destinations,
+        ),
+      ),
     );
   }
 }
@@ -94,85 +97,90 @@ class _BlurAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final top = MediaQuery.of(context).padding.top;
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          height: kToolbarHeight + top,
-          decoration: BoxDecoration(
-            color: UdieTheme.bg.withValues(alpha: 0.72),
-            border: const Border(
-              bottom: BorderSide(color: UdieTheme.border),
+    return ListenableBuilder(
+      listenable: store,
+      builder: (context, _) {
+        final top = MediaQuery.of(context).padding.top;
+        return ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              height: kToolbarHeight + top,
+              decoration: BoxDecoration(
+                color: UdieTheme.bg.withValues(alpha: 0.72),
+                border: const Border(
+                  bottom: BorderSide(color: UdieTheme.border),
+                ),
+              ),
+              padding: EdgeInsets.only(top: top, left: 16, right: 8),
+              child: Row(
+                children: [
+                  // Logo mark
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: UdieTheme.accent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(UdieTheme.radiusSm),
+                      border: Border.all(
+                        color: UdieTheme.accent.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.radar_rounded,
+                      color: UdieTheme.accent,
+                      size: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Title + subtitle
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'UDIE',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: UdieTheme.textPrimary,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        Text(
+                          '${store.area.city} · ${store.namespace}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: UdieTheme.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Sync badge
+                  SyncBadge(state: store.syncState),
+                  // Refresh button
+                  IconButton(
+                    tooltip: 'Sync now',
+                    onPressed: store.refreshAll,
+                    icon: AnimatedRotation(
+                      turns: store.syncState == SyncState.connecting ? 1 : 0,
+                      duration: const Duration(milliseconds: 600),
+                      child: const Icon(
+                        Icons.sync_rounded,
+                        size: 20,
+                        color: UdieTheme.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          padding: EdgeInsets.only(top: top, left: 16, right: 8),
-          child: Row(
-            children: [
-              // Logo mark
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: UdieTheme.accent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(UdieTheme.radiusSm),
-                  border: Border.all(
-                    color: UdieTheme.accent.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.radar_rounded,
-                  color: UdieTheme.accent,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 10),
-              // Title + subtitle
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'UDIE',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: UdieTheme.textPrimary,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    Text(
-                      '${store.area.city} · ${store.namespace}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: UdieTheme.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Sync badge
-              SyncBadge(state: store.syncState),
-              // Refresh button
-              IconButton(
-                tooltip: 'Sync now',
-                onPressed: store.refreshAll,
-                icon: AnimatedRotation(
-                  turns: store.syncState == SyncState.connecting ? 1 : 0,
-                  duration: const Duration(milliseconds: 600),
-                  child: const Icon(
-                    Icons.sync_rounded,
-                    size: 20,
-                    color: UdieTheme.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
