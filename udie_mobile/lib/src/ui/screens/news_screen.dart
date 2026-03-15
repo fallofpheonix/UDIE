@@ -7,86 +7,104 @@ import '../../state/app_store.dart';
 import '../../theme.dart';
 import '../widgets/skeleton_loader.dart';
 
-class NewsScreen extends StatelessWidget {
+class NewsScreen extends StatefulWidget {
   const NewsScreen({super.key, required this.store});
 
   final AppStore store;
 
   @override
-  Widget build(BuildContext context) {
-    final formatter = DateFormat('dd MMM, HH:mm');
-    final topPad = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
+  State<NewsScreen> createState() => _NewsScreenState();
+}
 
-    return Column(
-      children: [
-        SizedBox(height: topPad),
-        // ── Category filter strip ──────────────────────────────────────────
-        SizedBox(
-          height: 48,
-          child: ListView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: UdieTheme.sp12,
-              vertical: UdieTheme.sp6,
-            ),
-            scrollDirection: Axis.horizontal,
-            children: [
-              // "All" chip
-              _CategoryChip(
-                category: 'All',
-                icon: Icons.apps_rounded,
-                selected: store.activeNewsCategories.isEmpty,
-                color: UdieTheme.accent,
-                onTap: () {
-                  store.clearActiveCategories();
-                  store.refreshNewsOnly();
-                },
-              ),
-              const SizedBox(width: UdieTheme.sp6),
-              ...store.availableCategories.map(
-                (c) => Padding(
-                  padding: const EdgeInsets.only(right: UdieTheme.sp6),
-                  child: _CategoryChip(
-                    category: c,
-                    icon: UdieTheme.categoryIcon(c),
-                    selected: store.activeNewsCategories.contains(c),
-                    color: UdieTheme.categoryColor(c),
+class _NewsScreenState extends State<NewsScreen> {
+  late final DateFormat _formatter;
+
+  @override
+  void initState() {
+    super.initState();
+    _formatter = DateFormat('dd MMM, HH:mm');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: widget.store,
+      builder: (context, _) {
+        final store = widget.store;
+        final topPad = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
+
+        return Column(
+          children: [
+            SizedBox(height: topPad),
+            // ── Category filter strip ──────────────────────────────────────────
+            SizedBox(
+              height: 48,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: UdieTheme.sp12,
+                  vertical: UdieTheme.sp6,
+                ),
+                scrollDirection: Axis.horizontal,
+                children: [
+                  // "All" chip
+                  _CategoryChip(
+                    category: 'All',
+                    icon: Icons.apps_rounded,
+                    selected: store.activeNewsCategories.isEmpty,
+                    color: UdieTheme.accent,
                     onTap: () {
-                      store.toggleCategory(c);
+                      store.clearActiveCategories();
                       store.refreshNewsOnly();
                     },
                   ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        // ── News list ──────────────────────────────────────────────────────
-        Expanded(
-          child: store.syncState == SyncState.connecting && store.news.isEmpty
-              ? const _LoadingSkeleton()
-              : store.news.isEmpty
-                  ? const _EmptyState()
-                  : RefreshIndicator(
-                      onRefresh: store.refreshNewsOnly,
-                      color: UdieTheme.accent,
-                      backgroundColor: UdieTheme.surface1,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(
-                          UdieTheme.sp12,
-                          UdieTheme.sp8,
-                          UdieTheme.sp12,
-                          UdieTheme.sp24,
-                        ),
-                        itemCount: store.news.length,
-                        itemBuilder: (context, index) {
-                          final item = store.news[index];
-                          return _NewsCard(item: item, formatter: formatter);
+                  const SizedBox(width: UdieTheme.sp6),
+                  ...store.availableCategories.map(
+                    (c) => Padding(
+                      padding: const EdgeInsets.only(right: UdieTheme.sp6),
+                      child: _CategoryChip(
+                        category: c,
+                        icon: UdieTheme.categoryIcon(c),
+                        selected: store.activeNewsCategories.contains(c),
+                        color: UdieTheme.categoryColor(c),
+                        onTap: () {
+                          store.toggleCategory(c);
+                          store.refreshNewsOnly();
                         },
                       ),
                     ),
-        ),
-      ],
+                  ),
+                ],
+              ),
+            ),
+            // ── News list ──────────────────────────────────────────────────────
+            Expanded(
+              child: store.syncState == SyncState.connecting && store.news.isEmpty
+                  ? const _LoadingSkeleton()
+                  : store.news.isEmpty
+                      ? const _EmptyState()
+                      : RefreshIndicator(
+                          onRefresh: store.refreshNewsOnly,
+                          color: UdieTheme.accent,
+                          backgroundColor: UdieTheme.surface1,
+                          child: ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(
+                              UdieTheme.sp12,
+                              UdieTheme.sp8,
+                              UdieTheme.sp12,
+                              UdieTheme.sp24,
+                            ),
+                            itemCount: store.news.length,
+                            itemBuilder: (context, index) {
+                              final item = store.news[index];
+                              return _NewsCard(item: item, formatter: _formatter);
+                            },
+                          ),
+                        ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -44,116 +44,121 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final store = widget.store;
-    final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
+    return ListenableBuilder(
+      listenable: widget.store,
+      builder: (context, _) {
+        final store = widget.store;
+        final topPadding = MediaQuery.of(context).padding.top + kToolbarHeight;
 
-    final markers = store.events
-        .take(_maxMarkers)
-        .map(
-          (event) => Marker(
-            point: event.point,
-            width: 56,
-            height: 56,
-            child: EventMarker(
-              event: event,
-              onTap: () => _showEventDetail(event),
-            ),
-          ),
-        )
-        .toList(growable: false);
-
-    final isLoading = store.syncState == SyncState.connecting;
-
-    return Stack(
-      children: [
-        // ── Map ─────────────────────────────────────────────────────────────
-        FlutterMap(
-          mapController: _mapController,
-          key: ValueKey(
-            '${store.area.center.latitude}-'
-            '${store.area.center.longitude}-'
-            '${store.area.radiusKm}',
-          ),
-          options: MapOptions(
-            initialCenter: store.area.center,
-            initialZoom: 11,
-            interactionOptions: const InteractionOptions(
-              flags: InteractiveFlag.all,
-            ),
-          ),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.udie.mobile',
-            ),
-            CircleLayer(
-              circles: [
-                CircleMarker(
-                  point: store.area.center,
-                  radius: store.area.radiusKm * 1000,
-                  useRadiusInMeter: true,
-                  color: UdieTheme.accent.withValues(alpha: 0.07),
-                  borderColor: UdieTheme.accent.withValues(alpha: 0.5),
-                  borderStrokeWidth: 1.5,
+        final markers = store.events
+            .take(_maxMarkers)
+            .map(
+              (event) => Marker(
+                point: event.point,
+                width: 56,
+                height: 56,
+                child: EventMarker(
+                  event: event,
+                  onTap: () => _showEventDetail(event),
                 ),
+              ),
+            )
+            .toList(growable: false);
+
+        final isLoading = store.syncState == SyncState.connecting;
+
+        return Stack(
+          children: [
+            // ── Map ───────────────────────────────────────────────────────────
+            FlutterMap(
+              mapController: _mapController,
+              key: ValueKey(
+                '${store.area.center.latitude}-'
+                '${store.area.center.longitude}-'
+                '${store.area.radiusKm}',
+              ),
+              options: MapOptions(
+                initialCenter: store.area.center,
+                initialZoom: 11,
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.all,
+                ),
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.udie.mobile',
+                ),
+                CircleLayer(
+                  circles: [
+                    CircleMarker(
+                      point: store.area.center,
+                      radius: store.area.radiusKm * 1000,
+                      useRadiusInMeter: true,
+                      color: UdieTheme.accent.withValues(alpha: 0.07),
+                      borderColor: UdieTheme.accent.withValues(alpha: 0.5),
+                      borderStrokeWidth: 1.5,
+                    ),
+                  ],
+                ),
+                MarkerLayer(markers: markers),
               ],
             ),
-            MarkerLayer(markers: markers),
+
+            // ── Loading bar ────────────────────────────────────────────────────
+            if (isLoading)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: LinearProgressIndicator(
+                  minHeight: 2,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(UdieTheme.accent),
+                ),
+              ),
+
+            // ── Floating action buttons (right side) ───────────────────────────
+            Positioned(
+              top: topPadding + 12,
+              right: 12,
+              child: _MapFABColumn(
+                onCenter: () => _mapController.move(
+                  store.area.center,
+                  _mapController.camera.zoom,
+                ),
+                onZoomIn: () => _mapController.move(
+                  _mapController.camera.center,
+                  _mapController.camera.zoom + 1,
+                ),
+                onZoomOut: () => _mapController.move(
+                  _mapController.camera.center,
+                  _mapController.camera.zoom - 1,
+                ),
+                onRefresh: store.refreshAll,
+              ),
+            ),
+
+            // ── Severity legend ────────────────────────────────────────────────
+            Positioned(
+              top: topPadding + 12,
+              left: 12,
+              child: const _MapLegend(),
+            ),
+
+            // ── Bottom info panel ──────────────────────────────────────────────
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: 12,
+              child: _BottomPanel(
+                store: store,
+                mapController: _mapController,
+              ),
+            ),
           ],
-        ),
-
-        // ── Loading bar ──────────────────────────────────────────────────────
-        if (isLoading)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: LinearProgressIndicator(
-              minHeight: 2,
-              backgroundColor: Colors.transparent,
-              valueColor: AlwaysStoppedAnimation<Color>(UdieTheme.accent),
-            ),
-          ),
-
-        // ── Floating action buttons (right side) ─────────────────────────────
-        Positioned(
-          top: topPadding + 12,
-          right: 12,
-          child: _MapFABColumn(
-            onCenter: () => _mapController.move(
-              store.area.center,
-              _mapController.camera.zoom,
-            ),
-            onZoomIn: () => _mapController.move(
-              _mapController.camera.center,
-              _mapController.camera.zoom + 1,
-            ),
-            onZoomOut: () => _mapController.move(
-              _mapController.camera.center,
-              _mapController.camera.zoom - 1,
-            ),
-            onRefresh: store.refreshAll,
-          ),
-        ),
-
-        // ── Severity legend ──────────────────────────────────────────────────
-        Positioned(
-          top: topPadding + 12,
-          left: 12,
-          child: const _MapLegend(),
-        ),
-
-        // ── Bottom info panel ────────────────────────────────────────────────
-        Positioned(
-          left: 12,
-          right: 12,
-          bottom: 12,
-          child: _BottomPanel(
-            store: store,
-            mapController: _mapController,
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

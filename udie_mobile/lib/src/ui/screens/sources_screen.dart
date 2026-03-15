@@ -15,34 +15,6 @@ class SourcesScreen extends StatefulWidget {
 }
 
 class _SourcesScreenState extends State<SourcesScreen> {
-  static const Map<String, List<double>> _indianCityCenters = {
-    'Delhi': [28.6139, 77.2090],
-    'Mumbai': [19.0760, 72.8777],
-    'Bengaluru': [12.9716, 77.5946],
-    'Chennai': [13.0827, 80.2707],
-    'Hyderabad': [17.3850, 78.4867],
-    'Kolkata': [22.5726, 88.3639],
-    'Pune': [18.5204, 73.8567],
-    'Ahmedabad': [23.0225, 72.5714],
-    'Jaipur': [26.9124, 75.7873],
-    'Lucknow': [26.8467, 80.9462],
-    'Bhopal': [23.2599, 77.4126],
-    'Patna': [25.5941, 85.1376],
-    'Guwahati': [26.1445, 91.7362],
-    'Chandigarh': [30.7333, 76.7794],
-    'Srinagar': [34.0837, 74.7973],
-    'Kochi': [9.9312, 76.2673],
-    'Thiruvananthapuram': [8.5241, 76.9366],
-    'Nagpur': [21.1458, 79.0882],
-    'Indore': [22.7196, 75.8577],
-    'Surat': [21.1702, 72.8311],
-    'Kanpur': [26.4499, 80.3319],
-    'Varanasi': [25.3176, 82.9739],
-    'Visakhapatnam': [17.6868, 83.2185],
-    'Coimbatore': [11.0168, 76.9558],
-    'Madurai': [9.9252, 78.1198],
-  };
-
   late final TextEditingController _baseUrl;
   late final TextEditingController _lat;
   late final TextEditingController _lng;
@@ -55,7 +27,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
     super.initState();
     final area = widget.store.area;
     _baseUrl = TextEditingController(text: widget.store.baseUrl);
-    _selectedCity = _indianCityCenters.keys.contains(area.city)
+    _selectedCity = kCityCoordinates.keys.contains(area.city)
         ? area.city
         : 'Delhi';
     _lat = TextEditingController(text: area.center.latitude.toStringAsFixed(6));
@@ -134,7 +106,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
                     color: UdieTheme.textMuted,
                   ),
                 ),
-                items: _indianCityCenters.keys
+                items: kCityCoordinates.keys
                     .map(
                       (city) => DropdownMenuItem<String>(
                         value: city,
@@ -144,7 +116,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
                     .toList(growable: false),
                 onChanged: (value) {
                   if (value == null) return;
-                  final center = _indianCityCenters[value]!;
+                  final center = kCityCoordinates[value]!;
                   setState(() {
                     _selectedCity = value;
                     _lat.text = center[0].toStringAsFixed(6);
@@ -239,93 +211,109 @@ class _SourcesScreenState extends State<SourcesScreen> {
                       ),
               ),
               // Error message
-              if (store.lastError != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: UdieTheme.sp10),
-                  child: Container(
-                    padding: const EdgeInsets.all(UdieTheme.sp10),
-                    decoration: BoxDecoration(
-                      color: UdieTheme.danger.withValues(alpha: 0.1),
-                      borderRadius:
-                          BorderRadius.circular(UdieTheme.radiusSm),
-                      border: Border.all(
-                        color: UdieTheme.danger.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.error_outline_rounded,
-                          size: 16,
-                          color: UdieTheme.danger,
+              ListenableBuilder(
+                listenable: widget.store,
+                builder: (context, _) {
+                  if (widget.store.lastError == null) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: UdieTheme.sp10),
+                    child: Container(
+                      padding: const EdgeInsets.all(UdieTheme.sp10),
+                      decoration: BoxDecoration(
+                        color: UdieTheme.danger.withValues(alpha: 0.1),
+                        borderRadius:
+                            BorderRadius.circular(UdieTheme.radiusSm),
+                        border: Border.all(
+                          color: UdieTheme.danger.withValues(alpha: 0.3),
                         ),
-                        const SizedBox(width: UdieTheme.sp8),
-                        Expanded(
-                          child: Text(
-                            store.lastError!,
-                            style: const TextStyle(
-                              color: UdieTheme.danger,
-                              fontSize: 12,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline_rounded,
+                            size: 16,
+                            color: UdieTheme.danger,
+                          ),
+                          const SizedBox(width: UdieTheme.sp8),
+                          Expanded(
+                            child: Text(
+                              widget.store.lastError!,
+                              style: const TextStyle(
+                                color: UdieTheme.danger,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
+              ),
             ],
           ),
         ),
         const SizedBox(height: UdieTheme.sp24),
 
         // ── Source diagnostics section ─────────────────────────────────────
-        SectionHeader(
-          'Source Diagnostics',
-          trailing: Text(
-            '${store.sources.length} sources',
-            style: const TextStyle(
-              fontSize: 11,
-              color: UdieTheme.textMuted,
-            ),
-          ),
-        ),
-        const SizedBox(height: UdieTheme.sp12),
-        if (store.sources.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(UdieTheme.sp20),
-            decoration: BoxDecoration(
-              color: UdieTheme.surface1,
-              borderRadius: BorderRadius.circular(UdieTheme.radiusLg),
-              border: Border.all(color: UdieTheme.border),
-            ),
-            child: const Center(
-              child: Text(
-                'No source data – sync to load diagnostics.',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: UdieTheme.textMuted,
-                ),
-              ),
-            ),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: UdieTheme.surface1,
-              borderRadius: BorderRadius.circular(UdieTheme.radiusLg),
-              border: Border.all(color: UdieTheme.border),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
+        ListenableBuilder(
+          listenable: widget.store,
+          builder: (context, _) {
+            final sources = widget.store.sources;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (var i = 0; i < store.sources.length; i++) ...[
-                  if (i > 0)
-                    const Divider(height: 1, indent: 16, endIndent: 16),
-                  _SourceRow(source: store.sources[i]),
-                ],
+                SectionHeader(
+                  'Source Diagnostics',
+                  trailing: Text(
+                    '${sources.length} sources',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: UdieTheme.textMuted,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: UdieTheme.sp12),
+                if (sources.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(UdieTheme.sp20),
+                    decoration: BoxDecoration(
+                      color: UdieTheme.surface1,
+                      borderRadius: BorderRadius.circular(UdieTheme.radiusLg),
+                      border: Border.all(color: UdieTheme.border),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'No source data – sync to load diagnostics.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: UdieTheme.textMuted,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    decoration: BoxDecoration(
+                      color: UdieTheme.surface1,
+                      borderRadius: BorderRadius.circular(UdieTheme.radiusLg),
+                      border: Border.all(color: UdieTheme.border),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        for (var i = 0; i < sources.length; i++) ...[
+                          if (i > 0)
+                            const Divider(height: 1, indent: 16, endIndent: 16),
+                          _SourceRow(source: sources[i]),
+                        ],
+                      ],
+                    ),
+                  ),
               ],
-            ),
-          ),
+            );
+          },
+        ),
       ],
     );
   }
