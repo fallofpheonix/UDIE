@@ -358,7 +358,10 @@ export class RouteOptionsService {
       };
     }
 
-    const distanceKm = haversineKm(dto.origin.lat, dto.origin.lng, dto.destination.lat, dto.destination.lng);
+    const distanceKm = haversineKm(
+      dto.origin.lat, dto.origin.lng,
+      dto.destination.lat, dto.destination.lng,
+    );
     const startNode = await this.findNearestNode(dto.origin, dto.city_id);
     const endNode = await this.findNearestNode(dto.destination, dto.city_id);
     if (!startNode || !endNode) {
@@ -461,7 +464,10 @@ export class RouteOptionsService {
   }
 
   private async loadGraph(origin: LatLngDto, destination: LatLngDto, cityId?: string): Promise<Graph> {
-    const distanceKm = haversineKm(origin.lat, origin.lng, destination.lat, destination.lng);
+    const distanceKm = haversineKm(
+      origin.lat, origin.lng,
+      destination.lat, destination.lng,
+    );
     const margin = Math.max(0.05, distanceKm / 80);
     const minLat = Math.min(origin.lat, destination.lat) - margin;
     const maxLat = Math.max(origin.lat, destination.lat) + margin;

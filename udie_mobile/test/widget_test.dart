@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 
 import 'package:udie_mobile/src/models.dart';
-import 'package:udie_mobile/src/api_client.dart';
 
 void main() {
   // ──────────────────────────────────────────────────────────
