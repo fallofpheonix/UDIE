@@ -1,17 +1,17 @@
 # Architecture Reference
 
-UDIE follows a **Log-Derived Pattern**. The system distinguishes strictly between the immutable source of truth and versioned projections.
+UDIE follows a log-derived pattern. The system distinguishes strictly between the immutable source of truth and versioned projections.
 
-## 🏗 System Philosophy
+## System Philosophy
 
-- **Events Log = Authoritative State**: Every derived grid or view can be replayed from the event log.
-- **Bounded Request Logic**: Request-time logic is O(route\_cells), never O(historical\_events).
-- **Spatial Sovereignty**: The backend owns all intelligence; clients are thin observers.
+- **Events log = authoritative state.** Every derived grid or view can be replayed from the event log.
+- **Bounded request logic.** Request-time logic is O(route\_cells), never O(historical\_events).
+- **Spatial sovereignty.** The backend owns all intelligence; clients are thin observers.
 
-## 🧱 Core Subsystems
+## Core Subsystems
 
 ### 1. Ingestion Layer
-Normalizes signals from REST, WebSocket, and Kafka. Signals are validated against geographic bounds and appended to the `events_log`.
+Normalizes signals from REST and WebSocket transports. Signals are validated against geographic bounds and appended to the `events_log`.
 
 ### 2. Spatial Compute Engine
 Uses Uber H3 resolution 9 as the primary indexing unit. Aggregates event weights into decayed risk scores across a materialized `risk_cells` surface.
@@ -21,19 +21,16 @@ Uses Uber H3 resolution 9 as the primary indexing unit. Aggregates event weights
 - **Lifecycle Worker**: Manages temporal decay and event expiration.
 - **Snapshot Worker**: Captures periodic global grid states for analysis.
 
-## 🚦 Architecture Decisions (ADRs)
+## Architecture Decision Records
 
-- **ADR-001**: Event-Sourced Spatial Compute as the sole source of truth.
-- **ADR-002**: H3 Standard for discretized spatial addressing.
-- **ADR-003**: Precomputed Risk Surface to ensure sub-millisecond hot-path lookups.
-- **ADR-004**: Thin Clients to centralize intelligence authority.
-- **ADR-005**: Environment-Aware Base URL resolution for simulator vs physical device stability.
+- **ADR-001**: Event-sourced spatial compute as the sole source of truth.
+- **ADR-002**: H3 standard for discretized spatial addressing.
+- **ADR-003**: Precomputed risk surface to ensure sub-millisecond hot-path lookups.
+- **ADR-004**: Thin clients to centralize intelligence authority.
+- **ADR-005**: Environment-aware base URL resolution for simulator vs physical device stability.
 
-## ⚖️ Architectural Laws
+## Architectural Constraints
 
-All components must adhere to the **Laws of UDIE**, including:
-- **Law of Deterministic Rebuild**: $\text{state} = f(\text{logs})$.
-- **Law of Hot Path Isolation**: Evaluation cost $\perp$ event count.
-- **Law of Derived-Status Purity**: No manual mutation of materialized tables.
-
-Refer to [SYSTEM_DESIGN.md](file:///Users/fallofpheonix/Project/UDIE/SYSTEM_DESIGN.md) for detailed mathematical and theoretical foundations.
+- **Deterministic rebuild**: `state = f(logs)`. All derived state must be reproducible from the event log alone.
+- **Hot path isolation**: Evaluation cost must be independent of total event volume.
+- **Derived-state purity**: No manual mutation of materialized tables.

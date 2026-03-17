@@ -1,4 +1,4 @@
-import { IntelligenceInsight, IntelligenceRuleConfig, InsightSeverity } from './IntelligenceTypes';
+import { IntelligenceInsight, IntelligenceRuleConfig, InsightSeverity } from './intelligence.types';
 
 export function toSeverity(weight: number, hotspotThreshold: number): InsightSeverity {
   if (weight >= hotspotThreshold * 2) return 'HIGH';

@@ -7,8 +7,8 @@ import {
   IntelligenceInsight,
   IntelligenceQuery,
   IntelligenceRuleConfig,
-} from './IntelligenceTypes';
-import { hotspotInsight, recurringInsight, spikeInsight } from './IntelligenceRules';
+} from './intelligence.types';
+import { hotspotInsight, recurringInsight, spikeInsight } from './intelligence.rules';
 
 @Injectable()
 export class IntelligenceService {
@@ -21,8 +21,8 @@ export class IntelligenceService {
   ) { }
 
   /**
-   * Orchestrates the pattern detection loop.
-   * Law: Intelligence is asynchronous and does not block ingestion.
+   * Runs the full pattern analysis loop over all active H3 cells.
+   * Runs asynchronously to avoid blocking ingestion throughput.
    */
   async runAnalysis(): Promise<number> {
     this.logger.log('[INTEL] Starting nationwide pattern analysis...');

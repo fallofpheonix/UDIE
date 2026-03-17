@@ -20,7 +20,6 @@ import { DiagnosticsModule } from './modules/diagnostics/diagnostics.module';
 import { SimulationModule } from './modules/simulation/simulation.module';
 import { MetricsModule } from './metrics/metrics.module';
 
-// Role definition defaults
 const NODE_ROLE = process.env.NODE_ROLE || 'ALL';
 const roles = NODE_ROLE.toUpperCase().split(',');
 const isAll = roles.includes('ALL');

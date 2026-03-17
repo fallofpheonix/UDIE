@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { IntelligenceService } from './IntelligenceService';
+import { IntelligenceService } from './intelligence.service';
 import { DatabaseService } from '../database/database.service';
 import { AnomalyDetectionService } from './anomaly-detection.service';
 

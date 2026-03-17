@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { IntelligenceService } from './IntelligenceService';
+import { IntelligenceService } from './intelligence.service';
 
 class IntelligenceQueryDto {
   regionId?: string;

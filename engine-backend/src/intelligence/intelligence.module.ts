@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
-import { IntelligenceService } from './IntelligenceService';
+import { IntelligenceService } from './intelligence.service';
 import { IntelligenceController } from './intelligence.controller';
 import { IntelligenceWorker } from './intelligence.worker';
 import { RiskModule } from '../modules/risk/risk.module';
