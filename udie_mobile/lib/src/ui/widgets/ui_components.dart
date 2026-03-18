@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme.dart';
+import '../../theme/udie_theme.dart';
 
 /// A small colored badge showing a count and a short label.
 ///

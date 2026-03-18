@@ -5,15 +5,15 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../api_client.dart';
-import '../models.dart';
+import '../api/api_client.dart';
+import '../models/app_models.dart';
 
 class AppStore extends ChangeNotifier {
   AppStore()
     : area = GeoArea(
-        city: 'Delhi',
-        center: const LatLng(28.6139, 77.2090),
-        radiusKm: 10,
+        city: kOperationalCityName,
+        center: const LatLng(kBhopalLatitude, kBhopalLongitude),
+        radiusKm: 8,
       ),
       _baseUrl = _defaultBaseUrl(),
       _client = ApiClient(baseUrl: _defaultBaseUrl());
@@ -90,15 +90,9 @@ class AppStore extends ChangeNotifier {
     _transition(SyncState.syncing);
 
     try {
-      final results = await Future.wait([
-        _client.fetchEvents(area),
-        _client.fetchNews(area, categories: activeNewsCategories),
-        _client.fetchSources(area),
-      ]);
-
-      events = results[0] as List<DisruptionEvent>;
-      news = results[1] as List<AreaNewsItem>;
-      sources = results[2] as List<SourceStatus>;
+      events = await _client.fetchEvents(area);
+      news = const [];
+      sources = const [];
       lastSyncedAt = DateTime.now();
       _reconnectAttempts = 0;
       _cancelReconnect();
@@ -115,23 +109,9 @@ class AppStore extends ChangeNotifier {
   }
 
   Future<void> refreshNewsOnly() async {
-    _transition(SyncState.syncing, clearError: true);
-
-    try {
-      news = await _client.fetchNews(
-        area,
-        categories: activeNewsCategories,
-      );
-      lastSyncedAt = DateTime.now();
-      _transition(SyncState.synced, clearError: true);
-    } on SocketException catch (e) {
-      _fail('Transport failure: ${e.message}', scheduleReconnect: true);
-    } on HttpException catch (e) {
-      _fail('Data-plane failure: ${e.message}');
-    } on FormatException catch (e) {
-      _fail('API contract failure: ${e.message}');
-    } on Exception catch (e) {
-      _fail('Data-plane failure: $e');
+    news = const [];
+    if (!_disposed) {
+      notifyListeners();
     }
   }
 
@@ -171,15 +151,12 @@ class AppStore extends ChangeNotifier {
     required double lng,
     required double radiusKm,
   }) {
-    final normalized = city.trim().toLowerCase();
-    final isSupported = kCityCoordinates.keys
-        .any((k) => k.toLowerCase() == normalized);
-    if (!isSupported) {
-      _fail('Data-plane failure: only supported Indian cities are allowed');
+    if (city.trim().toLowerCase() != kOperationalCityName.toLowerCase()) {
+      _fail('Data-plane failure: only $kOperationalCityName is supported');
       return;
     }
 
-    area.city = city;
+    area.city = kOperationalCityName;
     area.center = LatLng(lat, lng);
     area.radiusKm = radiusKm;
     notifyListeners();

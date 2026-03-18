@@ -2,19 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
 
-import '../../models.dart';
+import '../../models/app_models.dart';
 import '../../state/app_store.dart';
-import '../../theme.dart';
+import '../../theme/udie_theme.dart';
+import 'emergency_report_ui.dart';
 import '../widgets/event_marker.dart';
-import '../widgets/ui_components.dart';
-
-const double _kHighSeverity = 0.7;
-const double _kMedSeverity = 0.35;
+import '../widgets/glass_event_sheet.dart';
+import '../widgets/hud_sync_overlay.dart';
+import '../widgets/live_feed_sheet.dart';
+import '../widgets/pulsing_emergency_fab.dart';
+import '../widgets/radar_empty_state.dart';
+import '../widgets/route_risk_scanner.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key, required this.store});
+  const MapScreen({
+    super.key,
+    required this.store,
+    this.onOpenRoutePlanner,
+  });
 
   final AppStore store;
+  final VoidCallback? onOpenRoutePlanner;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -32,13 +40,10 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _showEventDetail(DisruptionEvent event) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (ctx) =>
-          _EventDetailSheet(event: event, timeFormat: _timeFormat),
+    showGlassEventSheet(
+      context,
+      event: event,
+      observedAt: _timeFormat.format(event.updatedAt.toLocal()),
     );
   }
 
@@ -105,22 +110,34 @@ class _MapScreenState extends State<MapScreen> {
               ],
             ),
 
-            // ── Loading bar ────────────────────────────────────────────────────
+            // ── Sync overlay ───────────────────────────────────────────────────
             if (isLoading)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: LinearProgressIndicator(
-                  minHeight: 2,
-                  backgroundColor: Colors.transparent,
-                  valueColor: AlwaysStoppedAnimation<Color>(UdieTheme.accent),
-                ),
+              const Positioned.fill(
+                child: HudSyncOverlay(),
               ),
+
+            if (!isLoading && store.events.isEmpty)
+              const Positioned.fill(
+                child: RadarEmptyState(),
+              ),
+
+            Positioned(
+              top: topPadding + 8,
+              left: 12,
+              right: 12,
+              child: RouteRiskScanner(
+                isScanning: false,
+                originLabel: store.area.city,
+                destinationLabel: 'Select destination in route planner',
+                actionLabel: 'OPEN ROUTE ANALYZER',
+                onAnalyzeRoute:
+                    widget.onOpenRoutePlanner ?? widget.store.refreshAll,
+              ),
+            ),
 
             // ── Floating action buttons (right side) ───────────────────────────
             Positioned(
-              top: topPadding + 12,
+              top: topPadding + 184,
               right: 12,
               child: _MapFABColumn(
                 onCenter: () => _mapController.move(
@@ -139,21 +156,32 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
 
+            Positioned(
+              right: 16,
+              bottom: 132,
+              child: PulsingEmergencyFab(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const EmergencyReportUI(),
+                    ),
+                  );
+                },
+              ),
+            ),
+
             // ── Severity legend ────────────────────────────────────────────────
             Positioned(
-              top: topPadding + 12,
+              top: topPadding + 184,
               left: 12,
               child: const _MapLegend(),
             ),
 
-            // ── Bottom info panel ──────────────────────────────────────────────
-            Positioned(
-              left: 12,
-              right: 12,
-              bottom: 12,
-              child: _BottomPanel(
-                store: store,
-                mapController: _mapController,
+            Positioned.fill(
+              child: LiveFeedSheet(
+                events: store.events,
+                syncState: store.syncState,
+                onSelectEvent: _showEventDetail,
               ),
             ),
           ],
@@ -335,288 +363,6 @@ class _LegendRow extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ── Bottom panel ──────────────────────────────────────────────────────────────
-
-class _BottomPanel extends StatelessWidget {
-  const _BottomPanel({required this.store, required this.mapController});
-
-  final AppStore store;
-  final MapController mapController;
-
-  @override
-  Widget build(BuildContext context) {
-    final high = store.events
-        .where((e) => e.severity >= _kHighSeverity)
-        .length;
-    final med = store.events
-        .where((e) =>
-            e.severity >= _kMedSeverity && e.severity < _kHighSeverity)
-        .length;
-    final low = store.events
-        .where((e) => e.severity < _kMedSeverity)
-        .length;
-
-    return Container(
-      decoration: UdieTheme.glassDecoration(
-        color: UdieTheme.surface0,
-        borderRadius: UdieTheme.radiusXl,
-      ),
-      padding: const EdgeInsets.fromLTRB(
-        UdieTheme.sp16,
-        UdieTheme.sp16,
-        UdieTheme.sp16,
-        UdieTheme.sp12,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // City + severity row
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      store.area.city,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 17,
-                        color: UdieTheme.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${store.events.length} active disruptions',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: UdieTheme.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: UdieTheme.sp12),
-              SeverityCountBadge(
-                count: high,
-                color: UdieTheme.danger,
-                label: 'HIGH',
-              ),
-              const SizedBox(width: UdieTheme.sp6),
-              SeverityCountBadge(
-                count: med,
-                color: UdieTheme.caution,
-                label: 'MED',
-              ),
-              const SizedBox(width: UdieTheme.sp6),
-              SeverityCountBadge(
-                count: low,
-                color: UdieTheme.ok,
-                label: 'LOW',
-              ),
-            ],
-          ),
-          const SizedBox(height: UdieTheme.sp12),
-          // Radius row
-          Row(
-            children: [
-              const Icon(
-                Icons.radio_button_checked_rounded,
-                size: 14,
-                color: UdieTheme.accent,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${store.area.radiusKm.toStringAsFixed(0)} km radius',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: UdieTheme.textSecondary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Expanded(
-                child: Slider(
-                  min: 1,
-                  max: 20,
-                  divisions: 19,
-                  value: store.area.radiusKm,
-                  onChanged: (v) {
-                    store.updateArea(
-                      city: store.area.city,
-                      lat: store.area.center.latitude,
-                      lng: store.area.center.longitude,
-                      radiusKm: v,
-                    );
-                  },
-                  onChangeEnd: (_) => store.refreshAll(),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Event detail bottom sheet ─────────────────────────────────────────────────
-
-class _EventDetailSheet extends StatelessWidget {
-  const _EventDetailSheet({required this.event, required this.timeFormat});
-
-  final DisruptionEvent event;
-  final DateFormat timeFormat;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = UdieTheme.categoryColor(event.category);
-    final icon = UdieTheme.categoryIcon(event.category);
-    final riskColor = UdieTheme.riskColor(event.severity);
-    final riskLabel = UdieTheme.riskLabel(event.severity);
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 20),
-      decoration: BoxDecoration(
-        color: UdieTheme.surface1,
-        borderRadius: BorderRadius.circular(UdieTheme.radiusXl),
-        border: Border.all(color: UdieTheme.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 32,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const DragHandle(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              UdieTheme.sp16,
-              0,
-              UdieTheme.sp16,
-              UdieTheme.sp20,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header row
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(UdieTheme.radiusMd),
-                        border: Border.all(
-                          color: color.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Icon(icon, color: color, size: 22),
-                    ),
-                    const SizedBox(width: UdieTheme.sp12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event.category.toUpperCase(),
-                            style: TextStyle(
-                              color: color,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            event.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              color: UdieTheme.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: UdieTheme.sp8),
-                    // Severity badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: UdieTheme.sp8,
-                        vertical: UdieTheme.sp4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: riskColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(UdieTheme.radiusSm),
-                        border: Border.all(
-                          color: riskColor.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            (event.severity * 100).toStringAsFixed(0),
-                            style: TextStyle(
-                              color: riskColor,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              height: 1.1,
-                            ),
-                          ),
-                          Text(
-                            riskLabel,
-                            style: TextStyle(
-                              color: riskColor.withValues(alpha: 0.8),
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: UdieTheme.sp16),
-                Container(
-                  height: 1,
-                  color: UdieTheme.border,
-                ),
-                const SizedBox(height: UdieTheme.sp16),
-                InfoRow(
-                  icon: Icons.source_outlined,
-                  label: 'Source',
-                  value: event.source,
-                ),
-                const SizedBox(height: UdieTheme.sp12),
-                InfoRow(
-                  icon: Icons.location_on_outlined,
-                  label: 'Coordinates',
-                  value:
-                      '${event.lat.toStringAsFixed(4)}, ${event.lng.toStringAsFixed(4)}',
-                ),
-                const SizedBox(height: UdieTheme.sp12),
-                InfoRow(
-                  icon: Icons.schedule_outlined,
-                  label: 'Last Updated',
-                  value: timeFormat.format(event.updatedAt.toLocal()),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

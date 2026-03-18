@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../models.dart';
+import '../../models/app_models.dart';
 import '../../state/app_store.dart';
-import '../../theme.dart';
+import '../../theme/udie_theme.dart';
 import '../widgets/ui_components.dart';
 
 class SourcesScreen extends StatefulWidget {
@@ -29,7 +29,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
     _baseUrl = TextEditingController(text: widget.store.baseUrl);
     _selectedCity = kCityCoordinates.keys.contains(area.city)
         ? area.city
-        : 'Delhi';
+        : kOperationalCityName;
     _lat = TextEditingController(text: area.center.latitude.toStringAsFixed(6));
     _lng = TextEditingController(
       text: area.center.longitude.toStringAsFixed(6),

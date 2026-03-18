@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:udie_mobile/src/models.dart';
+import 'package:udie_mobile/src/models/app_models.dart';
 
 void main() {
   // ──────────────────────────────────────────────────────────
@@ -41,6 +41,27 @@ void main() {
       expect(event.lng, 0.0);
       expect(event.severity, 0.0);
       expect(event.updatedAt, DateTime.fromMillisecondsSinceEpoch(0));
+    });
+
+    test('parses backend events endpoint shape', () {
+      final json = {
+        'id': 'evt-bpl-1',
+        'source': 'user',
+        'event_type': 'ACCIDENT',
+        'severity': 4,
+        'latitude': 23.2337,
+        'longitude': 77.4344,
+        'observed_at': '2026-03-18T20:51:40.883Z',
+      };
+
+      final event = DisruptionEvent.fromJson(json);
+
+      expect(event.category, 'accident');
+      expect(event.title, 'ACCIDENT');
+      expect(event.lat, 23.2337);
+      expect(event.lng, 77.4344);
+      expect(event.severity, 0.8);
+      expect(event.updatedAt.toUtc().toIso8601String(), '2026-03-18T20:51:40.883Z');
     });
 
     test('point getter returns correct LatLng', () {
@@ -167,15 +188,28 @@ void main() {
   group('GeoArea.toQuery', () {
     test('produces correct query map keys', () {
       final area = GeoArea(
-        city: 'Mumbai',
-        center: LatLng(19.076, 72.8777),
-        radiusKm: 10,
+        city: kOperationalCityName,
+        center: const LatLng(kBhopalLatitude, kBhopalLongitude),
+        radiusKm: 8,
       );
       final query = area.toQuery();
-      expect(query['city'], 'Mumbai');
+      expect(query['city'], kOperationalCityName);
       expect(query.containsKey('lat'), isTrue);
       expect(query.containsKey('lng'), isTrue);
       expect(query.containsKey('radiusKm'), isTrue);
+    });
+
+    test('toBoundingBoxQuery produces bbox keys', () {
+      final area = GeoArea(
+        city: kOperationalCityName,
+        center: const LatLng(kBhopalLatitude, kBhopalLongitude),
+        radiusKm: 8,
+      );
+      final query = area.toBoundingBoxQuery();
+      expect(query.containsKey('minLat'), isTrue);
+      expect(query.containsKey('maxLat'), isTrue);
+      expect(query.containsKey('minLng'), isTrue);
+      expect(query.containsKey('maxLng'), isTrue);
     });
   });
 }

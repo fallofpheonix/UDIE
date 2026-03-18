@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme.dart';
+import '../../theme/udie_theme.dart';
 
 /// A card with a subtle frosted-glass look that fits the UDIE design system.
 ///

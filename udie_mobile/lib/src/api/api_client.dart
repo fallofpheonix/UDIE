@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-import 'models.dart';
+import '../models/app_models.dart';
 
 class ApiClient {
   ApiClient({required this.baseUrl}) : _client = http.Client();
@@ -17,24 +17,40 @@ class ApiClient {
   }
 
   Future<void> detectNamespace() async {
-    final probes = ['/api/health', '/api/v1/health'];
+    const probes = <String>[
+      '/health/ready',
+      '/health/live',
+      '/api/v1/health/ready',
+      '/api/v1/health/live',
+      '/api/health',
+      '/api/v1/health',
+    ];
+
     for (final path in probes) {
       final uri = _buildUri(path, const {});
       try {
         final resp = await _client.get(uri).timeout(const Duration(seconds: 4));
         if (resp.statusCode == 200) {
-          namespace = path.startsWith('/api/v1') ? '/api/v1' : '/api';
+          if (path.startsWith('/api/v1/')) {
+            namespace = '/api/v1';
+          } else if (path.startsWith('/api/')) {
+            namespace = '/api';
+          } else {
+            namespace = '';
+          }
           return;
         }
       } on Exception {
         // Try next candidate.
       }
     }
-    throw const SocketException('Failed namespace probe for /api and /api/v1');
+    throw const SocketException(
+      'Failed health probe for /health/live,/health/ready,/api,/api/v1',
+    );
   }
 
   Future<List<DisruptionEvent>> fetchEvents(GeoArea area) async {
-    final data = await _getList('$namespace/events', area.toQuery());
+    final data = await _getList('$namespace/events', area.toBoundingBoxQuery());
     return data.map((e) => DisruptionEvent.fromJson(e)).toList();
   }
 

@@ -39,4 +39,36 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
   end
+
+  Dir.glob(File.join(__dir__, 'Pods', 'Target Support Files', 'Pods-*', '*-frameworks.sh')).each do |script_path|
+    contents = File.read(script_path)
+    next if contents.include?('FRAMEWORK_SOURCE_FALLBACK')
+
+    original = <<~'SH'
+        local destination="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+
+        if [ -L "${source}" ]; then
+    SH
+
+    replacement = <<~'SH'
+        local destination="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+        local fallback_source
+        fallback_source="${PROJECT_DIR}/../build/ios/${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}/$(basename "$1")" # FRAMEWORK_SOURCE_FALLBACK
+
+        if [ -z "${source+x}" ] && [ -r "${fallback_source}" ]; then
+          source="${fallback_source}"
+        fi
+
+        if [ -z "${source+x}" ]; then
+          echo "warning: [CP] Unable to resolve framework source for $1"
+          return
+        fi
+
+        if [ -L "${source}" ]; then
+    SH
+
+    next unless contents.include?(original)
+
+    File.write(script_path, contents.sub(original, replacement))
+  end
 end

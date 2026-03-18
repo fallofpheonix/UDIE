@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme.dart';
+import '../../theme/udie_theme.dart';
 
 /// A skeleton shimmer placeholder used while data is loading.
 ///

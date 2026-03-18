@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'state/app_store.dart';
-import 'theme.dart';
+import 'theme/udie_theme.dart';
+import 'ui/screens/boot_sequence_screen.dart';
 import 'ui/screens/home_shell.dart';
 
 class UdieApp extends StatefulWidget {
@@ -13,6 +14,7 @@ class UdieApp extends StatefulWidget {
 
 class _UdieAppState extends State<UdieApp> {
   late final AppStore _store;
+  bool _bootComplete = false;
 
   @override
   void initState() {
@@ -35,7 +37,17 @@ class _UdieAppState extends State<UdieApp> {
       title: 'UDIE Mobile',
       debugShowCheckedModeBanner: false,
       theme: UdieTheme.build(),
-      home: HomeShell(store: _store),
+      home: _bootComplete
+          ? HomeShell(store: _store)
+          : BootSequenceScreen(
+              store: _store,
+              onBootComplete: () {
+                if (!mounted || _bootComplete) {
+                  return;
+                }
+                setState(() => _bootComplete = true);
+              },
+            ),
     );
   }
 }

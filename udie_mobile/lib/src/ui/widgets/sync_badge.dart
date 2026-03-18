@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../models.dart';
-import '../../theme.dart';
+import '../../models/app_models.dart';
+import '../../theme/udie_theme.dart';
 
 /// A compact pill badge that shows the current sync state.
 ///

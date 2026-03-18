@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-import '../../models.dart';
+import '../../models/app_models.dart';
 import '../../state/app_store.dart';
-import '../../theme.dart';
+import '../../theme/udie_theme.dart';
 import '../widgets/skeleton_loader.dart';
 
 class NewsScreen extends StatefulWidget {

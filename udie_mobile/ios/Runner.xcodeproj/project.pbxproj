@@ -199,6 +199,7 @@
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 				0F0CBA60AC4593DE636441B5 /* [CP] Embed Pods Frameworks */,
+				C8C0E7F99831A0D400A1B2C3 /* Re-sign Native Asset Frameworks */,
 			);
 			buildRules = (
 			);
@@ -324,6 +325,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin";
+		};
+		C8C0E7F99831A0D400A1B2C3 /* Re-sign Native Asset Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${TARGET_BUILD_DIR}/${WRAPPER_NAME}/Frameworks",
+			);
+			name = "Re-sign Native Asset Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"$PLATFORM_NAME\" != \"iphoneos\" ]; then\n  exit 0\nfi\n\nif [ -z \"$EXPANDED_CODE_SIGN_IDENTITY\" ]; then\n  echo \"warning: code signing identity is empty, skipping native asset re-sign\"\n  exit 0\nfi\n\nFRAMEWORKS_DIR=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}/Frameworks\"\nif [ ! -d \"$FRAMEWORKS_DIR\" ]; then\n  exit 0\nfi\n\nfind \"$FRAMEWORKS_DIR\" -maxdepth 1 -type d -name \"*.framework\" | while IFS= read -r framework; do\n  team_id=$(/usr/bin/codesign -dv --verbose=4 \"$framework\" 2>&1 | /usr/bin/awk -F= '/^TeamIdentifier=/{print $2}')\n  if [ -z \"$team_id\" ] || [ \"$team_id\" = \"not set\" ]; then\n    echo \"Re-signing embedded framework: $(basename \"$framework\")\"\n    /usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --preserve-metadata=identifier,entitlements,flags --timestamp=none \"$framework\"\n  fi\ndone\n";
 		};
 		9740EEB61CF901F6004384FC /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -473,6 +490,10 @@
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 9HRB674593;
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../build/ios/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+				);
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -656,6 +677,10 @@
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 9HRB674593;
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../build/ios/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+				);
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -679,6 +704,10 @@
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DEVELOPMENT_TEAM = 9HRB674593;
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/../build/ios/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)",
+				);
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

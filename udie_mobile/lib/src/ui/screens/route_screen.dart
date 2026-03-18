@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../models.dart';
+import '../../models/app_models.dart';
 import '../../state/app_store.dart';
-import '../../theme.dart';
+import '../../theme/udie_theme.dart';
 import '../widgets/ui_components.dart';
 
 class RouteScreen extends StatefulWidget {
@@ -97,7 +97,7 @@ class _RouteScreenState extends State<RouteScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Route Risk Evaluator',
+                  'Route Intelligence',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
@@ -105,7 +105,7 @@ class _RouteScreenState extends State<RouteScreen> {
                   ),
                 ),
                 Text(
-                  'Analyse disruption risk along a corridor',
+                  'Compute corridor risk from backend evaluation',
                   style: TextStyle(
                     fontSize: 12,
                     color: UdieTheme.textSecondary,
@@ -182,7 +182,7 @@ class _RouteScreenState extends State<RouteScreen> {
                   key: const ValueKey('button'),
                   onPressed: _onEvaluate,
                   icon: const Icon(Icons.analytics_rounded, size: 18),
-                  label: const Text('Evaluate Risk'),
+                  label: const Text('Engage Route Analysis'),
                 ),
         ),
         const SizedBox(height: UdieTheme.sp20),
@@ -434,7 +434,46 @@ class _RiskResultCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(UdieTheme.sp16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Text(
+                  'RISK PROFILE',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: UdieTheme.textSecondary,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: UdieTheme.sp10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(999),
+                  child: SizedBox(
+                    height: 6,
+                    child: Stack(
+                      children: [
+                        Container(
+                          color: Colors.white.withValues(alpha: 0.06),
+                        ),
+                        FractionallySizedBox(
+                          widthFactor: risk.riskScore.clamp(0.0, 1.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  UdieTheme.ok,
+                                  riskColor,
+                                  UdieTheme.ok.withValues(alpha: 0.8),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: UdieTheme.sp16),
                 InfoRow(
                   icon: Icons.density_medium_rounded,
                   label: 'Risk Density',
