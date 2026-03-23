@@ -13,6 +13,8 @@ import 'route_screen.dart';
 import 'sources_screen.dart';
 import 'telemetry_screen.dart';
 
+const bool kSingleScreenMode = false;
+
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key, required this.store});
 
@@ -52,9 +54,6 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
-    // Pages are created once and reused.  Each screen subscribes to the
-    // store via its own ListenableBuilder, so they update independently
-    // without causing the entire shell to rebuild.
     _pages = [
       MapScreen(
         store: widget.store,
@@ -68,6 +67,22 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final body = kSingleScreenMode
+        ? MapScreen(
+            store: widget.store,
+            onOpenRoutePlanner: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => RouteScreen(store: widget.store),
+                ),
+              );
+            },
+          )
+        : IndexedStack(
+            index: _index,
+            children: _pages,
+          );
+
     return Container(
       decoration: const BoxDecoration(
         gradient: UdieTheme.bgGradient,
@@ -77,15 +92,14 @@ class _HomeShellState extends State<HomeShell> {
         extendBodyBehindAppBar: true,
         extendBody: true,
         appBar: _BlurAppBar(store: widget.store),
-        body: IndexedStack(
-          index: _index,
-          children: _pages,
-        ),
-        bottomNavigationBar: TacticalBottomNav(
-          currentIndex: _index,
-          onTap: (v) => setState(() => _index = v),
-          destinations: _destinations,
-        ),
+        body: body,
+        bottomNavigationBar: kSingleScreenMode
+            ? null
+            : TacticalBottomNav(
+                currentIndex: _index,
+                onTap: (v) => setState(() => _index = v),
+                destinations: _destinations,
+              ),
       ),
     );
   }

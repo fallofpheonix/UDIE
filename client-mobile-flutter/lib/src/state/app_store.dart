@@ -25,19 +25,22 @@ class AppStore extends ChangeNotifier {
     }
     const deviceBaseUrl = String.fromEnvironment(
       'UDIE_DEVICE_BASE_URL',
-      defaultValue: 'http://172.25.246.165:8002',
+      defaultValue: '',
     );
     const useAndroidEmulator = bool.fromEnvironment(
       'UDIE_USE_ANDROID_EMULATOR',
       defaultValue: false,
     );
     if (kIsWeb) {
-      return 'http://127.0.0.1:8000';
+      return 'http://127.0.0.1:3000';
     }
     if (Platform.isAndroid && useAndroidEmulator) {
-      return 'http://10.0.2.2:8000';
+      return 'http://10.0.2.2:3000';
     }
-    return deviceBaseUrl;
+    if (deviceBaseUrl != '') {
+      return deviceBaseUrl;
+    }
+    return 'http://127.0.0.1:3000';
   }
 
   final GeoArea area;

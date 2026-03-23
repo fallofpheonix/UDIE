@@ -16,8 +16,10 @@ class RouteScreen extends StatefulWidget {
 }
 
 class _RouteScreenState extends State<RouteScreen> {
+  late final TextEditingController _startAddress;
   late final TextEditingController _startLat;
   late final TextEditingController _startLng;
+  late final TextEditingController _endAddress;
   late final TextEditingController _endLat;
   late final TextEditingController _endLng;
   bool _isEvaluating = false;
@@ -26,8 +28,10 @@ class _RouteScreenState extends State<RouteScreen> {
   void initState() {
     super.initState();
     final c = widget.store.area.center;
+    _startAddress = TextEditingController(text: 'Bhopal Center');
     _startLat = TextEditingController(text: c.latitude.toStringAsFixed(6));
     _startLng = TextEditingController(text: c.longitude.toStringAsFixed(6));
+    _endAddress = TextEditingController(text: 'MP Nagar Zone 1');
     _endLat = TextEditingController(
       text: (c.latitude + 0.03).toStringAsFixed(6),
     );
@@ -38,8 +42,10 @@ class _RouteScreenState extends State<RouteScreen> {
 
   @override
   void dispose() {
+    _startAddress.dispose();
     _startLat.dispose();
     _startLng.dispose();
+    _endAddress.dispose();
     _endLat.dispose();
     _endLng.dispose();
     super.dispose();
@@ -122,6 +128,7 @@ class _RouteScreenState extends State<RouteScreen> {
           label: 'Origin',
           icon: Icons.trip_origin_rounded,
           color: UdieTheme.ok,
+          addressCtrl: _startAddress,
           latCtrl: _startLat,
           lngCtrl: _startLng,
         ),
@@ -147,6 +154,7 @@ class _RouteScreenState extends State<RouteScreen> {
           label: 'Destination',
           icon: Icons.place_rounded,
           color: UdieTheme.danger,
+          addressCtrl: _endAddress,
           latCtrl: _endLat,
           lngCtrl: _endLng,
         ),
@@ -224,6 +232,7 @@ class _WaypointCard extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.color,
+    required this.addressCtrl,
     required this.latCtrl,
     required this.lngCtrl,
   });
@@ -231,6 +240,7 @@ class _WaypointCard extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
+  final TextEditingController addressCtrl;
   final TextEditingController latCtrl;
   final TextEditingController lngCtrl;
 
@@ -270,52 +280,30 @@ class _WaypointCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: UdieTheme.sp12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: latCtrl,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: UdieTheme.textPrimary,
-                  ),
-                  decoration: const InputDecoration(
-                    labelText: 'Latitude',
-                    prefixIcon: Icon(
-                      Icons.north_rounded,
-                      size: 16,
-                      color: UdieTheme.textMuted,
-                    ),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                    signed: true,
-                  ),
-                ),
+          TextField(
+            controller: addressCtrl,
+            readOnly: true,
+            style: const TextStyle(
+              fontSize: 13,
+              color: UdieTheme.textPrimary,
+            ),
+            decoration: const InputDecoration(
+              labelText: 'Address',
+              prefixIcon: Icon(
+                Icons.place_rounded,
+                size: 16,
+                color: UdieTheme.textMuted,
               ),
-              const SizedBox(width: UdieTheme.sp10),
-              Expanded(
-                child: TextField(
-                  controller: lngCtrl,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: UdieTheme.textPrimary,
-                  ),
-                  decoration: const InputDecoration(
-                    labelText: 'Longitude',
-                    prefixIcon: Icon(
-                      Icons.east_rounded,
-                      size: 16,
-                      color: UdieTheme.textMuted,
-                    ),
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                    signed: true,
-                  ),
-                ),
-              ),
-            ],
+            ),
+          ),
+          const SizedBox(height: UdieTheme.sp8),
+          Text(
+            '${latCtrl.text}, ${lngCtrl.text}',
+            style: const TextStyle(
+              color: UdieTheme.textMuted,
+              fontSize: 11,
+              fontFamily: 'monospace',
+            ),
           ),
         ],
       ),

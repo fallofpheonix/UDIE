@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';
@@ -32,11 +34,29 @@ class _MapScreenState extends State<MapScreen> {
   static const int _maxMarkers = 180;
   final _timeFormat = DateFormat('dd MMM, HH:mm');
   final _mapController = MapController();
+  Timer? _routeHintTimer;
+  bool _showRouteHint = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _routeHintTimer = Timer(const Duration(seconds: 5), _dismissRouteHint);
+  }
 
   @override
   void dispose() {
+    _routeHintTimer?.cancel();
     _mapController.dispose();
     super.dispose();
+  }
+
+  void _dismissRouteHint() {
+    _routeHintTimer?.cancel();
+    _routeHintTimer = null;
+    if (!mounted || !_showRouteHint) {
+      return;
+    }
+    setState(() => _showRouteHint = false);
   }
 
   void _showEventDetail(DisruptionEvent event) {
@@ -121,19 +141,20 @@ class _MapScreenState extends State<MapScreen> {
                 child: RadarEmptyState(),
               ),
 
-            Positioned(
-              top: topPadding + 8,
-              left: 12,
-              right: 12,
-              child: RouteRiskScanner(
-                isScanning: false,
-                originLabel: store.area.city,
-                destinationLabel: 'Select destination in route planner',
-                actionLabel: 'OPEN ROUTE ANALYZER',
-                onAnalyzeRoute:
-                    widget.onOpenRoutePlanner ?? widget.store.refreshAll,
+            if (_showRouteHint)
+              Positioned(
+                top: topPadding + 8,
+                left: 12,
+                right: 12,
+                child: RouteRiskScanner(
+                  isScanning: false,
+                  originLabel: store.area.city,
+                  destinationLabel: 'Select destination in route planner',
+                  onAnalyzeRoute:
+                      widget.onOpenRoutePlanner ?? widget.store.refreshAll,
+                  onClose: _dismissRouteHint,
+                ),
               ),
-            ),
 
             // ── Floating action buttons (right side) ───────────────────────────
             Positioned(

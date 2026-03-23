@@ -8,6 +8,7 @@ class RouteRiskScanner extends StatefulWidget {
   const RouteRiskScanner({
     super.key,
     required this.onAnalyzeRoute,
+    this.onClose,
     this.isScanning = false,
     this.originLabel = 'Current Location',
     this.destinationLabel = 'Enter Destination...',
@@ -15,6 +16,7 @@ class RouteRiskScanner extends StatefulWidget {
   });
 
   final VoidCallback onAnalyzeRoute;
+  final VoidCallback? onClose;
   final bool isScanning;
   final String originLabel;
   final String destinationLabel;
@@ -115,6 +117,35 @@ class _RouteRiskScannerState extends State<RouteRiskScanner>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (widget.onClose != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              children: [
+                                const Spacer(),
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(999),
+                                  onTap: widget.onClose,
+                                  child: Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.08),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white.withValues(alpha: 0.12),
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.close_rounded,
+                                      size: 16,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         _buildLocationInput(
                           Icons.my_location,
                           widget.originLabel,
