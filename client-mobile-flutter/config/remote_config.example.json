@@ -1,0 +1,10 @@
+{
+  "baseUrl": "https://api.example.com",
+  "features": {
+    "newMapUI": false,
+    "riskEngineV2": false
+  },
+  "timeouts": {
+    "api": 6000
+  }
+}

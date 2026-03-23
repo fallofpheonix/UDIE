@@ -64,12 +64,24 @@ class UdieTheme {
     switch (category.toLowerCase()) {
       case 'traffic':
         return const Color(0xFFF4A261);
+      case 'accident':
+      case 'road_block':
+      case 'road block':
       case 'crime':
         return const Color(0xFFE63946);
       case 'weather':
         return const Color(0xFF00C8F0);
+      case 'intelligence':
+        return const Color(0xFF00C8F0);
       case 'infrastructure':
+      case 'construction':
+      case 'system':
         return const Color(0xFF9B5DE5);
+      case 'hotspot':
+        return const Color(0xFFFF6B6B);
+      case 'sudden_spike':
+      case 'sudden spike':
+        return const Color(0xFFFF9F1C);
       case 'protest':
         return const Color(0xFFFF6B6B);
       case 'fire':
@@ -84,12 +96,27 @@ class UdieTheme {
     switch (category.toLowerCase()) {
       case 'traffic':
         return Icons.traffic_rounded;
+      case 'accident':
+        return Icons.car_crash_rounded;
+      case 'road_block':
+      case 'road block':
+        return Icons.block_rounded;
       case 'crime':
         return Icons.local_police_rounded;
       case 'weather':
         return Icons.thunderstorm_rounded;
+      case 'intelligence':
+        return Icons.auto_awesome_rounded;
       case 'infrastructure':
+      case 'construction':
         return Icons.construction_rounded;
+      case 'system':
+        return Icons.memory_rounded;
+      case 'hotspot':
+        return Icons.local_fire_department_rounded;
+      case 'sudden_spike':
+      case 'sudden spike':
+        return Icons.trending_up_rounded;
       case 'protest':
         return Icons.groups_rounded;
       case 'fire':

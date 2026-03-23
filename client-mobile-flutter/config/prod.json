@@ -1,0 +1,4 @@
+{
+  "ENV": "prod",
+  "UDIE_CONFIG_URL": "https://config.example.com/udie/prod.json"
+}

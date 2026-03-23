@@ -155,8 +155,14 @@ class _TelemetryScreenState extends State<TelemetryScreen>
               ),
               const SizedBox(height: 16),
               _StreamRow(label: 'Sync State', value: syncLabel),
+              _StreamRow(label: 'Environment', value: store.environment),
+              _StreamRow(label: 'Config Source', value: store.configSource),
               _StreamRow(label: 'API Namespace', value: store.namespace),
               _StreamRow(label: 'Backend URL', value: store.baseUrl),
+              _StreamRow(
+                label: 'API Timeout',
+                value: '${store.apiTimeoutMs} ms',
+              ),
               _StreamRow(label: 'Last Sync', value: lastSynced),
               _StreamRow(label: 'Operational City', value: store.area.city),
               _StreamRow(

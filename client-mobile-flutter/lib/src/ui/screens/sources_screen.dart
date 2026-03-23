@@ -81,7 +81,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
                   color: UdieTheme.textPrimary,
                 ),
                 decoration: const InputDecoration(
-                  labelText: 'Backend Base URL',
+                  labelText: 'Backend Base URL Override',
                   prefixIcon: Icon(
                     Icons.link_rounded,
                     size: 16,
@@ -325,7 +325,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
     if (lat == null || lng == null || radius == null) return;
 
     setState(() => _isSaving = true);
-    store.updateBaseUrl(_baseUrl.text);
+    await store.updateBaseUrl(_baseUrl.text);
     store.updateArea(
       city: _selectedCity,
       lat: lat,
@@ -349,6 +349,9 @@ class _SourceRow extends StatelessWidget {
     final hasError = source.lastError != null;
     final statusColor = hasError ? UdieTheme.danger : UdieTheme.ok;
     final catColor = UdieTheme.categoryColor(source.category);
+    final subtitle = source.detail.isNotEmpty
+        ? source.detail
+        : '${source.category} · ${source.eventCount} events · ${source.newsCount} news';
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -387,11 +390,13 @@ class _SourceRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${source.category} · ${source.eventCount} events · ${source.newsCount} news',
+                  subtitle,
                   style: const TextStyle(
                     fontSize: 11,
                     color: UdieTheme.textSecondary,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 if (hasError)
                   Padding(
@@ -410,20 +415,36 @@ class _SourceRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: UdieTheme.sp8),
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: statusColor,
-              boxShadow: [
-                BoxShadow(
-                  color: statusColor.withValues(alpha: 0.5),
-                  blurRadius: 4,
-                  spreadRadius: 1,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: statusColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: statusColor.withValues(alpha: 0.5),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+              ),
+              if ((source.statusLabel ?? '').isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  source.statusLabel!,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: statusColor,
+                  ),
                 ),
               ],
-            ),
+            ],
           ),
         ],
       ),

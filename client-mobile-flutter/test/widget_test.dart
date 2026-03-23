@@ -153,6 +153,21 @@ void main() {
       final status = SourceStatus.fromJson(json);
       expect(status.lastError, 'Connection timed out');
     });
+
+    test('parses diagnostics detail and status label', () {
+      final json = {
+        'name': 'Risk Surface',
+        'category': 'system',
+        'endpoint': 'https://example.com/health',
+        'event_count': 405,
+        'news_count': 0,
+        'detail': '405 cells · avg 0.55 · max 1.00',
+        'status_label': 'LIVE',
+      };
+      final status = SourceStatus.fromJson(json);
+      expect(status.detail, contains('405 cells'));
+      expect(status.statusLabel, 'LIVE');
+    });
   });
 
   // ──────────────────────────────────────────────────────────

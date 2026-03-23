@@ -100,28 +100,31 @@ class _BootSequenceScreenState extends State<BootSequenceScreen>
                     const SizedBox(height: 56),
                     SizedBox(
                       height: 128,
-                      child: Column(
-                        children: [
-                          for (var i = 0; i < lines.length; i++)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Text(
-                                lines[i],
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: i == lines.length - 1
-                                      ? Colors.white
-                                      : Colors.white.withValues(alpha: 0.36),
-                                  fontFamily: 'monospace',
-                                  fontSize: 12,
-                                  letterSpacing: 1.8,
-                                  fontWeight: i == lines.length - 1
-                                      ? FontWeight.w700
-                                      : FontWeight.w400,
+                      child: SingleChildScrollView(
+                        physics: const NeverScrollableScrollPhysics(),
+                        child: Column(
+                          children: [
+                            for (var i = 0; i < lines.length; i++)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Text(
+                                  lines[i],
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: i == lines.length - 1
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.36),
+                                    fontFamily: 'monospace',
+                                    fontSize: 12,
+                                    letterSpacing: 1.8,
+                                    fontWeight: i == lines.length - 1
+                                        ? FontWeight.w700
+                                        : FontWeight.w400,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],

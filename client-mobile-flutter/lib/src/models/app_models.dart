@@ -141,6 +141,8 @@ class SourceStatus {
     required this.eventCount,
     required this.newsCount,
     required this.lastError,
+    this.detail = '',
+    this.statusLabel,
   });
 
   final String name;
@@ -149,6 +151,8 @@ class SourceStatus {
   final int eventCount;
   final int newsCount;
   final String? lastError;
+  final String detail;
+  final String? statusLabel;
 
   factory SourceStatus.fromJson(Map<String, dynamic> json) {
     return SourceStatus(
@@ -158,6 +162,8 @@ class SourceStatus {
       eventCount: (json['event_count'] as num?)?.toInt() ?? 0,
       newsCount: (json['news_count'] as num?)?.toInt() ?? 0,
       lastError: json['last_error']?.toString(),
+      detail: (json['detail'] ?? '').toString(),
+      statusLabel: json['status_label']?.toString(),
     );
   }
 }
