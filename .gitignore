@@ -42,3 +42,50 @@ udie_mobile/.flutter-plugins-dependencies
 
 # Misc
 *.log
+# OS/editor
+.idea/
+.vscode/
+# Python
+.coverage
+htmlcov/
+# Node/JS
+build/
+coverage/
+.env.*
+!.env.example
+# Dart/Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+# Local data, models, and generated artifacts
+*.db
+*.db.bak
+*.sqlite
+*.sqlite3
+*.jsonl
+*.csv.tmp
+out/
+out_old/
+output/
+outputs/
+artifacts/runs/
+artifacts/checkpoints/
+models/**/*.pt
+models/**/*.pth
+models/**/*.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.mp3
+*.wav
+*.m4a
+# Native build products
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+bench/bench_*
+tests/test_*
