@@ -688,3 +688,193 @@ body {
         opacity: 1;
     }
 }
+/* ------------------------------------------------------------------ */
+/* Shell layout patch: styles for the index.html app shell and the    */
+/* route partials (dashboard.html etc.), which use newer class names  */
+/* than the original map-centric layout above.                        */
+/* ------------------------------------------------------------------ */
+
+.app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.topbar .logo {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.status-pill {
+    font-size: 0.78rem;
+    padding: 6px 14px;
+    border-radius: 999px;
+    color: var(--success-green);
+    border: 1px solid rgba(0, 242, 96, 0.35);
+    background: rgba(0, 242, 96, 0.08);
+}
+
+.layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.layout .sidebar {
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    gap: 6px;
+}
+
+.layout .sidebar a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    transition: background 0.2s, color 0.2s;
+}
+
+.layout .sidebar a:hover {
+    background: var(--card-bg);
+    color: var(--text-primary);
+}
+
+.layout .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+}
+
+.loader {
+    color: var(--text-secondary);
+    padding: 40px;
+    text-align: center;
+}
+
+/* Route partials share the .dashboard-grid root class; inside the
+   shell content pane it is a card grid, not the full-page grid. */
+.content .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    height: auto;
+}
+
+.content .overview-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.content .overview-header h2 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+}
+
+.risk-index {
+    font-family: var(--font-heading);
+    font-size: 1.6rem;
+    color: var(--warning-orange);
+}
+
+.risk-index span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-left: 6px;
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.content .card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 22px;
+}
+
+.content .card h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+}
+
+.content .metric {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.content .metric.high {
+    color: var(--emergency-red);
+}
+
+.content .metric.medium {
+    color: var(--warning-orange);
+}
+
+.placeholder-map {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    color: var(--text-secondary);
+    border: 1px dashed var(--glass-border);
+    background:
+        radial-gradient(circle at 30% 40%, rgba(255, 78, 80, 0.25), transparent 34%),
+        radial-gradient(circle at 62% 60%, rgba(249, 212, 35, 0.18), transparent 30%),
+        radial-gradient(circle at 78% 30%, rgba(0, 210, 255, 0.18), transparent 26%),
+        linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.03));
+}
+
+.feed-item {
+    padding: 10px 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.quick-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 12px;
+}
+
+.quick-actions button {
+    padding: 12px 22px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: linear-gradient(110deg, rgba(0, 210, 255, 0.18), rgba(157, 80, 187, 0.18));
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.quick-actions button:hover {
+    filter: brightness(1.25);
+}
